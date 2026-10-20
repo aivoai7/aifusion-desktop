@@ -4187,8 +4187,8 @@
     "needsAttention": "需要处理",
     "back": "返回",
     "walletBalance": "钱包余额",
-    "walletNotEnabled": "未开通",
-    "walletNotEnabledHint": "平台暂未提供用户钱包接口，接入后显示真实美元余额"
+    "walletUnavailable": "未连接",
+    "walletHint": "用本机保存的平台密钥实时查询美元钱包余额，每分钟刷新一次"
   },
   "appsPage": {
     "showInSidebar": "在侧栏显示 {{name}}",

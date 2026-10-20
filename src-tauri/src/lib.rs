@@ -1487,6 +1487,7 @@ pub fn run() {
             commands::get_platform_api_key_status,
             commands::login_platform_web,
             commands::cancel_platform_web_login,
+            commands::get_platform_wallet_balance,
             commands::validate_platform_api_key,
             commands::set_platform_api_key,
             commands::clear_platform_api_key,

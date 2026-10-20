@@ -46,6 +46,14 @@ export const platformKeyApi = {
     return await invoke("cancel_platform_web_login");
   },
 
+  /**
+   * 平台钱包余额（美元）。未登录或平台还没有钱包接口时返回 null，
+   * 其余失败抛错，由调用方决定是保留上次数值还是提示。
+   */
+  async walletBalance(): Promise<number | null> {
+    return await invoke("get_platform_wallet_balance");
+  },
+
   /** 保存前先校验，避免用户存下一把必然 401 的 Key。 */
   async validate(apiKey: string): Promise<PlatformKeyValidation> {
     return await invoke("validate_platform_api_key", { apiKey });

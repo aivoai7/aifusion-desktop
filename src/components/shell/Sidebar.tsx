@@ -16,6 +16,7 @@ import {
   Wallet,
 } from "lucide-react";
 import type { AppId } from "@/lib/api";
+import { platformKeyApi } from "@/lib/api/platformKey";
 import type { VisibleApps } from "@/types";
 import { APP_IDS } from "@/config/appConfig";
 import type { SettingsSection, View } from "@/lib/navigation";
@@ -232,25 +233,40 @@ function MainDirectory({
 /**
  * 侧栏底部的钱包余额。
  *
- * 平台目前只提供共享 Key 和上游额度，没有按用户的美元钱包接口，
- * 因此这里先保留位置，不显示 0 或估算值；平台补上钱包接口后替换 `$—`。
+ * 用本机保存的平台 Key 走网关 `/v1/wallet/balance` 取真实美元余额，每分钟刷新一次；
+ * 未登录或平台还没有这个接口时保留 `$—` 占位，不显示 0 或估算值。
  */
 function WalletFooter({ collapsed }: { collapsed: boolean }) {
   const { t } = useTranslation();
   const label = t("nav.walletBalance");
-  const hint = t("nav.walletNotEnabledHint");
+  const hint = t("nav.walletHint");
+  const { data: balance } = useQuery({
+    queryKey: ["platformWalletBalance"],
+    queryFn: () => platformKeyApi.walletBalance(),
+    refetchInterval: 60_000,
+    staleTime: 30_000,
+  });
+  const amount =
+    typeof balance === "number" && Number.isFinite(balance)
+      ? `$${balance.toLocaleString("en-US", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        })}`
+      : "$—";
+
+  const summary = `${label} · ${amount}`;
 
   if (collapsed) {
     return (
       <div className="shrink-0 border-t border-border/60 px-2 py-2">
         <HoverTip
-          content={`${label} · ${hint}`}
+          content={summary}
           side="right"
           disableHoverableContent
         >
           <div
             role="img"
-            aria-label={`${label} · ${hint}`}
+            aria-label={summary}
             className="mx-auto flex h-8 w-12 items-center justify-center rounded-control text-fg-2"
           >
             <Wallet className="h-[18px] w-[18px]" strokeWidth={1.5} />
@@ -271,9 +287,9 @@ function WalletFooter({ collapsed }: { collapsed: boolean }) {
           {label}
         </div>
         <div className="mt-1 flex items-baseline justify-between gap-2">
-          <span className="text-title tabular-nums text-fg-1">$—</span>
+          <span className="text-title tabular-nums text-fg-1">{amount}</span>
           <span className="rounded-full border border-border/70 px-1.5 py-0.5 text-badge text-fg-3">
-            {t("nav.walletNotEnabled")}
+            {typeof balance === "number" ? "USD" : t("nav.walletUnavailable")}
           </span>
         </div>
       </div>

@@ -4188,8 +4188,8 @@
     "needsAttention": "Needs attention",
     "back": "Back",
     "walletBalance": "Wallet balance",
-    "walletNotEnabled": "Not enabled",
-    "walletNotEnabledHint": "The platform does not expose a user wallet API yet. The real USD balance will appear here once connected."
+    "walletUnavailable": "Not connected",
+    "walletHint": "Live USD balance from the platform, queried with the locally stored key and refreshed every minute"
   },
   "appsPage": {
     "showInSidebar": "Show {{name}} in the sidebar",

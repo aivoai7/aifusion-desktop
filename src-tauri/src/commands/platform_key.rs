@@ -47,6 +47,14 @@ pub async fn cancel_platform_web_login() -> Result<bool, String> {
     Ok(crate::services::platform_login::cancel_pending_login())
 }
 
+/// 侧栏钱包余额（美元）；未登录或平台还没有钱包接口时返回 `None`。
+#[tauri::command]
+pub async fn get_platform_wallet_balance(
+    state: tauri::State<'_, AppState>,
+) -> Result<Option<f64>, String> {
+    platform_key::fetch_wallet_balance(state.db.as_ref()).await
+}
+
 async fn apply_fetched_key(
     app_handle: &AppHandle,
     fetched: FetchedPlatformKey,

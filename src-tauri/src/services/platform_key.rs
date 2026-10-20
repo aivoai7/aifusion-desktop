@@ -200,6 +200,44 @@ pub async fn validate(api_key: &str) -> PlatformKeyValidation {
     }
 }
 
+/// 平台钱包余额（美元）。
+///
+/// 桌面端只有下发到的 API Key，没有浏览器会话 Cookie，所以走网关的
+/// `GET /v1/wallet/balance`。未登录、或平台版本还没有这个接口时返回 `None`，
+/// 侧栏保留占位；其余失败原样回传给前端展示。
+pub async fn fetch_wallet_balance(db: &Database) -> Result<Option<f64>, String> {
+    let Some((api_key, _)) = resolve_api_key(db) else {
+        return Ok(None);
+    };
+
+    let url = format!("{}/v1/wallet/balance", PLATFORM_SITE.trim_end_matches('/'));
+    let client = reqwest::Client::builder()
+        .timeout(std::time::Duration::from_secs(12))
+        .build()
+        .map_err(|error| format!("无法初始化网络请求：{error}"))?;
+
+    let response = match client.get(&url).bearer_auth(&api_key).send().await {
+        Ok(response) => response,
+        Err(_) => return Err("无法连接平台，请检查网络后重试".to_string()),
+    };
+    let status = response.status();
+    if status == reqwest::StatusCode::NOT_FOUND || status == reqwest::StatusCode::METHOD_NOT_ALLOWED
+    {
+        return Ok(None);
+    }
+    if !status.is_success() {
+        return Err(format!("查询钱包余额失败：HTTP {}", status.as_u16()));
+    }
+    let body: serde_json::Value = response
+        .json()
+        .await
+        .map_err(|error| format!("平台返回的钱包余额无法解析：{error}"))?;
+    match body.get("balance_usd").and_then(serde_json::Value::as_f64) {
+        Some(balance) => Ok(Some(balance)),
+        None => Err("平台返回的钱包余额格式不正确".to_string()),
+    }
+}
+
 /// 保存密钥并下发到所有平台的供应商行，随后重投影当前供应商的 live 配置。
 pub fn set_api_key(state: &AppState, api_key: &str) -> Result<PlatformKeyApplyResult, AppError> {
     let api_key = api_key.trim();
