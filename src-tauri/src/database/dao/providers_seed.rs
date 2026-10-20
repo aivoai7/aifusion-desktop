@@ -27,15 +27,22 @@ pub(crate) const API_KEY_PLACEHOLDER: &str = "__AIFUSION_API_KEY__";
 pub(crate) const SITE_PLACEHOLDER: &str = "__AIFUSION_SITE__";
 /// seed 模板中的 API Base 占位符（站点根 + `/v1`）。
 pub(crate) const BASE_PLACEHOLDER: &str = "__AIFUSION_BASE__";
+/// seed 模板中的默认模型占位符；平台换默认模型时只改这里。
+pub(crate) const MODEL_PLACEHOLDER: &str = "__AIFUSION_MODEL__";
+/// 平台当前默认主模型。
+pub(crate) const PLATFORM_DEFAULT_MODEL: &str = "claude-sonnet-5";
+/// 已从平台下架的旧默认模型；启动迁移与原生导入都把它换成当前默认值。
+pub(crate) const RETIRED_PLATFORM_MODELS: &[&str] = &["hy4-preview", "Hy4 preview"];
 /// 旧版内置平台地址；升级时用它识别并迁移既有供应商行。
 pub(crate) const LEGACY_PLATFORM_SITE: &str = "http://192.168.5.125:8788";
 
-/// 渲染种子 JSON：注入本机密钥与当前平台地址。
+/// 渲染种子 JSON：注入本机密钥、当前平台地址与默认模型。
 pub(crate) fn render_seed_config(seed: &OfficialProviderSeed, api_key: &str) -> String {
     seed.settings_config_json
         .replace(API_KEY_PLACEHOLDER, api_key)
         .replace(BASE_PLACEHOLDER, &format!("{PLATFORM_SITE}/v1"))
         .replace(SITE_PLACEHOLDER, PLATFORM_SITE)
+        .replace(MODEL_PLACEHOLDER, PLATFORM_DEFAULT_MODEL)
 }
 
 /// 把供应商配置里残留的旧平台地址换成交付地址；返回是否有改动。
@@ -74,6 +81,91 @@ pub(crate) fn replace_legacy_platform_site(value: &mut serde_json::Value) -> boo
     replace(value, LEGACY_PLATFORM_SITE, PLATFORM_SITE)
 }
 
+/// 把平台已下架的默认模型换成当前默认值；返回是否有改动。
+///
+/// 平台改版会换掉默认可用模型（`hy4-preview` 已经从 `/v1/models` 下架），而
+/// Codex / Grok 的模型名写在 TOML 文本里、Pi 又会从原生 models.json 回灌，
+/// 所以种子导入、启动迁移和原生导入都要过一遍。只替换整个字段值或 TOML 里
+/// 的 `model = "..."` 行，避免误改 `tencent/hy4-preview` 这类别家同名条目。
+pub(crate) fn replace_retired_platform_model(value: &mut serde_json::Value) -> bool {
+    fn rewrite_toml(text: &str) -> Option<String> {
+        let mut changed = false;
+        let next = text
+            .lines()
+            .map(|line| {
+                let trimmed = line.trim();
+                if trimmed.starts_with('#') {
+                    return line.to_string();
+                }
+                let Some((key, raw_value)) = trimmed.split_once('=') else {
+                    return line.to_string();
+                };
+                if key.trim() != "model" {
+                    return line.to_string();
+                }
+                let current = raw_value.trim().trim_matches('"');
+                if RETIRED_PLATFORM_MODELS.contains(&current) {
+                    changed = true;
+                    return format!("model = \"{PLATFORM_DEFAULT_MODEL}\"");
+                }
+                line.to_string()
+            })
+            .collect::<Vec<_>>()
+            .join("\n");
+        if changed {
+            Some(next)
+        } else {
+            None
+        }
+    }
+
+    fn walk(value: &mut serde_json::Value) -> bool {
+        match value {
+            serde_json::Value::String(text) => {
+                if RETIRED_PLATFORM_MODELS.contains(&text.as_str()) {
+                    *text = PLATFORM_DEFAULT_MODEL.to_string();
+                    return true;
+                }
+                if text.contains("model") && text.contains('\n') {
+                    if let Some(next) = rewrite_toml(text) {
+                        *text = next;
+                        return true;
+                    }
+                }
+                false
+            }
+            serde_json::Value::Array(items) => {
+                // 不能用 `any`：它短路，后面的字段就没机会被检查。
+                let mut changed = false;
+                for item in items {
+                    changed |= walk(item);
+                }
+                changed
+            }
+            serde_json::Value::Object(map) => {
+                let mut changed = false;
+                // OpenCode / Mcode 这类模型表拿模型 id 当键，只改值会留下
+                // `"hy4-preview": { "name": "claude-sonnet-5" }` 这种废键，
+                // 客户端仍然会把下架模型当可选项列出来。
+                for retired in RETIRED_PLATFORM_MODELS {
+                    if let Some(entry) = map.remove(*retired) {
+                        changed = true;
+                        // 已经存在当前默认模型的条目时以现存的为准，废键直接丢弃。
+                        map.entry(PLATFORM_DEFAULT_MODEL).or_insert(entry);
+                    }
+                }
+                for item in map.values_mut() {
+                    changed |= walk(item);
+                }
+                changed
+            }
+            _ => false,
+        }
+    }
+
+    walk(value)
+}
+
 /// 单条平台供应商种子定义。
 pub(crate) struct OfficialProviderSeed {
     pub id: &'static str,
@@ -106,7 +198,7 @@ pub(crate) const PLATFORM_SEEDS: &[OfficialProviderSeed] = &[
         category: "third_party",
         // Claude Code 讲 Anthropic Messages，平台只提供 OpenAI 兼容端点，
         // 因此必须经本地代理转换（apiFormat = openai_chat）。
-        settings_config_json: r#"{"env":{"ANTHROPIC_BASE_URL":"__AIFUSION_BASE__","ANTHROPIC_AUTH_TOKEN":"__AIFUSION_API_KEY__","ANTHROPIC_MODEL":"hy4-preview","ANTHROPIC_DEFAULT_HAIKU_MODEL":"glm-5.3-flash","ANTHROPIC_DEFAULT_SONNET_MODEL":"hy4-preview","ANTHROPIC_DEFAULT_OPUS_MODEL":"hy4-preview","CLAUDE_CODE_DISABLE_EXPERIMENTAL_BETAS":"1","CLAUDE_CODE_MAX_CONTEXT_TOKENS":"200000"}}"#,
+        settings_config_json: r#"{"env":{"ANTHROPIC_BASE_URL":"__AIFUSION_BASE__","ANTHROPIC_AUTH_TOKEN":"__AIFUSION_API_KEY__","ANTHROPIC_MODEL":"__AIFUSION_MODEL__","ANTHROPIC_DEFAULT_HAIKU_MODEL":"glm-5.3-flash","ANTHROPIC_DEFAULT_SONNET_MODEL":"__AIFUSION_MODEL__","ANTHROPIC_DEFAULT_OPUS_MODEL":"__AIFUSION_MODEL__","CLAUDE_CODE_DISABLE_EXPERIMENTAL_BETAS":"1","CLAUDE_CODE_MAX_CONTEXT_TOKENS":"200000"}}"#,
         meta_json: Some(r#"{"apiFormat":"openai_chat"}"#),
     },
     OfficialProviderSeed {
@@ -119,7 +211,7 @@ pub(crate) const PLATFORM_SEEDS: &[OfficialProviderSeed] = &[
         category: "third_party",
         settings_config_json: r#"{"env":{"ANTHROPIC_BASE_URL":"__AIFUSION_BASE__","ANTHROPIC_AUTH_TOKEN":"__AIFUSION_API_KEY__"}}"#,
         meta_json: Some(
-            r#"{"claudeDesktopMode":"proxy","apiFormat":"openai_chat","claudeDesktopModelRoutes":{"claude-sonnet-5":{"model":"hy4-preview","labelOverride":"Hy4 preview"},"claude-opus-5":{"model":"hy4-preview","labelOverride":"Hy4 preview"},"claude-haiku-4-5":{"model":"glm-5.3-flash","labelOverride":"GLM 5.3 Flash"}}}"#,
+            r#"{"claudeDesktopMode":"proxy","apiFormat":"openai_chat","claudeDesktopModelRoutes":{"claude-sonnet-5":{"model":"__AIFUSION_MODEL__","labelOverride":"__AIFUSION_MODEL__"},"claude-opus-5":{"model":"__AIFUSION_MODEL__","labelOverride":"__AIFUSION_MODEL__"},"claude-haiku-4-5":{"model":"glm-5.3-flash","labelOverride":"GLM 5.3 Flash"}}}"#,
         ),
     },
     OfficialProviderSeed {
@@ -131,7 +223,7 @@ pub(crate) const PLATFORM_SEEDS: &[OfficialProviderSeed] = &[
         icon_color: "#6366F1",
         category: "third_party",
         // Codex 讲 OpenAI Responses，平台 /v1/responses 可用，直接对接。
-        settings_config_json: r#"{"auth":{"OPENAI_API_KEY":"__AIFUSION_API_KEY__"},"config":"model_provider = \"custom\"\nmodel = \"hy4-preview\"\nmodel_reasoning_effort = \"high\"\ndisable_response_storage = true\n\n[model_providers.custom]\nname = \"aifusion\"\nbase_url = \"__AIFUSION_BASE__\"\nwire_api = \"responses\"\nrequires_openai_auth = true"}"#,
+        settings_config_json: r#"{"auth":{"OPENAI_API_KEY":"__AIFUSION_API_KEY__"},"config":"model_provider = \"custom\"\nmodel = \"__AIFUSION_MODEL__\"\nmodel_reasoning_effort = \"high\"\ndisable_response_storage = true\n\n[model_providers.custom]\nname = \"aifusion\"\nbase_url = \"__AIFUSION_BASE__\"\nwire_api = \"responses\"\nrequires_openai_auth = true"}"#,
         meta_json: Some(r#"{"apiFormat":"openai_responses"}"#),
     },
     OfficialProviderSeed {
@@ -143,7 +235,7 @@ pub(crate) const PLATFORM_SEEDS: &[OfficialProviderSeed] = &[
         icon_color: "#6366F1",
         category: "third_party",
         // 平台无 Gemini native 端点，此页签仅为占位（UI 会标注暂不可用）。
-        settings_config_json: r#"{"env":{"GOOGLE_GEMINI_BASE_URL":"__AIFUSION_SITE__","GEMINI_API_KEY":"__AIFUSION_API_KEY__","GEMINI_MODEL":"hy4-preview"}}"#,
+        settings_config_json: r#"{"env":{"GOOGLE_GEMINI_BASE_URL":"__AIFUSION_SITE__","GEMINI_API_KEY":"__AIFUSION_API_KEY__","GEMINI_MODEL":"__AIFUSION_MODEL__"}}"#,
         meta_json: None,
     },
     OfficialProviderSeed {
@@ -155,7 +247,7 @@ pub(crate) const PLATFORM_SEEDS: &[OfficialProviderSeed] = &[
         icon_color: "#6366F1",
         category: "third_party",
         // Grok CLI 原生 config.toml 形状：[models].default + [model."<name>"] 表
-        settings_config_json: r#"{"auth":{"OPENAI_API_KEY":"__AIFUSION_API_KEY__"},"config":"[models]\ndefault = \"aifusion\"\n\n[model.\"aifusion\"]\nmodel = \"hy4-preview\"\nbase_url = \"__AIFUSION_BASE__\"\nname = \"aifusion\"\napi_key = \"__AIFUSION_API_KEY__\"\napi_backend = \"responses\"\ncontext_window = 960000\n"}"#,
+        settings_config_json: r#"{"auth":{"OPENAI_API_KEY":"__AIFUSION_API_KEY__"},"config":"[models]\ndefault = \"aifusion\"\n\n[model.\"aifusion\"]\nmodel = \"__AIFUSION_MODEL__\"\nbase_url = \"__AIFUSION_BASE__\"\nname = \"aifusion\"\napi_key = \"__AIFUSION_API_KEY__\"\napi_backend = \"responses\"\ncontext_window = 960000\n"}"#,
         meta_json: Some(r#"{"apiFormat":"openai_responses"}"#),
     },
     OfficialProviderSeed {
@@ -166,7 +258,7 @@ pub(crate) const PLATFORM_SEEDS: &[OfficialProviderSeed] = &[
         icon: "openai",
         icon_color: "#6366F1",
         category: "third_party",
-        settings_config_json: r#"{"npm":"@ai-sdk/openai-compatible","name":"aifusion","options":{"baseURL":"__AIFUSION_BASE__","apiKey":"__AIFUSION_API_KEY__","setCacheKey":true},"models":{"hy4-preview":{"name":"Hy4 preview","reasoning":true},"glm-5.3-flash":{"name":"GLM 5.3 Flash","reasoning":true}}}"#,
+        settings_config_json: r#"{"npm":"@ai-sdk/openai-compatible","name":"aifusion","options":{"baseURL":"__AIFUSION_BASE__","apiKey":"__AIFUSION_API_KEY__","setCacheKey":true},"models":{"__AIFUSION_MODEL__":{"name":"__AIFUSION_MODEL__","reasoning":true},"glm-5.3-flash":{"name":"GLM 5.3 Flash","reasoning":true}}}"#,
         meta_json: None,
     },
     OfficialProviderSeed {
@@ -177,7 +269,7 @@ pub(crate) const PLATFORM_SEEDS: &[OfficialProviderSeed] = &[
         icon: "openai",
         icon_color: "#6366F1",
         category: "third_party",
-        settings_config_json: r#"{"baseUrl":"__AIFUSION_BASE__","apiKey":"__AIFUSION_API_KEY__","api":"openai-completions","models":[{"id":"hy4-preview","name":"Hy4 preview","reasoning":true,"input":["text","image"]},{"id":"glm-5.3-flash","name":"GLM 5.3 Flash","reasoning":true,"input":["text"]}]}"#,
+        settings_config_json: r#"{"baseUrl":"__AIFUSION_BASE__","apiKey":"__AIFUSION_API_KEY__","api":"openai-completions","models":[{"id":"__AIFUSION_MODEL__","name":"__AIFUSION_MODEL__","reasoning":true,"input":["text","image"]},{"id":"glm-5.3-flash","name":"GLM 5.3 Flash","reasoning":true,"input":["text"]}]}"#,
         meta_json: None,
     },
     OfficialProviderSeed {
@@ -188,7 +280,7 @@ pub(crate) const PLATFORM_SEEDS: &[OfficialProviderSeed] = &[
         icon: "openai",
         icon_color: "#6366F1",
         category: "third_party",
-        settings_config_json: r#"{"name":"aifusion","base_url":"__AIFUSION_BASE__","api_key":"__AIFUSION_API_KEY__","api_mode":"chat_completions","models":[{"id":"hy4-preview","name":"Hy4 preview"},{"id":"glm-5.3-flash","name":"GLM 5.3 Flash"}]}"#,
+        settings_config_json: r#"{"name":"aifusion","base_url":"__AIFUSION_BASE__","api_key":"__AIFUSION_API_KEY__","api_mode":"chat_completions","models":[{"id":"__AIFUSION_MODEL__","name":"__AIFUSION_MODEL__"},{"id":"glm-5.3-flash","name":"GLM 5.3 Flash"}]}"#,
         meta_json: None,
     },
     OfficialProviderSeed {
@@ -199,7 +291,7 @@ pub(crate) const PLATFORM_SEEDS: &[OfficialProviderSeed] = &[
         icon: "openai",
         icon_color: "#6366F1",
         category: "third_party",
-        settings_config_json: r#"{"name":"aifusion","baseUrl":"__AIFUSION_BASE__","api":"openai-completions","apiKey":"__AIFUSION_API_KEY__","models":[{"id":"hy4-preview","name":"Hy4 preview","reasoning":true,"input":["text","image"],"contextWindow":960000,"maxTokens":32000},{"id":"glm-5.3-flash","name":"GLM 5.3 Flash","reasoning":true,"input":["text"],"contextWindow":200000,"maxTokens":32000}]}"#,
+        settings_config_json: r#"{"name":"aifusion","baseUrl":"__AIFUSION_BASE__","api":"openai-completions","apiKey":"__AIFUSION_API_KEY__","models":[{"id":"__AIFUSION_MODEL__","name":"__AIFUSION_MODEL__","reasoning":true,"input":["text","image"],"contextWindow":960000,"maxTokens":32000},{"id":"glm-5.3-flash","name":"GLM 5.3 Flash","reasoning":true,"input":["text"],"contextWindow":200000,"maxTokens":32000}]}"#,
         meta_json: None,
     },
     OfficialProviderSeed {
@@ -210,7 +302,7 @@ pub(crate) const PLATFORM_SEEDS: &[OfficialProviderSeed] = &[
         icon: "openai",
         icon_color: "#6366F1",
         category: "third_party",
-        settings_config_json: r#"{"name":"aifusion","kind":"custom","enabled":true,"api":"openai-completions","options":{"baseURL":"__AIFUSION_BASE__","apiKey":"__AIFUSION_API_KEY__"},"models":{"hy4-preview":{"name":"Hy4 preview","reasoning":true},"glm-5.3-flash":{"name":"GLM 5.3 Flash","reasoning":true}}}"#,
+        settings_config_json: r#"{"name":"aifusion","kind":"custom","enabled":true,"api":"openai-completions","options":{"baseURL":"__AIFUSION_BASE__","apiKey":"__AIFUSION_API_KEY__"},"models":{"__AIFUSION_MODEL__":{"name":"__AIFUSION_MODEL__","reasoning":true},"glm-5.3-flash":{"name":"GLM 5.3 Flash","reasoning":true}}}"#,
         meta_json: None,
     },
 ];
@@ -443,5 +535,72 @@ mod tests {
             "other model table must stay untouched: {text}"
         );
         assert_eq!(config["auth"]["OPENAI_API_KEY"], "grok-key");
+    }
+    #[test]
+    fn retired_platform_model_is_replaced_everywhere_it_appears() {
+        use serde_json::json;
+
+        // 角色环境变量、模型表、TOML 文本三种写法都要换掉。
+        let mut claude = json!({"env": {"ANTHROPIC_MODEL": "hy4-preview"}});
+        assert!(replace_retired_platform_model(&mut claude));
+        assert_eq!(claude["env"]["ANTHROPIC_MODEL"], json!(PLATFORM_DEFAULT_MODEL));
+
+        let mut table = json!({"models": [{"id": "hy4-preview", "name": "Hy4 preview"}]});
+        assert!(replace_retired_platform_model(&mut table));
+        assert_eq!(table["models"][0]["id"], json!(PLATFORM_DEFAULT_MODEL));
+        assert_eq!(table["models"][0]["name"], json!(PLATFORM_DEFAULT_MODEL));
+
+        let mut toml_text = json!({"config": "model_provider = \"custom\"
+model = \"hy4-preview\"
+model_reasoning_effort = \"high\"
+"});
+        assert!(replace_retired_platform_model(&mut toml_text));
+        let text = toml_text["config"].as_str().expect("toml");
+        assert!(text.contains(&format!("model = \"{PLATFORM_DEFAULT_MODEL}\"")), "{text}");
+        assert!(text.contains("model_provider = \"custom\""), "{text}");
+        assert!(text.contains("model_reasoning_effort"), "{text}");
+    }
+
+    #[test]
+    fn retired_platform_model_key_is_renamed_in_model_tables() {
+        use serde_json::json;
+
+        // OpenCode 形状：模型 id 是键，只改值会留下废键。
+        let mut keyed = json!({"models": {"hy4-preview": {"name": "claude-sonnet-5", "reasoning": true}}});
+        assert!(replace_retired_platform_model(&mut keyed));
+        let models = keyed["models"].as_object().expect("map");
+        assert!(!models.contains_key("hy4-preview"), "{models:?}");
+        assert_eq!(
+            models[PLATFORM_DEFAULT_MODEL]["reasoning"],
+            json!(true),
+            "条目内容要跟着键一起搬过去: {models:?}"
+        );
+
+        // 同一张表里已有当前默认模型时，保留现存条目，废键丢弃。
+        let mut dup = json!({"models": {
+            "hy4-preview": {"name": "旧条目"},
+            "claude-sonnet-5": {"name": "现条目"}
+        }});
+        assert!(replace_retired_platform_model(&mut dup));
+        let models = dup["models"].as_object().expect("map");
+        assert_eq!(models.len(), 1, "{models:?}");
+        assert_eq!(models[PLATFORM_DEFAULT_MODEL]["name"], json!("现条目"));
+    }
+
+    #[test]
+    fn other_vendors_retired_named_models_are_left_alone() {
+        use serde_json::json;
+
+        // 别家前缀的同名条目（tencent/hy4-preview）不是平台默认模型，不能改。
+        let mut other = json!({"models": {"tencent/hy4-preview": {"name": "Hy4 别家"}}});
+        assert!(!replace_retired_platform_model(&mut other));
+        assert!(other["models"]
+            .as_object()
+            .expect("map")
+            .contains_key("tencent/hy4-preview"));
+
+        let mut kept = json!({"env": {"ANTHROPIC_MODEL": "glm-5.3-flash"}});
+        assert!(!replace_retired_platform_model(&mut kept));
+        assert_eq!(kept["env"]["ANTHROPIC_MODEL"], json!("glm-5.3-flash"));
     }
 }

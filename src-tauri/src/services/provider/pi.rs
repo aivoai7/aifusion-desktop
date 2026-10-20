@@ -226,15 +226,17 @@ fn sync_native_locked(
     let mut changed = 0;
 
     for (id, native_config) in native {
-        // 平台改版后 Pi 的原生 models.json 里可能还写着旧版局域网网关地址，
-        // 而这里每次列表刷新都会回灌数据库，所以导入时先归一化，
-        // 再把新地址写回原生文件，避免旧网关被反复带回。
+        // 平台改版后 Pi 的原生 models.json 里可能还写着旧版局域网网关地址，或已经被
+        // 下架的默认模型，而这里每次列表刷新都会回灌数据库，所以导入时先归一化，
+        // 再把新配置写回原生文件，避免旧网关和旧模型被反复带回。
         let mut config = native_config.clone();
-        if crate::database::replace_legacy_platform_site(&mut config) {
+        let site_changed = crate::database::replace_legacy_platform_site(&mut config);
+        let model_changed = crate::database::replace_retired_platform_model(&mut config);
+        if site_changed || model_changed {
             match crate::pi_config::replace_pi_provider_if_present(id, &config) {
-                Ok(Some(_)) => log::info!("已把 Pi 原生配置里的旧平台地址更新为 AIFusion 官网"),
+                Ok(Some(_)) => log::info!("已把 Pi 原生配置里的旧平台地址/旧模型更新为当前值"),
                 Ok(None) => {}
-                Err(error) => log::warn!("Pi 原生配置平台地址归一化失败: {error}"),
+                Err(error) => log::warn!("Pi 原生配置归一化失败: {error}"),
             }
         }
 

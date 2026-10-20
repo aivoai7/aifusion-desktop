@@ -155,7 +155,7 @@ export const hermesProviderPresets: HermesProviderPreset[] = [
       models: [
         {
           id: AIFUSION_MODEL,
-          name: "Hy4 preview",
+          name: AIFUSION_MODEL,
           context_length: AIFUSION_MODEL_CONTEXT,
         },
         { id: AIFUSION_LIGHT_MODEL, name: "GLM 5.3 Flash" },

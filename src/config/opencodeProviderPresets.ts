@@ -312,7 +312,7 @@ export const opencodeProviderPresets: OpenCodeProviderPreset[] = [
       },
       models: {
         [AIFUSION_MODEL]: {
-          name: "Hy4 preview",
+          name: AIFUSION_MODEL,
           reasoning: true,
           limit: { context: AIFUSION_MODEL_CONTEXT, output: 32000 },
           modalities: { input: ["text", "image"], output: ["text"] },

@@ -936,6 +936,48 @@ pub fn run() {
                 Err(e) => log::warn!("✗ Failed to re-migrate AIFusion platform endpoints: {e}"),
             }
 
+            // 平台会下架旧模型（`hy4-preview` 已经不在 /v1/models 里）：把内置平台
+            // 供应商行换成当前默认模型，再把正在用平台的应用重投影，避免客户端拿着
+            // 一个 404 的模型名。用户自己在选择弹窗里改过的模型不会被覆盖。
+            match app_state.db.migrate_official_provider_models() {
+                Ok(apps) => {
+                    for name in apps {
+                        let Ok(app) = <crate::app_config::AppType as std::str::FromStr>::from_str(
+                            &name,
+                        ) else {
+                            log::warn!("✗ 平台模型迁移后遇到未知应用：{name}");
+                            continue;
+                        };
+                        // Pi 的 live 是独立 models.json，只能走它自己的启用流程。
+                        let result = if matches!(app, crate::app_config::AppType::Pi) {
+                            crate::database::platform_seed_id_for(&app)
+                                .map(|seed_id| {
+                                    crate::services::provider::ProviderService::switch(
+                                        &app_state,
+                                        app.clone(),
+                                        seed_id,
+                                    )
+                                    .map(|_| ())
+                                })
+                                .unwrap_or_else(|| {
+                                    Err(crate::error::AppError::Config(
+                                        "Pi 平台供应商缺失".to_string(),
+                                    ))
+                                })
+                        } else {
+                            crate::services::provider::ProviderService::sync_current_provider_for_app(
+                                &app_state,
+                                app.clone(),
+                            )
+                        };
+                        if let Err(e) = result {
+                            log::warn!("✗ 平台模型迁移后重投影 {name} 失败: {e}");
+                        }
+                    }
+                }
+                Err(e) => log::warn!("✗ Failed to migrate AIFusion platform models: {e}"),
+            }
+
             // 2. OMO 配置导入（当数据库中无 OMO provider 时，从本地文件导入）
             {
                 let has_omo = app_state
@@ -1492,6 +1534,9 @@ pub fn run() {
             commands::set_platform_api_key,
             commands::clear_platform_api_key,
             commands::get_platform_site,
+            commands::get_platform_models,
+            commands::get_platform_model_config,
+            commands::set_platform_model,
             commands::has_codex_unify_history_backup,
             commands::codex_forces_multi_agent_v2,
             commands::get_codex_session_compression,

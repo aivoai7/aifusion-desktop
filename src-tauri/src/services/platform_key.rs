@@ -15,8 +15,8 @@ use serde::Serialize;
 
 use crate::app_config::AppType;
 use crate::database::{
-    apply_api_key, replace_legacy_platform_site, Database, API_KEY_SETTING, PLATFORM_SEEDS,
-    PLATFORM_SITE,
+    apply_api_key, replace_legacy_platform_site, replace_retired_platform_model, Database,
+    API_KEY_SETTING, PLATFORM_SEEDS, PLATFORM_SITE,
 };
 use crate::error::AppError;
 use crate::mode::current::{provider_for, Purpose};
@@ -99,7 +99,7 @@ fn environment_api_key() -> Option<String> {
         .filter(|key| !key.is_empty())
 }
 
-fn resolve_api_key(db: &Database) -> Option<(String, &'static str)> {
+pub(crate) fn resolve_api_key(db: &Database) -> Option<(String, &'static str)> {
     if let Some(key) = stored_api_key(db) {
         return Some((key, SOURCE_USER));
     }
@@ -276,10 +276,11 @@ fn apply_to_all_seeds(state: &AppState, api_key: &str) -> Result<PlatformKeyAppl
         };
         let mut settings_config = provider.settings_config.clone();
         // 原生配置可能把旧版局域网地址回灌进数据库（Pi 每次列表刷新都会同步），
-        // 下发 Key 前先归一化，避免新 Key 被写进旧网关。
+        // 下发 Key 前先归一化，避免新 Key 被写进旧网关。平台下架的旧模型同理。
         let endpoint_changed = replace_legacy_platform_site(&mut settings_config);
+        let model_changed = replace_retired_platform_model(&mut settings_config);
         let key_changed = apply_api_key(app_type, &mut settings_config, api_key);
-        if endpoint_changed || key_changed {
+        if endpoint_changed || model_changed || key_changed {
             state
                 .db
                 .update_provider_settings_config(app, seed.id, &settings_config)?;

@@ -1,4 +1,6 @@
 import { useTranslation } from "react-i18next";
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
   ArrowUpCircle,
   BookOpen,
@@ -10,6 +12,7 @@ import {
   RefreshCw,
   Route,
   Server,
+  Shapes,
   ShieldCheck,
   TriangleAlert,
   X,
@@ -21,6 +24,7 @@ import { cn } from "@/lib/utils";
 import type { GlobalPage } from "@/lib/navigation";
 import type { AppId } from "@/lib/api";
 import type { Provider } from "@/types";
+import { platformKeyApi } from "@/lib/api/platformKey";
 import { usePlatformKeyStatusQuery } from "@/lib/query";
 import { useAppMode, useProxyStatusQuery } from "@/lib/query/proxy";
 import {
@@ -30,6 +34,7 @@ import {
   getAppLabel,
 } from "@/config/appConfig";
 import { ToolUpgradeConfirmDialog } from "@/components/settings/ToolUpgradeConfirmDialog";
+import { PlatformModelDialog } from "@/components/providers/PlatformModelDialog";
 import {
   toolDisplayName,
   useToolManagement,
@@ -71,6 +76,7 @@ export function PlatformConnectionPanel({
 }: PlatformConnectionPanelProps) {
   const { t } = useTranslation();
   const { data: keyStatus, isLoading } = usePlatformKeyStatusQuery();
+  const configured = keyStatus?.configured === true;
   const webLogin = usePlatformWebLogin();
   const modeApp = isModeAppId(app);
   const { data: modeView } = useAppMode(app, modeApp);
@@ -78,8 +84,45 @@ export function PlatformConnectionPanel({
   // 应用更新放在平台连接里：侧栏不再单独给「应用」入口。
   const tools = useToolManagement();
   const updatableCount = tools.updatableToolNames.length;
+  // 渠道卡隐藏了，模型也只能在这里选：按应用读一次平台模型配置。
+  const [modelDialogOpen, setModelDialogOpen] = useState(false);
+  const { data: modelConfig } = useQuery({
+    queryKey: ["platformModelConfig", app],
+    queryFn: () => platformKeyApi.modelConfig(app),
+    enabled: configured,
+    staleTime: 15_000,
+  });
 
-  const configured = keyStatus?.configured === true;
+  const modelSummary = (() => {
+    if (!configured) {
+      return t("platformConnection.modelSignedOut", {
+        defaultValue: "登录平台后可选择",
+      });
+    }
+    if (!modelConfig) {
+      return t("platformConnection.modelLoading", { defaultValue: "读取中…" });
+    }
+    if (modelConfig.supportsList) {
+      return modelConfig.models.length > 0
+        ? t("platformConnection.modelCount", {
+            count: modelConfig.models.length,
+            defaultValue: "{{count}} 个模型",
+          })
+        : t("platformConnection.modelNone", { defaultValue: "未选择模型" });
+    }
+    if (!modelConfig.defaultModel) {
+      return t("platformConnection.modelNone", { defaultValue: "未选择模型" });
+    }
+    return modelConfig.lightModel &&
+      modelConfig.lightModel !== modelConfig.defaultModel
+      ? t("platformConnection.modelPair", {
+          main: modelConfig.defaultModel,
+          light: modelConfig.lightModel,
+          defaultValue: "{{main}}（轻量：{{light}}）",
+        })
+      : modelConfig.defaultModel;
+  })();
+
   // additive 应用（OpenCode / OpenClaw / Hermes / Pi / Mcode）没有「当前供应商」，
   // 只要平台条目已经下发到库里就算已接入；其余应用看当前选中的那一条。
   const platformProvider = isAdditiveAppId(app)
@@ -233,6 +276,36 @@ export function PlatformConnectionPanel({
                 })}
           </dd>
 
+          <dt className="text-fg-3">
+            {t("platformConnection.modelLabel", { defaultValue: "模型" })}
+          </dt>
+          <dd className="flex flex-wrap items-center gap-2 text-fg-1">
+            <span className="inline-flex min-w-0 items-center gap-1">
+              <Shapes className="h-3.5 w-3.5 shrink-0 text-fg-3" />
+              <span className="truncate font-mono text-caption" title={modelSummary}>
+                {modelSummary}
+              </span>
+            </span>
+            <Button
+              variant="quiet"
+              size="compact"
+              className="rounded-full"
+              disabled={!configured}
+              onClick={() => setModelDialogOpen(true)}
+            >
+              {t("platformConnection.chooseModel", {
+                defaultValue: "选择模型",
+              })}
+            </Button>
+            {modelConfig && !modelConfig.usingPlatform && configured && (
+              <span className="text-caption text-warning-text">
+                {t("platformConnection.modelPending", {
+                  defaultValue: "切回平台后生效",
+                })}
+              </span>
+            )}
+          </dd>
+
           {modeApp && (
             <>
               <dt className="text-fg-3">
@@ -383,6 +456,12 @@ export function PlatformConnectionPanel({
         displayName={toolDisplayName}
         onConfirm={tools.handleConfirmUpgrade}
         onCancel={tools.handleCancelUpgrade}
+      />
+
+      <PlatformModelDialog
+        app={app}
+        open={modelDialogOpen}
+        onOpenChange={setModelDialogOpen}
       />
     </>
   );

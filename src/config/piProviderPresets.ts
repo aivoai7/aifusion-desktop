@@ -77,7 +77,7 @@ const piProviderPresetDefinitions: PiProviderPreset[] = [
       models: [
         {
           id: AIFUSION_MODEL,
-          name: "Hy4 preview",
+          name: AIFUSION_MODEL,
           reasoning: true,
           input: ["text", "image"],
           contextWindow: AIFUSION_MODEL_CONTEXT,

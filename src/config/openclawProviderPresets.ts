@@ -120,7 +120,7 @@ export const openclawProviderPresets: OpenClawProviderPreset[] = [
       models: [
         {
           id: AIFUSION_MODEL,
-          name: "Hy4 preview",
+          name: AIFUSION_MODEL,
           reasoning: true,
           input: ["text", "image"],
           contextWindow: AIFUSION_MODEL_CONTEXT,
@@ -137,7 +137,7 @@ export const openclawProviderPresets: OpenClawProviderPreset[] = [
     suggestedDefaults: {
       model: { primary: "aifusion/" + AIFUSION_MODEL },
       modelCatalog: {
-        ["aifusion/" + AIFUSION_MODEL]: { alias: "Hy4 preview" },
+        ["aifusion/" + AIFUSION_MODEL]: { alias: AIFUSION_MODEL },
       },
     },
     icon: "openai",

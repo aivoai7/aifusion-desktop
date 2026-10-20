@@ -1,11 +1,14 @@
 //! 平台密钥命令：状态查询、校验、保存与清除。
 
+use std::str::FromStr;
+
 use tauri::{AppHandle, Manager};
 
 use crate::services::platform_key::{
     self, FetchedPlatformKey, PlatformKeyApplyResult, PlatformKeyStatus, PlatformKeyValidation,
     PlatformLoginResult,
 };
+use crate::services::platform_model;
 use crate::store::AppState;
 
 /// 当前平台密钥状态（脱敏，不回传明文）。
@@ -158,4 +161,54 @@ pub async fn clear_platform_api_key(
 #[tauri::command]
 pub async fn get_platform_site() -> Result<String, String> {
     Ok(crate::database::PLATFORM_SITE.to_string())
+}
+
+/// 平台可用模型列表（密钥只在本机解析，不回传前端）。
+#[tauri::command]
+pub async fn get_platform_models(
+    state: tauri::State<'_, AppState>,
+) -> Result<Vec<platform_model::PlatformModelOption>, String> {
+    platform_model::fetch_models(state.db.as_ref()).await
+}
+
+/// 某个客户端当前的平台模型配置（主模型 / 轻量模型 / 可用模型列表）。
+#[tauri::command]
+pub async fn get_platform_model_config(
+    app: String,
+    app_handle: AppHandle,
+) -> Result<platform_model::PlatformModelConfig, String> {
+    let app_type = crate::app_config::AppType::from_str(&app).map_err(|e| e.to_string())?;
+    tauri::async_runtime::spawn_blocking(move || {
+        let state = app_handle
+            .try_state::<AppState>()
+            .ok_or_else(|| "应用状态不可用".to_string())?;
+        platform_model::current_config(state.inner(), &app_type).map_err(|e| e.to_string())
+    })
+    .await
+    .map_err(|e| format!("读取平台模型配置任务执行失败: {e}"))?
+}
+
+/// 保存平台模型选择：写入该客户端的平台供应商，并在正使用平台时立刻重投影 live。
+#[tauri::command(rename_all = "camelCase")]
+pub async fn set_platform_model(
+    app: String,
+    default_model: Option<String>,
+    light_model: Option<String>,
+    models: Option<Vec<String>>,
+    app_handle: AppHandle,
+) -> Result<platform_model::PlatformModelApplyResult, String> {
+    let app_type = crate::app_config::AppType::from_str(&app).map_err(|e| e.to_string())?;
+    let request = platform_model::PlatformModelRequest {
+        default_model,
+        light_model,
+        models,
+    };
+    tauri::async_runtime::spawn_blocking(move || {
+        let state = app_handle
+            .try_state::<AppState>()
+            .ok_or_else(|| "应用状态不可用".to_string())?;
+        platform_model::apply(state.inner(), &app_type, request).map_err(|e| e.to_string())
+    })
+    .await
+    .map_err(|e| format!("保存平台模型任务执行失败: {e}"))?
 }

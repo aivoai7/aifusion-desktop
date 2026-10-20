@@ -23,11 +23,11 @@ export const AIFUSION_BASE_URL = "https://op.aifusion.sbs/v1";
  * 密钥字段一律留空，避免把共享密钥打进安装包。
  */
 
-/** 主力模型。 */
-export const AIFUSION_MODEL = "hy4-preview";
+/** 主力模型（平台当前默认可用模型；下架换名时改这里，前后端预设同源）。 */
+export const AIFUSION_MODEL = "claude-sonnet-5";
 
 /** 轻量模型。 */
 export const AIFUSION_LIGHT_MODEL = "glm-5.3-flash";
 
 /** 主力模型声明的上下文窗口。 */
-export const AIFUSION_MODEL_CONTEXT = 960000;
+export const AIFUSION_MODEL_CONTEXT = 200000;

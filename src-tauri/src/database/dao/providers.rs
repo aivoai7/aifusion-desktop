@@ -841,6 +841,61 @@ impl Database {
         Ok(migrated)
     }
 
+    /// 把平台已下架的默认模型换成当前默认值。
+    ///
+    /// 平台改版下架旧模型后（`hy4-preview`），各客户端配置里仍写着它，切过去就是
+    /// 404。这里只覆盖内置平台供应商行（含 Claude Desktop 的模型映射），返回其中
+    /// 「当前正在使用该供应商」的应用，由调用方重投影 live；用户自己换过模型的
+    /// 行会跟着一起归一（因为旧模型已经不可用），但不会改动非平台供应商。
+    pub fn migrate_official_provider_models(&self) -> Result<Vec<String>, AppError> {
+        use crate::database::dao::providers_seed::{
+            replace_retired_platform_model, PLATFORM_DEFAULT_MODEL, RETIRED_PLATFORM_MODELS,
+        };
+
+        let mut apps_to_sync: Vec<String> = Vec::new();
+
+        for seed in crate::database::dao::providers_seed::PLATFORM_SEEDS {
+            let app = seed.app_type.as_str();
+            let Some(mut provider) = self.get_provider_by_id(seed.id, app)? else {
+                continue;
+            };
+
+            let mut changed = replace_retired_platform_model(&mut provider.settings_config);
+            if let Some(meta) = provider.meta.as_mut() {
+                for route in meta.claude_desktop_model_routes.values_mut() {
+                    if RETIRED_PLATFORM_MODELS.contains(&route.model.as_str()) {
+                        route.model = PLATFORM_DEFAULT_MODEL.to_string();
+                        changed = true;
+                    }
+                    if route
+                        .label_override
+                        .as_deref()
+                        .is_some_and(|label| RETIRED_PLATFORM_MODELS.contains(&label))
+                    {
+                        route.label_override = Some(PLATFORM_DEFAULT_MODEL.to_string());
+                        changed = true;
+                    }
+                }
+            }
+            if !changed {
+                continue;
+            }
+
+            let is_current = self
+                .get_current_provider(app)?
+                .as_deref()
+                .map(|id| id == seed.id)
+                .unwrap_or(false);
+            self.save_provider(app, &provider)?;
+            log::info!("✓ 已把 {} 的平台默认模型换成 {PLATFORM_DEFAULT_MODEL}", seed.id);
+            if is_current {
+                apps_to_sync.push(app.to_string());
+            }
+        }
+
+        Ok(apps_to_sync)
+    }
+
     /// 启动时调用：补齐缺失的平台供应商（10 个客户端各一条）。
     ///
     /// 本应用只对接 AIFusion 平台，平台供应商是可用性的前提，因此每次启动都会
@@ -1160,5 +1215,48 @@ mod ensure_official_seed_tests {
             db.migrate_official_provider_endpoints().expect("migrate"),
             0
         );
+    }
+
+    #[test]
+    fn migrate_official_provider_models_swaps_retired_default() {
+        use crate::database::dao::providers_seed::PLATFORM_DEFAULT_MODEL;
+
+        let db = Database::memory().expect("memory db");
+        db.init_default_official_providers().expect("seed");
+        let app = AppType::Claude.as_str();
+        let mut provider = db
+            .get_provider_by_id("claude-official", app)
+            .expect("query")
+            .expect("platform row");
+        provider.settings_config["env"]["ANTHROPIC_MODEL"] = serde_json::json!("hy4-preview");
+        provider.settings_config["env"]["ANTHROPIC_DEFAULT_HAIKU_MODEL"] =
+            serde_json::json!("glm-5.3-flash");
+        db.save_provider(app, &provider).expect("save retired row");
+
+        // claude 是当前供应商：迁移后应返回需要重投影的应用列表。
+        let synced = db
+            .migrate_official_provider_models()
+            .expect("migrate models");
+        assert!(synced.iter().any(|name| name == app), "{synced:?}");
+
+        let migrated = db
+            .get_provider_by_id("claude-official", app)
+            .expect("query")
+            .expect("platform row");
+        assert_eq!(
+            migrated.settings_config["env"]["ANTHROPIC_MODEL"],
+            serde_json::json!(PLATFORM_DEFAULT_MODEL)
+        );
+        assert_eq!(
+            migrated.settings_config["env"]["ANTHROPIC_DEFAULT_HAIKU_MODEL"],
+            serde_json::json!("glm-5.3-flash"),
+            "用户自己选的轻量模型不该被覆盖"
+        );
+
+        // 幂等：第二次没有东西可改。
+        assert!(db
+            .migrate_official_provider_models()
+            .expect("migrate again")
+            .is_empty());
     }
 }

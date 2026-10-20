@@ -35,8 +35,8 @@ mod tests;
 pub use dao::custom_icons::{CustomIconEntry, CUSTOM_ICONS_KEY};
 pub(crate) use dao::providers_seed::{
     apply_api_key, is_official_seed_id, platform_seed_id_for, replace_legacy_platform_site,
-    API_KEY_SETTING, CLAUDE_DESKTOP_OFFICIAL_PROVIDER_ID, CODEX_OFFICIAL_PROVIDER_ID,
-    GROKBUILD_OFFICIAL_PROVIDER_ID, PLATFORM_SEEDS, PLATFORM_SITE,
+    replace_retired_platform_model, API_KEY_SETTING, CLAUDE_DESKTOP_OFFICIAL_PROVIDER_ID,
+    CODEX_OFFICIAL_PROVIDER_ID, GROKBUILD_OFFICIAL_PROVIDER_ID, PLATFORM_SEEDS, PLATFORM_SITE,
 };
 pub(crate) use dao::proxy::{PRICING_SOURCE_REQUEST, PRICING_SOURCE_RESPONSE};
 pub use dao::FailoverQueueItem;

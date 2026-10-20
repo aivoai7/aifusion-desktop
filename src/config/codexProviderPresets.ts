@@ -151,7 +151,7 @@ export const codexProviderPresets: CodexProviderPreset[] = [
     modelCatalog: modelCatalog([
       {
         model: AIFUSION_MODEL,
-        displayName: "Hy4 preview",
+        displayName: AIFUSION_MODEL,
         contextWindow: AIFUSION_MODEL_CONTEXT,
         reasoningLevels: ["none", "low", "medium", "high", "xhigh", "max"],
         defaultReasoningLevel: "high",
