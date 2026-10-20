@@ -1,0 +1,28 @@
+id: default
+name: default
+settings_config: {"config":"[models]\ndefault = \"grok-4.5\"\n\n[model.\"grok-4.5\"]\nmodel = \"grok-4.5\"\nbase_url = \"https://relay.example/v1\"\nname = \"Relay\"\napi_key = \"xai-live\"\napi_backend = \"responses\"\ncontext_window = 500000\n"}
+website_url: NULL
+category: custom
+sort_index: NULL
+notes: NULL
+icon: NULL
+icon_color: NULL
+meta: {}
+is_current: false
+in_failover_queue: false
+
+id: grokbuild-official
+name: AIFusion
+settings_config: {"auth":{"OPENAI_API_KEY":""},"config":"[models]\ndefault = \"aifusion\"\n\n[model.\"aifusion\"]\nmodel = \"hy4-preview\"\nbase_url = \"https://op.aifusion.sbs/v1\"\nname = \"aifusion\"\napi_key = \"\"\napi_backend = \"responses\"\ncontext_window = 960000\n"}
+website_url: https://op.aifusion.sbs
+category: third_party
+sort_index: 0
+notes: NULL
+icon: openai
+icon_color: #6366F1
+meta: {"apiFormat":"openai_responses"}
+is_current: true
+in_failover_queue: false
+
+
+common config snippet: NULL

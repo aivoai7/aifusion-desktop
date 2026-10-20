@@ -1,0 +1,56 @@
+id: claude-official
+name: AIFusion
+settings_config: {"env":{"ANTHROPIC_BASE_URL":"https://op.aifusion.sbs/v1","ANTHROPIC_AUTH_TOKEN":"","ANTHROPIC_MODEL":"hy4-preview","ANTHROPIC_DEFAULT_HAIKU_MODEL":"glm-5.3-flash","ANTHROPIC_DEFAULT_SONNET_MODEL":"hy4-preview","ANTHROPIC_DEFAULT_OPUS_MODEL":"hy4-preview","CLAUDE_CODE_DISABLE_EXPERIMENTAL_BETAS":"1","CLAUDE_CODE_MAX_CONTEXT_TOKENS":"200000"}}
+website_url: https://op.aifusion.sbs
+category: third_party
+sort_index: 0
+notes: NULL
+icon: openai
+icon_color: #6366F1
+meta: {"apiFormat":"openai_chat"}
+is_current: true
+in_failover_queue: false
+
+id: default
+name: default
+settings_config: {"env":{"ANTHROPIC_AUTH_TOKEN":"sk-live","ANTHROPIC_BASE_URL":"https://relay.example","ANTHROPIC_MODEL":"claude-sonnet-4-5","ANTHROPIC_DEFAULT_OPUS_MODEL":"claude-sonnet-4-5","ANTHROPIC_DEFAULT_HAIKU_MODEL":"claude-sonnet-4-5","ANTHROPIC_DEFAULT_SONNET_MODEL":"claude-sonnet-4-5"},"model":"opus"}
+website_url: NULL
+category: custom
+sort_index: NULL
+notes: NULL
+icon: NULL
+icon_color: NULL
+meta: {"commonConfigEnabled":true}
+is_current: false
+in_failover_queue: false
+
+
+common config snippet: {
+  "env": {
+    "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": "1"
+  },
+  "permissions": {
+    "allow": [
+      "Bash(git status)"
+    ]
+  },
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "say done"
+          }
+        ]
+      }
+    ]
+  },
+  "enabledPlugins": {
+    "example@marketplace": true
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "~/.claude/statusline.sh"
+  }
+}

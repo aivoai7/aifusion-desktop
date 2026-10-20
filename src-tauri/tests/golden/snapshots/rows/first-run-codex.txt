@@ -1,0 +1,29 @@
+id: codex-official
+name: AIFusion
+settings_config: {"auth":{"OPENAI_API_KEY":""},"config":"model_provider = \"custom\"\nmodel = \"hy4-preview\"\nmodel_reasoning_effort = \"high\"\ndisable_response_storage = true\n\n[model_providers.custom]\nname = \"aifusion\"\nbase_url = \"https://op.aifusion.sbs/v1\"\nwire_api = \"responses\"\nrequires_openai_auth = true"}
+website_url: https://op.aifusion.sbs
+category: third_party
+sort_index: 0
+notes: NULL
+icon: openai
+icon_color: #6366F1
+meta: {"apiFormat":"openai_responses"}
+is_current: true
+in_failover_queue: false
+
+id: default
+name: default
+settings_config: {"auth":{"OPENAI_API_KEY":"sk-live"},"config":"model_provider = \"relay\"\nmodel = \"gpt-5-codex\"\nmodel_reasoning_effort = \"high\"\n\n[model_providers.relay]\nname = \"relay\"\nbase_url = \"https://relay.example/v1\"\nwire_api = \"responses\"\n\n[mcp_servers.external]\ncommand = \"external\"\n"}
+website_url: NULL
+category: custom
+sort_index: NULL
+notes: NULL
+icon: NULL
+icon_color: NULL
+meta: {"commonConfigEnabled":true}
+is_current: false
+in_failover_queue: false
+
+
+common config snippet: [projects."/Users/me/repo"]
+trust_level = "trusted"
