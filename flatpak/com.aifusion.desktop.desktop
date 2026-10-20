@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=AIFusion
+Comment=Desktop client for the AIFusion platform (Claude Code, Codex & Gemini CLI)
+Exec=aifusion
+Icon=com.aifusion.desktop
+Terminal=false
+Categories=Utility;Development;
+StartupNotify=true
