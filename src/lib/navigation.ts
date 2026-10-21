@@ -1,12 +1,12 @@
 import type { AppId } from "@/lib/api";
 
 /**
- * 主窗口的导航模型（v8）：首页总览打头，往下是单客户端详情；设置单独占一屏。
+ * 主窗口的导航模型（v9）：侧栏去掉了，首页总览是唯一入口，页头承担外壳。
  *
- * - 首页：平台卡 + 客户端网格 + 更多功能入口，是启动后的落地页。
- * - 应用页：点首页卡片或侧栏应用行进入详情；OpenClaw、Hermes 在页头下用分段控件切到自己的专属页。
+ * - 首页：平台卡 + 客户端网格 + 更多功能入口，是启动后的落地页，也是品牌块的回程目标。
+ * - 应用页：点首页卡片进入详情；OpenClaw、Hermes 在页头下用分段控件切到自己的专属页。
  * - 全局页：用量统计、MCP、Skills、提示词、会话，每样只出现一次，都由首页/详情进入。
- * - 设置：侧栏换成设置目录，6 个分组。
+ * - 设置：页头齿轮进入，页头下面的页签切 6 个分组。
  */
 
 export type AppPage =
@@ -105,7 +105,7 @@ export function readStoredView(): View {
   try {
     const stored = parseView(localStorage.getItem(VIEW_STORAGE_KEY));
     // 首页是新的落地页；上次停在应用页或全局页就回到那一页，
-    // 只有「设置」不当落地页（它由侧栏 / ⌘, 进入）。
+    // 只有「设置」不当落地页（它由页头齿轮 / ⌘, 进入）。
     if (stored && stored !== "settings") return stored;
     return "home";
   } catch {

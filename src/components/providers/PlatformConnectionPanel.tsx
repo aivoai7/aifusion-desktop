@@ -39,7 +39,7 @@ interface PlatformConnectionPanelProps {
   providers: Record<string, Provider>;
   /** 切换型应用的当前供应商；additive 应用没有这个概念，通常为空。 */
   currentProviderId: string;
-  /** 侧栏里可见的客户端，用来生成「切换到其他客户端」。 */
+  /** 首页可见的客户端，用来生成「切换到其他客户端」。 */
   visibleApps: VisibleApps;
   onOpenKeySettings: () => void;
   /** 打开 MCP / Skills / 提示词 / 会话 / 用量统计等全局页。 */
@@ -103,7 +103,7 @@ export function PlatformConnectionPanel({
   const modeApp = isModeAppId(app);
   const { data: modeView } = useAppMode(app, modeApp);
   const { data: proxyStatus } = useProxyStatusQuery();
-  // 应用更新放在详情里：侧栏不再单独给「应用」入口。
+  // 应用更新放在详情里：不再单独给「应用」入口。
   const tools = useToolManagement();
   const updatableCount = tools.updatableToolNames.length;
   // 渠道卡隐藏了，模型只能在这里选：按应用读一次平台模型配置。

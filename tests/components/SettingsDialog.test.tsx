@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor, within } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import "@testing-library/jest-dom";
 import type { ComponentProps } from "react";
@@ -226,16 +226,36 @@ describe("SettingsPage", () => {
     expect(document.querySelector(".animate-spin")).toBeInTheDocument();
   });
 
-  it("titles the page with the current section", () => {
+  it("titles the page 设置 and marks the current section", () => {
     renderSettingsPage({ section: "network" });
 
     expect(
       screen.getByRole("heading", {
         level: 1,
-        name: "settings.sections.network",
+        name: "settings.title",
       }),
     ).toBeInTheDocument();
+    // 分组名跟在标题后面做灰字副标题，页头不再是一屏一个标题
+    expect(screen.getByText("settings.sections.network")).toBeInTheDocument();
     expect(screen.getByText("global-proxy-settings")).toBeInTheDocument();
+  });
+
+  it("switches sections from the tabs under the header", () => {
+    const onSectionChange = vi.fn();
+    renderSettingsPage({ onSectionChange });
+
+    const tabs = screen.getAllByRole("tablist").find((list) =>
+      within(list).queryByRole("tab", { name: "settings.sections.routing" }),
+    ) as HTMLElement;
+    expect(within(tabs).getAllByRole("tab")).toHaveLength(6);
+    expect(
+      within(tabs).getByRole("tab", { name: "settings.sections.general" }),
+    ).toHaveAttribute("aria-selected", "true");
+
+    fireEvent.click(
+      within(tabs).getByRole("tab", { name: "settings.sections.routing" }),
+    );
+    expect(onSectionChange).toHaveBeenCalledWith("routing");
   });
 
   it("saves general switches immediately and links to the Apps page", async () => {

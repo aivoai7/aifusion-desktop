@@ -486,8 +486,8 @@
       "quotaDisplayLeft": "Left",
       "quotaDisplayUsed": "Used",
       "quotaDisplayHelp": "Whether each quota window on provider cards, in Accounts and in the tray shows how much is left or how much is used. Balances and Credits always show what is left.",
-      "sidebarAndHeader": "Sidebar and header",
-      "visibleApps": "Apps shown in the sidebar",
+      "sidebarAndHeader": "Home and header",
+      "visibleApps": "Clients shown on the home page",
       "goToApps": "Open Apps",
       "updates": "New versions of your apps",
       "checkToolUpdates": "Check for new versions of your apps at launch",
@@ -3765,7 +3765,7 @@
     "walletHint": "Live USD balance from the platform, queried with the locally stored key and refreshed every minute"
   },
   "appsPage": {
-    "showInSidebar": "Show {{name}} in the sidebar",
+    "showInHome": "Show {{name}} on the home page",
     "lastChecked": "Last checked {{time}}",
     "neverChecked": "Not checked for updates yet",
     "helpTitle": "Apps",
@@ -3806,7 +3806,7 @@
     "viewSessions": "View sessions",
     "configDirectory": "Config directory",
     "installAndUpgrade": "Install and upgrade",
-    "hideFromSidebar": "Hide from sidebar",
+    "hideFromHome": "Hide from home",
     "providers": "Platform link",
     "workspace": "Workspace",
     "openclawConfig": "Config",

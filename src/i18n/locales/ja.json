@@ -393,8 +393,8 @@
       "quotaDisplayLeft": "残り",
       "quotaDisplayUsed": "使用済み",
       "quotaDisplayHelp": "プロバイダーカード、アカウント、トレイで、各枠の残量を「残り」と「使用済み」のどちらで表示するかを選びます。残高と Credits は常に残りを表示します。",
-      "sidebarAndHeader": "サイドバーとヘッダー",
-      "visibleApps": "サイドバーに表示するアプリ",
+      "sidebarAndHeader": "ホームとヘッダー",
+      "visibleApps": "ホームに表示するクライアント",
       "goToApps": "「アプリ」を開く",
       "updates": "各アプリの新しいバージョン",
       "checkToolUpdates": "起動時に各アプリの新しいバージョンを確認",
@@ -3668,7 +3668,7 @@
     "back": "戻る"
   },
   "appsPage": {
-    "showInSidebar": "{{name}} をサイドバーに表示",
+    "showInHome": "{{name}} をホームに表示",
     "lastChecked": "最終確認 {{time}}",
     "neverChecked": "まだ更新を確認していません",
     "helpTitle": "アプリ",
@@ -3708,7 +3708,7 @@
     "viewSessions": "セッションを見る",
     "configDirectory": "設定ディレクトリ",
     "installAndUpgrade": "インストールとアップグレード",
-    "hideFromSidebar": "サイドバーから隠す",
+    "hideFromHome": "ホームに表示しない",
     "providers": "プラットフォーム接続",
     "workspace": "ワークスペース",
     "openclawConfig": "設定",

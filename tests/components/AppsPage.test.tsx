@@ -1915,11 +1915,11 @@ describe("AppsPage concurrent CLI upgrades", () => {
 });
 
 describe("AppsPage visibility column", () => {
-  it("renders the sidebar visibility switches small with the action color", async () => {
+  it("renders the home visibility switches small with the action color", async () => {
     vi.resetModules();
     await renderApps();
     const switches = screen.getAllByRole("switch", {
-      name: /appsPage\.showInSidebar/,
+      name: /在首页显示/,
     });
     expect(switches.length).toBeGreaterThan(0);
     for (const element of switches) {

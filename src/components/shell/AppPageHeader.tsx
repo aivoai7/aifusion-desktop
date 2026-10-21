@@ -5,6 +5,18 @@ import { cn } from "@/lib/utils";
 /** 由外壳提供：Linux 自绘窗口按钮要接在每一屏页头的最右端。 */
 export const WindowControlsContext = createContext<ReactNode>(null);
 
+/**
+ * 由外壳提供的常驻页头部件（去掉侧栏之后，页头就是唯一的全局外壳）：
+ * · brand 坐在最左端，点它回首页总览——首页是唯一的入口，页头必须自带回程；
+ * · actions 排在页面自己的操作之后、窗口按钮之前，余额与设置齿轮在任何一页都在。
+ */
+export interface HeaderChrome {
+  brand?: ReactNode;
+  actions?: ReactNode;
+}
+
+export const HeaderChromeContext = createContext<HeaderChrome>({});
+
 const NO_DRAG = { WebkitAppRegion: "no-drag" } as React.CSSProperties;
 
 interface AppPageHeaderProps {
@@ -22,6 +34,11 @@ interface AppPageHeaderProps {
   actions?: ReactNode;
   /** 标题可能很长（如会话阅读页的会话名）：标题占满剩余宽度，放不下就截断 */
   truncateTitle?: boolean;
+  /**
+   * 覆盖整块内容区的二级面板（全屏编辑器、抽屉）：不挂外壳的品牌与常驻操作。
+   * 它们自带返回按钮，再挂一份「回首页」只会多出一个回程和两条重复的余额、齿轮。
+   */
+  bare?: boolean;
   className?: string;
 }
 
@@ -38,9 +55,14 @@ export function AppPageHeader({
   titleExtra,
   actions,
   truncateTitle = false,
+  bare = false,
   className,
 }: AppPageHeaderProps) {
   const windowControls = useContext(WindowControlsContext);
+  const { brand: shellBrand, actions: shellActions } =
+    useContext(HeaderChromeContext);
+  const brand = bare ? null : shellBrand;
+  const globalActions = bare ? null : shellActions;
 
   return (
     <header
@@ -59,6 +81,17 @@ export function AppPageHeader({
           truncateTitle ? "flex-1" : "shrink-0",
         )}
       >
+        {brand && (
+          <span className="flex shrink-0 items-center" style={NO_DRAG}>
+            {brand}
+          </span>
+        )}
+        {brand && (
+          <span
+            aria-hidden="true"
+            className="h-4 w-px shrink-0 self-center bg-hairline"
+          />
+        )}
         {leading && (
           <span className="-ms-1.5 flex shrink-0 items-center" style={NO_DRAG}>
             {leading}
@@ -100,6 +133,11 @@ export function AppPageHeader({
           style={NO_DRAG}
         >
           {actions}
+        </div>
+      )}
+      {globalActions && (
+        <div className="flex shrink-0 items-center gap-2" style={NO_DRAG}>
+          {globalActions}
         </div>
       )}
       {windowControls && (

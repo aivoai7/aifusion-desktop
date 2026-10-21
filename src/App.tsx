@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { toast } from "@/lib/toast";
 import { invoke } from "@tauri-apps/api/core";
 import { useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, ExternalLink, MoreHorizontal } from "lucide-react";
+import { ExternalLink, MoreHorizontal } from "lucide-react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import type { VisibleApps } from "@/types";
 import { KNOWN_APP_TYPES, type AppTypeFilter } from "@/types/usage";
@@ -45,11 +45,15 @@ import {
   type SettingsSection,
   type View,
 } from "@/lib/navigation";
-import { Sidebar } from "@/components/shell/Sidebar";
+import {
+  GlobalHeaderActions,
+  HeaderBrand,
+} from "@/components/shell/HeaderChrome";
 import { useUpdate } from "@/contexts/UpdateContext";
 import { NewLayoutDialog } from "@/components/shell/NewLayoutDialog";
 import {
   AppPageHeader,
+  HeaderChromeContext,
   WindowControlsContext,
 } from "@/components/shell/AppPageHeader";
 import { WindowControls } from "@/components/shell/WindowControls";
@@ -480,6 +484,12 @@ function App() {
     setCurrentView(settingsReturnViewRef.current);
   };
 
+  /** 设置页里的分组切换：原来由侧栏的设置目录承担，现在交给页头下面的页签 */
+  const selectSettingsSection = (section: SettingsSection) => {
+    setAppConfigScrollTarget(undefined);
+    setSettingsSection(section);
+  };
+
   const selectApp = (app: AppId) => {
     if (managementBusyRef.current) return;
     if (confirmLeave(() => selectApp(app))) return;
@@ -488,7 +498,7 @@ function App() {
     setCurrentView("providers");
   };
 
-  /** 首页总览：侧栏第一项，也是客户端详情页「← 返回」的去向。 */
+  /** 首页总览：去掉侧栏后它是唯一入口，页头最左端的品牌块就指回这里。 */
   const openHome = () => {
     if (managementBusyRef.current) return;
     // 再点当前页不会离开：不弹确认，也不能清掉编辑页的未保存登记
@@ -507,7 +517,7 @@ function App() {
     if (currentViewRef.current === page) return;
     if (confirmLeave(() => openPage(page))) return;
     if (page === "prompts" && currentViewRef.current !== "prompts") {
-      // 提示词页默认选中侧栏里最后选的那个应用
+      // 提示词页默认选中最后用过的那个应用
       setPromptsApp(
         PROMPT_APP_IDS.includes(sharedFeatureApp) ? sharedFeatureApp : "claude",
       );
@@ -528,7 +538,7 @@ function App() {
     if (managementBusyRef.current || !confirmLeave(navigate)) navigate();
   });
 
-  // 侧栏、⌘K 进用量统计看全部应用；只有应用页 ⋯ 进来时带应用筛选
+  // 首页那一排入口、⌘K 进用量统计看全部应用；只有应用页 ⋯ 进来时带应用筛选
   const openPageFromNav = (page: GlobalPage | "settings") => {
     // 「设置」上的绿点说的是 AIFusion 有新版本，点进去直接到「关于」里的更新按钮
     if (page === "settings" && hasUpdate) {
@@ -669,7 +679,7 @@ function App() {
           disabled={Object.values(visibleApps).filter(Boolean).length <= 1}
           onSelect={() => void handleHideActiveApp()}
         >
-          {t("appPage.hideFromSidebar")}
+          {t("appPage.hideFromHome", { defaultValue: "在首页隐藏" })}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
@@ -684,20 +694,10 @@ function App() {
           ? t("appPage.memory")
           : t("appPage.providers");
 
+  // 回首页不再单独画返回按钮：页头最左端的品牌块就是回程，每一页都在
   const renderAppPageHeader = () => (
     <AppPageHeader
       variant="app"
-      leading={
-        <Button
-          variant="quiet"
-          size="compact"
-          onClick={openHome}
-          title={t("home.title", { defaultValue: "首页总览" })}
-        >
-          <ArrowLeft className="h-3.5 w-3.5" />
-          {t("appPage.backHome", { defaultValue: "首页" })}
-        </Button>
-      }
       icon={<AppGlyph app={activeApp} size={20} badgeClassName="bg-app" />}
       title={APP_DISPLAY_NAME[activeApp]}
       subtitle={
@@ -919,6 +919,7 @@ function App() {
       return (
         <SettingsPage
           section={settingsSection}
+          onSectionChange={selectSettingsSection}
           appConfigScrollTarget={appConfigScrollTarget}
           onImportSuccess={handleImportSuccess}
           onOpenApps={() => setCurrentView("apps")}
@@ -940,69 +941,74 @@ function App() {
     return isAppPage(currentView) ? renderAppPage() : renderGlobalPage();
   };
 
+  // 侧栏去掉了：品牌块、余额和设置齿轮都挂进每一屏的页头
+  const headerChrome = {
+    brand: <HeaderBrand onHome={openHome} active={currentView === "home"} />,
+    actions: (
+      <GlobalHeaderActions
+        onOpenSettings={() =>
+          currentView === "settings"
+            ? exitSettings()
+            : openPageFromNav("settings")
+        }
+        settingsActive={currentView === "settings"}
+        hasUpdate={hasUpdate}
+      />
+    ),
+  };
+
   return (
     <WindowControlsContext.Provider
       value={useAppWindowControls ? <WindowControls /> : null}
     >
-      <div className="flex h-screen overflow-hidden bg-app text-fg-1 selection:bg-selected">
-        <Sidebar
-          activeApp={activeApp}
-          view={currentView}
-          visibleApps={visibleApps}
-          settingsSection={settingsSection}
-          onSelectApp={selectApp}
-          onSelectHome={openHome}
-          onSelectSettingsSection={(section) => {
-            setAppConfigScrollTarget(undefined);
-            setSettingsSection(section);
-          }}
-          onExitSettings={exitSettings}
-        />
-        <main
-          ref={mainScrollRef}
-          id="content-area"
-          className="relative isolate flex min-w-0 flex-1 flex-col overflow-hidden bg-app"
-        >
-          {showEnvBanner && envConflicts.length > 0 && (
-            <EnvWarningBanner
-              conflicts={envConflicts}
-              onDismiss={() => {
-                setShowEnvBanner(false);
-                sessionStorage.setItem("env_banner_dismissed", "true");
-              }}
-              onDeleted={async () => {
-                try {
-                  const allConflicts = await checkAllEnvConflicts();
-                  const flatConflicts = Object.values(allConflicts).flat();
-                  setEnvConflicts(flatConflicts);
-                  if (flatConflicts.length === 0) {
-                    setShowEnvBanner(false);
-                  }
-                } catch (error) {
-                  console.error(
-                    "[App] Failed to re-check conflicts after deletion:",
-                    error,
-                  );
-                }
-              }}
-            />
-          )}
-          <div
-            key={
-              currentView === "settings"
-                ? "settings"
-                : currentView === "home"
-                  ? "home"
-                  : isAppPage(currentView)
-                    ? "app"
-                    : currentView
-            }
-            className="flex min-h-0 flex-1 flex-col"
+      <HeaderChromeContext.Provider value={headerChrome}>
+        <div className="flex h-screen overflow-hidden bg-app text-fg-1 selection:bg-selected">
+          <main
+            ref={mainScrollRef}
+            id="content-area"
+            className="relative isolate flex min-w-0 flex-1 flex-col overflow-hidden bg-app"
           >
-            {renderContent()}
-          </div>
-        </main>
-      </div>
+            {showEnvBanner && envConflicts.length > 0 && (
+              <EnvWarningBanner
+                conflicts={envConflicts}
+                onDismiss={() => {
+                  setShowEnvBanner(false);
+                  sessionStorage.setItem("env_banner_dismissed", "true");
+                }}
+                onDeleted={async () => {
+                  try {
+                    const allConflicts = await checkAllEnvConflicts();
+                    const flatConflicts = Object.values(allConflicts).flat();
+                    setEnvConflicts(flatConflicts);
+                    if (flatConflicts.length === 0) {
+                      setShowEnvBanner(false);
+                    }
+                  } catch (error) {
+                    console.error(
+                      "[App] Failed to re-check conflicts after deletion:",
+                      error,
+                    );
+                  }
+                }}
+              />
+            )}
+            <div
+              key={
+                currentView === "settings"
+                  ? "settings"
+                  : currentView === "home"
+                    ? "home"
+                    : isAppPage(currentView)
+                      ? "app"
+                      : currentView
+              }
+              className="flex min-h-0 flex-1 flex-col"
+            >
+              {renderContent()}
+            </div>
+          </main>
+        </div>
+      </HeaderChromeContext.Provider>
 
       <ConfirmDialog
         isOpen={pendingLeave !== null}

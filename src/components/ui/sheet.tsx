@@ -87,7 +87,7 @@ function UnsavedChangesScope({ children }: { children: React.ReactNode }) {
 
 /**
  * 整页版抽屉：盖住内容区，页头带返回按钮（同 FullScreenPanel），内容随窗口铺满。
- * 配合 `<Sheet modal={false}>` 使用：侧栏和窗口拖动区照常可用；点外面不关。
+ * 配合 `<Sheet modal={false}>` 使用：正文和窗口拖动区照常可用；点外面不关。
  */
 const SheetPageContent = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Content>,
@@ -112,6 +112,8 @@ const SheetPageContent = React.forwardRef<
       <AppPageHeader
         variant="app"
         truncateTitle
+        // 抽屉盖住了页面页头：外壳的品牌、余额和齿轮不再挂进来
+        bare
         title={
           <DialogPrimitive.Title asChild>
             <span {...DRAG_REGION_ATTR}>{title}</span>

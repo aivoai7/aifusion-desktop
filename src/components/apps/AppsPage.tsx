@@ -105,8 +105,8 @@ function formatCheckedAt(timestamp: number, locale: string): string {
 }
 
 /**
- * 「应用」页（v7）：每个应用一行 = 安装状态 / 版本 + 安装 / 升级 + 在侧栏显示的开关 + 「⋯」菜单（卸载）。
- * 隐藏一个应用只影响界面（侧栏、MCP / Skills 的列、提示词和会话的下拉），配置照常同步。
+ * 「应用」页（v9）：每个应用一行 = 安装状态 / 版本 + 安装 / 升级 + 在首页显示的开关 + 「⋯」菜单（卸载）。
+ * 隐藏一个应用只影响界面（首页九宫格、MCP / Skills 的列、提示词和会话的下拉），配置照常同步。
  */
 export function AppsPage() {
   const { t, i18n } = useTranslation();
@@ -184,7 +184,10 @@ export function AppsPage() {
       checked={visibleApps[app]}
       disabled={!settings || (visibleApps[app] && visibleCount <= 1)}
       onCheckedChange={(checked) => setVisible(app, checked)}
-      aria-label={t("appsPage.showInSidebar", { name: APP_DISPLAY_NAME[app] })}
+      aria-label={t("appsPage.showInHome", {
+        name: APP_DISPLAY_NAME[app],
+        defaultValue: "在首页显示 {{name}}",
+      })}
     />
   );
 

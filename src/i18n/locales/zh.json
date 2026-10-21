@@ -484,8 +484,8 @@
       "quotaDisplayLeft": "剩余",
       "quotaDisplayUsed": "已用",
       "quotaDisplayHelp": "供应商卡片、授权中心和托盘里，各档额度写还剩多少还是已经用了多少。余额和 Credits 始终写剩下的。",
-      "sidebarAndHeader": "侧栏与页头",
-      "visibleApps": "在侧栏显示哪些应用",
+      "sidebarAndHeader": "首页与页头",
+      "visibleApps": "在首页显示哪些客户端",
       "goToApps": "前往「应用」",
       "updates": "各应用的新版本",
       "checkToolUpdates": "启动时检查各应用的新版本",
@@ -3763,7 +3763,7 @@
     "walletHint": "用本机保存的平台密钥实时查询美元钱包余额，每分钟刷新一次"
   },
   "appsPage": {
-    "showInSidebar": "在侧栏显示 {{name}}",
+    "showInHome": "在首页显示 {{name}}",
     "lastChecked": "上次检查 {{time}}",
     "neverChecked": "还没检查过更新",
     "helpTitle": "应用",
@@ -3804,7 +3804,7 @@
     "viewSessions": "查看会话",
     "configDirectory": "配置目录",
     "installAndUpgrade": "安装与升级",
-    "hideFromSidebar": "在侧栏隐藏",
+    "hideFromHome": "在首页隐藏",
     "providers": "平台连接",
     "workspace": "工作区",
     "openclawConfig": "配置",

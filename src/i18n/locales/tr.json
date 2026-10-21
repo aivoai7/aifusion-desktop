@@ -381,8 +381,8 @@
       "quotaDisplayLeft": "Kalan",
       "quotaDisplayUsed": "Kullanılan",
       "quotaDisplayHelp": "Sağlayıcı kartlarındaki, Hesaplar'daki ve tepsideki her kota penceresinin ne kadar kaldığını veya ne kadar kullanıldığını gösterip göstermediği. Bakiyeler ve Krediler her zaman kalanları gösterir.",
-      "sidebarAndHeader": "Kenar çubuğu ve başlık",
-      "visibleApps": "Kenar çubuğunda gösterilen uygulamalar",
+      "sidebarAndHeader": "Ana sayfa ve başlık",
+      "visibleApps": "Ana sayfada gösterilen istemciler",
       "goToApps": "Uygulamaları seç",
       "updates": "Uygulamalarınızın yeni sürümleri",
       "checkToolUpdates": "Açılışta uygulama güncellemelerini kontrol et",
@@ -3615,7 +3615,7 @@
     "back": "Geri"
   },
   "appsPage": {
-    "showInSidebar": "Kenar çubuğunda {{name}}'yi göster",
+    "showInHome": "Ana sayfada {{name}}'yi göster",
     "lastChecked": "Son kontrol: {{time}}",
     "neverChecked": "Güncellemeler henüz kontrol edilmedi",
     "helpTitle": "Uygulamalar",
@@ -3654,7 +3654,7 @@
     "viewSessions": "Oturumları görüntüle",
     "configDirectory": "Yapılandırma dizini",
     "installAndUpgrade": "Yükleme ve yükseltme",
-    "hideFromSidebar": "Kenar çubuğundan gizle",
+    "hideFromHome": "Ana sayfada gösterme",
     "providers": "Platform bağlantısı",
     "workspace": "Çalışma alanı",
     "openclawConfig": "Yapılandırma",

@@ -165,6 +165,8 @@ export const FullScreenPanel: React.FC<FullScreenPanelProps> = ({
             title={title}
             // 标题里常带用户起的名字，不限长度；必须能收缩截断，否则会把窗口按钮挤出可视区
             truncateTitle
+            // 面板盖住了页面页头：外壳的品牌、余额和齿轮不再挂进来
+            bare
             subtitle={subtitle}
             actions={actions}
             leading={

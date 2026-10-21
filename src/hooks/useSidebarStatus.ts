@@ -1,14 +1,9 @@
 import { useMemo } from "react";
 import { useQueries } from "@tanstack/react-query";
 import type { AppId } from "@/lib/api";
-import * as authApi from "@/lib/api/auth";
-import type { ManagedAuthProvider } from "@/lib/api/auth";
 import { useProxyStatusQuery } from "@/lib/query/proxy";
 import { proxyApi } from "@/lib/api/proxy";
-import { useUsageSummary } from "@/lib/query/usage";
 import { MODE_APP_IDS, isModeAppId } from "@/config/appConfig";
-import { parseFiniteNumber } from "@/components/usage/format";
-import type { UsageRangeSelection } from "@/types/usage";
 import type { AppMode } from "@/types/proxy";
 
 export interface AppNavStatus {
@@ -17,15 +12,9 @@ export interface AppNavStatus {
   alert: boolean;
 }
 
-const TODAY: UsageRangeSelection = { preset: "today" };
-const MANAGED_AUTH_PROVIDERS: ManagedAuthProvider[] = [
-  "github_copilot",
-  "codex_oauth",
-  "xai_oauth",
-];
-
 /**
- * 侧栏需要的状态：每个应用的模式标签和提醒、今日花费与 Token、授权中心是否有账号要重新登录。
+ * 客户端的状态：走没走本机路由、路由服务停了没有。
+ * 名字沿用「sidebar」，但侧栏已经去掉——现在只有首页九宫格读它。
  */
 export function useSidebarStatus() {
   const { data: proxyStatus } = useProxyStatusQuery();
@@ -34,17 +23,6 @@ export function useSidebarStatus() {
     queries: MODE_APP_IDS.map((app) => ({
       queryKey: ["providers", app, "mode"],
       queryFn: () => proxyApi.getAppMode(app),
-    })),
-  });
-  const { data: todaySummary } = useUsageSummary(TODAY, undefined, {
-    refetchInterval: 60_000,
-  });
-
-  const authStatuses = useQueries({
-    queries: MANAGED_AUTH_PROVIDERS.map((provider) => ({
-      queryKey: ["managed-auth-status", provider],
-      queryFn: () => authApi.authGetStatus(provider),
-      staleTime: 60_000,
     })),
   });
 
@@ -68,24 +46,5 @@ export function useSidebarStatus() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [proxyStatus, serviceRunning, modeKey]);
 
-  const todayCost = parseFiniteNumber(todaySummary?.totalCost) ?? 0;
-  // 和用量页「真实消耗 Tokens」同口径
-  const todayTokens = todaySummary?.realTotalTokens ?? 0;
-  const todayRequests = todaySummary?.totalRequests ?? 0;
-  const todayHitRate = todaySummary?.cacheHitRate ?? 0;
-
-  const authNeedsAttention = authStatuses.some((query) =>
-    query.data?.accounts.some(
-      (account) => account.requires_reauth || account.reauth_required === true,
-    ),
-  );
-
-  return {
-    appStatus,
-    todayCost,
-    todayTokens,
-    todayRequests,
-    todayHitRate,
-    authNeedsAttention,
-  };
+  return { appStatus };
 }

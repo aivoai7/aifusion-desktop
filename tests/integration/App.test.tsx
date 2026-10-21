@@ -78,31 +78,34 @@ vi.mock("@/components/mcp/UnifiedMcpPanel", async () => {
   const { useUnsavedChangesTracker } = await vi.importActual<
     typeof import("@/lib/unsavedChanges")
   >("@/lib/unsavedChanges");
+  const { AppPageHeader } = await vi.importActual<
+    typeof import("@/components/shell/AppPageHeader")
+  >("@/components/shell/AppPageHeader");
   // 当作一直开着的 MCP 编辑页：输入即登记未保存的修改
   const Body = () => (
-    <div data-testid="mcp-editor" {...useUnsavedChangesTracker()}>
-      <input aria-label="mcp-field" />
-    </div>
+    <>
+      {/* 真实面板自己画页头，外壳的品牌块靠页头挂进来，这里照做 */}
+      <AppPageHeader title="mcp 面板" />
+      <div data-testid="mcp-editor" {...useUnsavedChangesTracker()}>
+        <input aria-label="mcp-field" />
+      </div>
+    </>
   );
   return { default: Body };
 });
 
-/** 侧栏里的应用行（v7 侧栏取代了原来页头的应用切换器） */
-const sidebarApp = (name: string) =>
-  // 首次启动提示是模态对话框，会把侧栏标成 aria-hidden，所以带上 hidden
-  within(document.querySelector("nav") as HTMLElement).getByRole("button", {
-    name,
-    hidden: true,
-  });
+/** 页头最左端的品牌块（v9：侧栏去掉了，点它回首页总览） */
+const homeButton = () =>
+  screen.getByRole("button", { name: "首页总览", hidden: true });
 
 /**
- * 从首页总览进全局页（v8）：MCP / 用量统计这些入口不再挂在侧栏上，
- * 只有首页「更多功能」那一排 chips。
+ * 首页是唯一的入口（v9）：客户端走九宫格卡片，MCP / 用量统计这些走
+ * 「更多功能」那一排 chips，所以都是先回首页再点。
  */
 const openFromHome = async (name: RegExp) => {
-  fireEvent.click(sidebarApp("首页总览"));
-  const chip = await screen.findByRole("button", { name, hidden: true });
-  fireEvent.click(chip);
+  fireEvent.click(homeButton());
+  const entry = await screen.findByRole("button", { name, hidden: true });
+  fireEvent.click(entry);
 };
 
 const renderApp = (AppComponent: ComponentType) => {
@@ -145,7 +148,7 @@ describe("App integration with MSW", () => {
     await expectPanelApp("claude");
     await waitFor(() => expect(panelProviderIds()).toHaveProperty("claude-1"));
 
-    fireEvent.click(sidebarApp("Codex"));
+    await openFromHome(/Codex/);
     await expectPanelApp("codex");
     await waitFor(() => expect(panelProviderIds()).toHaveProperty("codex-1"));
 
@@ -156,6 +159,9 @@ describe("App integration with MSW", () => {
   it("refreshes the route pointer when the proxy fails over to another provider", async () => {
     let routeProviderId = "claude-1";
     let modeRequests = 0;
+    // 首页的卡片标出每个客户端走没走路由，读的就是这份模式数据；
+    // 详情页的 mock 不查模式，所以这一条从首页看。
+    localStorage.setItem("cc-switch-last-view", "home");
     server.use(
       http.post("http://tauri.local/get_app_mode", async ({ request }) => {
         const { appType } = (await request.json()) as { appType: string };
@@ -206,7 +212,7 @@ describe("App integration with MSW", () => {
     providerScrollContainer()!.scrollTop = 640;
     providerScrollContainer()!.scrollLeft = 24;
 
-    fireEvent.click(sidebarApp("Codex"));
+    await openFromHome(/Codex/);
     await expectPanelApp("codex");
 
     expect(mainScrollContainer.scrollTop).toBe(0);
@@ -226,7 +232,7 @@ describe("App integration with MSW", () => {
     });
 
     // 离开未保存的全局页要问；取消后还在原页，登记也不能丢
-    fireEvent.click(sidebarApp("首页总览"));
+    fireEvent.click(homeButton());
     expect(await screen.findByTestId("confirm-message")).toHaveTextContent(
       "common.unsavedLeaveMessage",
     );
@@ -234,14 +240,14 @@ describe("App integration with MSW", () => {
     expect(screen.getByTestId("mcp-editor")).toBeInTheDocument();
 
     // 同意后才真的离开
-    fireEvent.click(sidebarApp("首页总览"));
+    fireEvent.click(homeButton());
     fireEvent.click(await screen.findByText("confirm-delete"));
     await waitFor(() =>
       expect(screen.queryByTestId("mcp-editor")).not.toBeInTheDocument(),
     );
 
     // 已经在首页时再点首页：不离开，所以不问
-    fireEvent.click(sidebarApp("首页总览"));
+    fireEvent.click(homeButton());
     expect(screen.queryByTestId("confirm-dialog")).not.toBeInTheDocument();
   }, 10_000);
 
@@ -348,7 +354,7 @@ describe("App integration with MSW", () => {
     const { default: App } = await import("@/App");
     renderApp(App);
 
-    fireEvent.click(sidebarApp("OpenClaw"));
+    await openFromHome(/OpenClaw/);
     // 首次启动提示是模态对话框，页面其余部分是 aria-hidden，所以带上 hidden
     const openclawTabs = await screen.findByRole("tablist", {
       name: "OpenClaw",
@@ -378,7 +384,7 @@ describe("App integration with MSW", () => {
       "openclaw-config-env",
     );
 
-    fireEvent.click(sidebarApp("Hermes"));
+    await openFromHome(/Hermes/);
     const hermesTabs = await screen.findByRole("tablist", {
       name: "Hermes",
       hidden: true,

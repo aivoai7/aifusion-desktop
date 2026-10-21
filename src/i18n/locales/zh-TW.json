@@ -393,8 +393,8 @@
       "quotaDisplayLeft": "剩餘",
       "quotaDisplayUsed": "已用",
       "quotaDisplayHelp": "供應商卡片、授權中心和系統匣裡，各檔額度寫還剩多少還是已經用了多少。餘額和 Credits 始終寫剩下的。",
-      "sidebarAndHeader": "側欄與頁首",
-      "visibleApps": "在側欄顯示哪些應用",
+      "sidebarAndHeader": "首頁與頁首",
+      "visibleApps": "在首頁顯示哪些客戶端",
       "goToApps": "前往「應用」",
       "updates": "各應用的新版本",
       "checkToolUpdates": "啟動時檢查各應用的新版本",
@@ -3669,7 +3669,7 @@
     "back": "返回"
   },
   "appsPage": {
-    "showInSidebar": "在側欄顯示 {{name}}",
+    "showInHome": "在首頁顯示 {{name}}",
     "lastChecked": "上次檢查 {{time}}",
     "neverChecked": "還沒檢查過更新",
     "helpTitle": "應用",
@@ -3709,7 +3709,7 @@
     "viewSessions": "查看工作階段",
     "configDirectory": "設定目錄",
     "installAndUpgrade": "安裝與升級",
-    "hideFromSidebar": "在側欄隱藏",
+    "hideFromHome": "在首頁隱藏",
     "providers": "平台連線",
     "workspace": "工作區",
     "openclawConfig": "設定",

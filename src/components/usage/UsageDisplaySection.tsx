@@ -23,12 +23,8 @@ import {
   getResolvedLang,
   isValidExchangeRate,
   resolveMoneyDisplay,
-  resolveSidebarToday,
   resolveTrendChartType,
   type DisplayCurrency,
-  SIDEBAR_TODAY_ITEMS,
-  SIDEBAR_TODAY_MAX_ITEMS,
-  type SidebarTodayItem,
   TREND_CHART_TYPES,
   type TrendChartType,
 } from "./format";
@@ -155,7 +151,7 @@ function ChecklistMenu({
 
 /**
  * 用量「设置」页签顶部的「显示」：币种与手填汇率（只改显示，库里照旧存美元）、
- * 侧栏「今日」显示什么、请求日志显示哪些列、趋势图用柱形图还是曲线面积图。
+ * 请求日志显示哪些列、趋势图用柱形图还是曲线面积图。
  */
 export function UsageDisplaySection({
   value,
@@ -178,31 +174,8 @@ export function UsageDisplaySection({
     setRateInvalid(false);
   }, [currency, rate]);
 
-  // 每次读出来都是新数组，按内容判断设置有没有变
-  const savedTodayItems = resolveSidebarToday(value);
-  const savedTodayKey = savedTodayItems.join(",");
-  const [todayItems, setTodayItems] =
-    useState<SidebarTodayItem[]>(savedTodayItems);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => setTodayItems(savedTodayItems), [savedTodayKey]);
-
   const save = (next: Partial<UsageDisplaySettings>) =>
     onChange({ ...value, ...next });
-
-  const toggleTodayItem = async (item: SidebarTodayItem) => {
-    // 按菜单顺序存，侧栏上也按这个顺序排
-    const next = SIDEBAR_TODAY_ITEMS.filter((i) =>
-      i === item ? !todayItems.includes(i) : todayItems.includes(i),
-    );
-    if (next.length > SIDEBAR_TODAY_MAX_ITEMS) return;
-    setTodayItems(next);
-    if ((await save({ sidebarTodayItems: next })) === false) {
-      setTodayItems(savedTodayItems);
-    }
-  };
-  const todayLabel = (item: SidebarTodayItem) =>
-    t(`usage.display.sidebarTodayItems.${item}`);
-  const todayFull = todayItems.length >= SIDEBAR_TODAY_MAX_ITEMS;
 
   // 请求日志的列：只存改过的列；保存要等设置读回来，先按刚勾的显示
   const savedColumns = value?.requestLogColumns;
@@ -354,31 +327,6 @@ export function UsageDisplaySection({
               </div>
             </>
           )}
-          <span className="text-body text-fg-2">
-            {t("usage.display.sidebarToday")}
-          </span>
-          <ChecklistMenu
-            label={t("usage.display.sidebarToday")}
-            className="w-full"
-            summary={
-              todayItems.length > 0
-                ? todayItems.map(todayLabel).join(" + ")
-                : t("usage.display.sidebarTodayItems.none")
-            }
-            items={SIDEBAR_TODAY_ITEMS.map((item) => {
-              const checked = todayItems.includes(item);
-              return {
-                id: item,
-                label: todayLabel(item),
-                checked,
-                disabled: todayFull && !checked,
-              };
-            })}
-            note={t("usage.display.sidebarTodayLimit", {
-              count: SIDEBAR_TODAY_MAX_ITEMS,
-            })}
-            onToggle={(id) => void toggleTodayItem(id as SidebarTodayItem)}
-          />
           <span className="text-body text-fg-2 md:ps-5">
             {t("usage.display.logColumns")}
           </span>

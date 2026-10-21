@@ -44,19 +44,6 @@ export const DEFAULT_EXCHANGE_RATES: Record<
   number
 > = { CNY: 6.8, EUR: 0.87, JPY: 158, TWD: 32, TRY: 48 };
 
-/** 侧栏「今日」可选的项，顺序即菜单和侧栏上的顺序 */
-export const SIDEBAR_TODAY_ITEMS = [
-  "cost",
-  "tokens",
-  "requests",
-  "hitRate",
-] as const;
-
-export type SidebarTodayItem = (typeof SIDEBAR_TODAY_ITEMS)[number];
-
-/** 侧栏那一格窄，两项已经是上下两行 */
-export const SIDEBAR_TODAY_MAX_ITEMS = 2;
-
 export const TREND_CHART_TYPES = ["bar", "area"] as const;
 
 export type TrendChartType = (typeof TREND_CHART_TYPES)[number];
@@ -67,21 +54,6 @@ export function resolveTrendChartType(
 ): TrendChartType {
   const saved = settings?.trendChartType;
   return TREND_CHART_TYPES.find((type) => type === saved) ?? "bar";
-}
-
-/**
- * 侧栏「今日」要显示的项：没设置过只显示金额；空列表＝不显示。
- * 认不出的项忽略，按菜单顺序排，最多两项（手改设置文件多写了也只取前两项）。
- */
-export function resolveSidebarToday(
-  settings: UsageDisplaySettings | undefined,
-): SidebarTodayItem[] {
-  const saved = settings?.sidebarTodayItems;
-  if (!Array.isArray(saved)) return ["cost"];
-  return SIDEBAR_TODAY_ITEMS.filter((item) => saved.includes(item)).slice(
-    0,
-    SIDEBAR_TODAY_MAX_ITEMS,
-  );
 }
 
 /** 命中率百分比：`98.6%`；四舍五入到 100.0 的写成 `100%` */
@@ -176,7 +148,7 @@ export function formatMoneyCompact(usd: number, display: MoneyDisplay): string {
   return `${prefix}${groupThousands(value.toFixed(2))}`;
 }
 
-/** 侧栏这类窄处：100 以上不带小数（`¥280`），免得把旁边的标签挤成省略号。 */
+/** 窄处（卡片、表格单元格）：100 以上不带小数（`¥280`），免得把旁边的标签挤成省略号。 */
 export function formatMoneyShort(usd: unknown, display: MoneyDisplay): string {
   const num = parseFiniteNumber(usd);
   if (num == null) return "--";

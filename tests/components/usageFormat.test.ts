@@ -14,7 +14,6 @@ import {
   formatTokensPerSecond,
   formatTokensShort,
   resolveMoneyDisplay,
-  resolveSidebarToday,
   getAggregateTokensPerSecond,
   getEstimatedTokensPerSecond,
   getOutputTokensPerSecond,
@@ -338,27 +337,7 @@ describe("display currency", () => {
   });
 });
 
-describe("sidebar Today items", () => {
-  it("shows only the cost until something is picked, and nothing for an empty list", () => {
-    expect(resolveSidebarToday(undefined)).toEqual(["cost"]);
-    expect(resolveSidebarToday({})).toEqual(["cost"]);
-    expect(resolveSidebarToday({ sidebarTodayItems: [] })).toEqual([]);
-  });
-
-  it("keeps menu order, drops unknown items and stops at two", () => {
-    expect(
-      resolveSidebarToday({ sidebarTodayItems: ["hitRate", "cost"] }),
-    ).toEqual(["cost", "hitRate"]);
-    expect(
-      resolveSidebarToday({ sidebarTodayItems: ["successRate", "requests"] }),
-    ).toEqual(["requests"]);
-    expect(
-      resolveSidebarToday({
-        sidebarTodayItems: ["hitRate", "requests", "tokens", "cost"],
-      }),
-    ).toEqual(["cost", "tokens"]);
-  });
-
+describe("hit rate", () => {
   it("writes the hit rate like the usage page", () => {
     expect(formatHitRatePercent(0.986)).toBe("98.6%");
     expect(formatHitRatePercent(0.9996)).toBe("100%");

@@ -30,7 +30,9 @@ import { Button } from "@/components/ui/button";
 import { settingsApi, type AppId } from "@/lib/api";
 import { useSettingsQuery } from "@/lib/query";
 import type { SettingsSection } from "@/lib/navigation";
+import { SETTINGS_SECTIONS } from "@/lib/navigation";
 import { AppPageHeader } from "@/components/shell/AppPageHeader";
+import { PageTabs } from "@/components/ui/page-tabs";
 import { DirectoryInput } from "@/components/settings/DirectorySettings";
 import { ImportExportSection } from "@/components/settings/ImportExportSection";
 import { BackupListSection } from "@/components/settings/BackupListSection";
@@ -66,21 +68,27 @@ const SECTION_ICON: Record<
 
 interface SettingsPageProps {
   section: SettingsSection;
+  /**
+   * 传入时在页头下面画一排分组页签。
+   * 侧栏去掉后设置不再有一份设置目录，分组只能在页内切；不传（测试与旧挂载）保持原样。
+   */
+  onSectionChange?: (section: SettingsSection) => void;
   /** 从应用页的「配置目录」进入时，定位到该应用的配置区域。 */
   appConfigScrollTarget?: AppId;
   onImportSuccess?: () => void | Promise<void>;
-  /** 「在侧栏显示哪些应用」跳到「应用」页 */
+  /** 「在首页显示哪些客户端」跳到「应用」页 */
   onOpenApps: () => void;
   /** 本地路由 →「正在使用路由的应用」的「前往」 */
   onOpenApp: (app: AppId) => void;
 }
 
 /**
- * 设置（v7）：侧栏换成设置目录，这里只渲染当前分组。设置里只放偏好，功能页都在侧栏。
- * 开关类即时保存；路径类改完点本节的「保存」。
+ * 设置（v9）：一屏一档，页头下面一排页签切分组，这里只渲染当前分组。
+ * 设置里只放偏好，功能页都在首页那一排入口。
  */
 export function SettingsPage({
   section,
+  onSectionChange,
   appConfigScrollTarget,
   onImportSuccess,
   onOpenApps,
@@ -530,8 +538,24 @@ export function SettingsPage({
     <>
       <AppPageHeader
         icon={<SectionIcon className="h-5 w-5" strokeWidth={1.5} />}
-        title={t(`settings.sections.${section}`)}
+        title={t("settings.title", { defaultValue: "设置" })}
+        subtitle={t(`settings.sections.${section}`)}
       />
+      {onSectionChange && (
+        <div className="shrink-0 px-5 pt-2">
+          <PageTabs
+            aria-label={t("settings.title", { defaultValue: "设置" })}
+            idPrefix="settings-section"
+            controls="main-content"
+            value={section}
+            onValueChange={onSectionChange}
+            items={SETTINGS_SECTIONS.map((item) => ({
+              value: item,
+              label: t(`settings.sections.${item}`),
+            }))}
+          />
+        </div>
+      )}
       <div
         ref={scrollRef}
         id="main-content"

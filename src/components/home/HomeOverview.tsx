@@ -495,7 +495,7 @@ export function HomeOverview({
                 />
               ))}
             </div>
-            {/* 侧栏只留平台与客户端，全局页在首页收成一排文字入口 */}
+            {/* 全局页在首页收成一排文字入口：页头只留品牌、余额和设置 */}
             <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1.5 ps-0.5">
               <span className="text-badge text-fg-3">
                 {t("home.moreTitle", { defaultValue: "更多功能" })}
