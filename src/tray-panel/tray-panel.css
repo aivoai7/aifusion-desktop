@@ -1,4 +1,5 @@
-/* macOS 背景交给系统玻璃，其余平台只给卡片画磨砂背景；画布本身始终透明 */
+/* Ink & Grid 托盘面板：卡片不透明、描边走发丝线、落影很浅。
+   macOS 背景交给系统玻璃，其余平台在卡片内画底色；画布本身始终透明。 */
 html,
 body.tray-panel,
 body.tray-panel #root {
@@ -18,77 +19,76 @@ body.tray-panel {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  color: hsl(var(--foreground));
+  color: var(--text-1);
 }
 
-/* macOS：每块卡片下面一块系统玻璃，网页只叠一层很淡的底色，保证文字对比度 */
+/* macOS：每块卡片下面一块系统玻璃，网页只叠一层很淡的墨色，保证文字对比度 */
 html[data-glass="native"][data-layout="floating"] .tp-card {
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(244, 246, 251, 0.55);
   box-shadow:
-    inset 0 0 0 0.5px rgba(0, 0, 0, 0.12),
-    0 6px 16px rgba(0, 0, 0, 0.14),
-    0 1px 3px rgba(0, 0, 0, 0.1);
+    inset 0 0 0 0.5px rgba(16, 24, 40, 0.14),
+    0 8px 20px rgba(16, 24, 40, 0.14);
 }
 html.dark[data-glass="native"][data-layout="floating"] .tp-card {
-  background: rgba(24, 24, 27, 0.08);
+  background: rgba(16, 23, 37, 0.5);
   box-shadow:
-    inset 0 0 0 0.5px rgba(255, 255, 255, 0.14),
-    0 6px 16px rgba(0, 0, 0, 0.3),
-    0 1px 3px rgba(0, 0, 0, 0.2);
+    inset 0 0 0 0.5px rgba(255, 255, 255, 0.16),
+    0 8px 20px rgba(0, 0, 0, 0.4);
 }
 
-/* 兼容磨砂背景：Windows、Linux 在卡片内绘制，保持固定画布的其余部分透明——
-   半透明底色 + 背景模糊（只作用于网页内容）+ 顶部高光和细描边，看起来像磨砂玻璃 */
+/* 兼容磨砂背景（Windows、Linux 关掉整窗透明时走这里）：半透明墨底 + 背景模糊，
+   顶部一条 1px 高光 + 发丝描边，和主界面的浮层（shadow-af-pop）同一套语言 */
 html[data-glass="frosted"] .tp-card {
   background:
     linear-gradient(
       180deg,
-      rgba(255, 255, 255, 0.55),
-      rgba(255, 255, 255, 0) 120px
+      rgba(255, 255, 255, 0.5),
+      rgba(255, 255, 255, 0) 96px
     ),
-    rgba(244, 244, 247, 0.9);
-  -webkit-backdrop-filter: blur(24px) saturate(160%);
-  backdrop-filter: blur(24px) saturate(160%);
+    rgba(244, 246, 251, 0.94);
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
+  backdrop-filter: blur(18px) saturate(150%);
   box-shadow:
-    inset 0 0 0 1px rgba(0, 0, 0, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+    inset 0 0 0 1px rgba(16, 24, 40, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
 }
 html.dark[data-glass="frosted"] .tp-card {
   background:
     linear-gradient(
       180deg,
-      rgba(255, 255, 255, 0.06),
-      rgba(255, 255, 255, 0) 120px
+      rgba(255, 255, 255, 0.05),
+      rgba(255, 255, 255, 0) 96px
     ),
-    rgba(36, 36, 40, 0.9);
+    rgba(16, 23, 37, 0.94);
   box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    inset 0 0 0 1px rgba(255, 255, 255, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
 /* Windows：移除整窗 Acrylic 后，卡片自己提供完整底色，避免桌面内容透进菜单。
-   保留卡片上的控件、选中态和用量区块的层次；只有卡片之外的画布透明。 */
+   底色就是 Ink & Grid 的卡面（浅墨白 / 深墨蓝），控件层次靠 --bg-subtle、--bg-selected。
+   这里写死具体颜色而不是 var()：面板是独立文档，测试也要断言它是实色。 */
 html [data-platform="windows"] .tp-card {
-  background: #ebebed;
+  background: #f7f9fd;
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
+  box-shadow:
+    inset 0 0 0 1px rgba(16, 24, 40, 0.16),
+    0 8px 20px rgba(16, 24, 40, 0.16);
 }
 html.dark [data-platform="windows"] .tp-card {
-  background: #242428;
+  background: #101725;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.14),
+    0 8px 20px rgba(0, 0, 0, 0.5);
 }
 
-/* 两栏时子面板和主面板之间一条分隔线 */
+/* 两栏时子面板和主面板之间一条发丝分隔线 */
 html[data-layout="joined"] .tp-sub[data-side="right"] {
-  border-left: 1px solid rgba(0, 0, 0, 0.08);
+  border-left: 1px solid var(--hairline-strong);
 }
 html[data-layout="joined"] .tp-sub[data-side="left"] {
-  border-right: 1px solid rgba(0, 0, 0, 0.08);
-}
-html.dark[data-layout="joined"] .tp-sub[data-side="right"] {
-  border-left-color: rgba(255, 255, 255, 0.08);
-}
-html.dark[data-layout="joined"] .tp-sub[data-side="left"] {
-  border-right-color: rgba(255, 255, 255, 0.08);
+  border-right: 1px solid var(--hairline-strong);
 }
 
 .tp-scroll {
@@ -101,7 +101,7 @@ html.dark[data-layout="joined"] .tp-sub[data-side="left"] {
 }
 .tp-scroll::-webkit-scrollbar-thumb {
   border-radius: 3px;
-  background: rgba(127, 127, 127, 0.35);
+  background: var(--hairline-strong);
 }
 
 /* 子面板展开：淡入并略微滑入（玻璃在原生层同步淡入） */

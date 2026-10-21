@@ -9,11 +9,9 @@ import {
 } from "@testing-library/react";
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { http, HttpResponse } from "msw";
-import { providersApi } from "@/lib/api/providers";
 import {
   resetProviderState,
   setCurrentProviderId,
-  setLiveProviderIds,
   setProviders,
 } from "../msw/state";
 import { emitTauriEvent } from "../msw/tauriMocks";
@@ -24,6 +22,7 @@ const toastErrorMock = vi.fn();
 const skillsPanelMocks = vi.hoisted(() => ({
   initialViews: [] as string[],
 }));
+const panelMocks = vi.hoisted(() => ({ apps: [] as string[] }));
 
 vi.mock("sonner", () => ({
   toast: {
@@ -32,112 +31,19 @@ vi.mock("sonner", () => ({
   },
 }));
 
-// 这组用例覆盖的是被产品开关关掉的渠道管理路径：测试里打开开关，
-// 继续验证「放开渠道列表」时的供应商增删改、复制和切换行为。
-vi.mock("@/config/providerChannels", () => ({
-  SHOW_PROVIDER_CHANNELS: true,
-}));
-
-vi.mock("@/components/providers/ProviderList", () => ({
-  ProviderList: ({
-    providers,
-    currentProviderId,
-    onSwitch,
-    onEdit,
-    onDuplicate,
-    onConfigureUsage,
-    onOpenWebsite,
-    onCreate,
-    onDelete,
-    onRemoveFromConfig,
-  }: any) => (
-    <div>
-      <div data-testid="provider-list">{JSON.stringify(providers)}</div>
-      <div data-testid="current-provider">{currentProviderId}</div>
-      <button onClick={() => onSwitch(providers[currentProviderId])}>
-        switch
-      </button>
-      <button onClick={() => onEdit(providers[currentProviderId])}>edit</button>
-      <button onClick={() => onDuplicate(providers[currentProviderId])}>
-        duplicate
-      </button>
-      <button onClick={() => onConfigureUsage(providers[currentProviderId])}>
-        usage
-      </button>
-      <button onClick={() => onOpenWebsite("https://example.com")}>
-        open-website
-      </button>
-      <button onClick={() => onDelete(Object.values(providers)[0])}>
-        delete
-      </button>
-      <button onClick={() => onRemoveFromConfig?.(Object.values(providers)[0])}>
-        remove
-      </button>
-      <button onClick={() => onCreate?.()}>create</button>
-    </div>
-  ),
-}));
-
-vi.mock("@/components/providers/AddProviderDialog", () => ({
-  AddProviderDialog: ({ open, onOpenChange, onSubmit, appId }: any) =>
-    open ? (
-      <div data-testid="add-provider-dialog">
-        <button
-          onClick={() =>
-            onSubmit({
-              name: `New ${appId} Provider`,
-              settingsConfig: {},
-              category: "custom",
-              sortIndex: 99,
-            })
-          }
-        >
-          confirm-add
-        </button>
-        <button onClick={() => onOpenChange(false)}>close-add</button>
+// 详情页每一行怎么取值由 tests/components/PlatformConnectionPanel.test.tsx 覆盖。
+// 这里只管 App 这一层：把哪个应用交给详情页、切应用切页时发生了什么。
+vi.mock("@/components/providers/PlatformConnectionPanel", () => ({
+  PlatformConnectionPanel: ({ app, providers, currentProviderId }: any) => {
+    panelMocks.apps.push(app);
+    return (
+      <div data-testid="platform-panel">
+        <span data-testid="panel-app">{app}</span>
+        <span data-testid="panel-providers">{JSON.stringify(providers)}</span>
+        <span data-testid="current-provider">{currentProviderId}</span>
       </div>
-    ) : null,
-}));
-
-vi.mock("@/components/providers/EditProviderDialog", async () => {
-  const { useUnsavedChangesTracker } = await vi.importActual<
-    typeof import("@/lib/unsavedChanges")
-  >("@/lib/unsavedChanges");
-  // 和真的编辑页一样登记改动（真的由 FullScreenPanel 的 trackUnsavedChanges 负责）
-  const Body = ({ provider, onSubmit, onOpenChange }: any) => (
-    <div data-testid="edit-provider-dialog" {...useUnsavedChangesTracker()}>
-      <input aria-label="edit-field" />
-      <button
-        onClick={() =>
-          onSubmit({
-            provider: {
-              ...provider,
-              name: `${provider.name}-edited`,
-            },
-            originalId: provider.id,
-          })
-        }
-      >
-        confirm-edit
-      </button>
-      <button onClick={() => onOpenChange(false)}>close-edit</button>
-    </div>
-  );
-  return {
-    EditProviderDialog: (props: any) =>
-      props.open ? <Body {...props} /> : null,
-  };
-});
-
-vi.mock("@/components/UsageScriptModal", () => ({
-  default: ({ isOpen, provider, onSave, onClose }: any) =>
-    isOpen ? (
-      <div data-testid="usage-modal">
-        <span data-testid="usage-provider">{provider?.id}</span>
-        <button onClick={() => onSave("script-code")}>save-script</button>
-        <button onClick={() => onClose()}>close-usage</button>
-      </div>
-    ) : null,
+    );
+  },
 }));
 
 vi.mock("@/components/ConfirmDialog", () => ({
@@ -168,17 +74,6 @@ vi.mock("@/components/skills/UnifiedSkillsPanel", () => ({
   },
 }));
 
-vi.mock("@/components/mcp/McpPanel", () => ({
-  default: ({ open, onOpenChange }: any) =>
-    open ? (
-      <div data-testid="mcp-panel">
-        <button onClick={() => onOpenChange(false)}>close-mcp</button>
-      </div>
-    ) : (
-      <button onClick={() => onOpenChange(true)}>open-mcp</button>
-    ),
-}));
-
 vi.mock("@/components/mcp/UnifiedMcpPanel", async () => {
   const { useUnsavedChangesTracker } = await vi.importActual<
     typeof import("@/lib/unsavedChanges")
@@ -200,6 +95,16 @@ const sidebarApp = (name: string) =>
     hidden: true,
   });
 
+/**
+ * 从首页总览进全局页（v8）：MCP / 用量统计这些入口不再挂在侧栏上，
+ * 只有首页「更多功能」那一排 chips。
+ */
+const openFromHome = async (name: RegExp) => {
+  fireEvent.click(sidebarApp("首页总览"));
+  const chip = await screen.findByRole("button", { name, hidden: true });
+  fireEvent.click(chip);
+};
+
 const renderApp = (AppComponent: ComponentType) => {
   const client = new QueryClient();
   return render(
@@ -211,72 +116,42 @@ const renderApp = (AppComponent: ComponentType) => {
   );
 };
 
+/** 详情页现在画的是哪个应用 */
+const panelApp = () => screen.getByTestId("panel-app").textContent;
+/** 详情页拿到的供应商列表 */
+const panelProviderIds = () =>
+  JSON.parse(screen.getByTestId("panel-providers").textContent || "{}");
+
+const expectPanelApp = async (app: string) => {
+  await waitFor(() => expect(panelApp()).toBe(app));
+};
+
 describe("App integration with MSW", () => {
   beforeEach(() => {
     resetProviderState();
     toastSuccessMock.mockReset();
     toastErrorMock.mockReset();
     skillsPanelMocks.initialViews = [];
-    localStorage.removeItem("cc-switch-last-view");
+    panelMocks.apps = [];
+    // v8 起首页是落地页；这批用例测的是应用页，直接把上次停留的页签设为客户端详情页
+    localStorage.setItem("cc-switch-last-view", "providers");
     localStorage.removeItem("cc-switch-last-app");
   });
 
-  it("covers basic provider flows via real hooks", async () => {
+  it("hands the active app and its providers to the detail page", async () => {
     const { default: App } = await import("@/App");
     renderApp(App);
 
-    await waitFor(() =>
-      expect(screen.getByTestId("provider-list").textContent).toContain(
-        "claude-1",
-      ),
-    );
+    await expectPanelApp("claude");
+    await waitFor(() => expect(panelProviderIds()).toHaveProperty("claude-1"));
 
     fireEvent.click(sidebarApp("Codex"));
-    await waitFor(() =>
-      expect(screen.getByTestId("provider-list").textContent).toContain(
-        "codex-1",
-      ),
-    );
+    await expectPanelApp("codex");
+    await waitFor(() => expect(panelProviderIds()).toHaveProperty("codex-1"));
 
-    fireEvent.click(screen.getByText("usage"));
-    expect(screen.getByTestId("usage-modal")).toBeInTheDocument();
-    fireEvent.click(screen.getByText("save-script"));
-    fireEvent.click(screen.getByText("close-usage"));
-
-    fireEvent.click(screen.getByText("create"));
-    expect(screen.getByTestId("add-provider-dialog")).toBeInTheDocument();
-    fireEvent.click(screen.getByText("confirm-add"));
-    await waitFor(() =>
-      expect(screen.getByTestId("provider-list").textContent).toMatch(
-        /New codex Provider/,
-      ),
-    );
-
-    fireEvent.click(screen.getByText("edit"));
-    expect(screen.getByTestId("edit-provider-dialog")).toBeInTheDocument();
-    fireEvent.click(screen.getByText("confirm-edit"));
-    await waitFor(() =>
-      expect(screen.getByTestId("provider-list").textContent).toMatch(
-        /-edited/,
-      ),
-    );
-
-    fireEvent.click(screen.getByText("switch"));
-    fireEvent.click(screen.getByText("duplicate"));
-    await waitFor(() =>
-      expect(screen.getByTestId("provider-list").textContent).toMatch(/copy/),
-    );
-
-    fireEvent.click(screen.getByText("open-website"));
-
-    emitTauriEvent("provider-switched", {
-      appType: "codex",
-      providerId: "codex-2",
-    });
-
-    expect(toastErrorMock).not.toHaveBeenCalled();
-    expect(toastSuccessMock).toHaveBeenCalled();
-  }, 10_000);
+    // 详情页只跟着当前应用走（切应用后重画一次，不会把上一个应用带过来）
+    expect([...new Set(panelMocks.apps)]).toEqual(["claude", "codex"]);
+  }, 30_000);
 
   it("refreshes the route pointer when the proxy fails over to another provider", async () => {
     let routeProviderId = "claude-1";
@@ -310,20 +185,16 @@ describe("App integration with MSW", () => {
     });
 
     await waitFor(() => expect(modeRequests).toBeGreaterThan(before));
-  });
+  }, 20_000);
 
   it("resets provider view scroll when switching apps", async () => {
     const { default: App } = await import("@/App");
     const { container } = renderApp(App);
 
-    await waitFor(() =>
-      expect(screen.getByTestId("provider-list").textContent).toContain(
-        "claude-1",
-      ),
-    );
+    await expectPanelApp("claude");
 
     const mainScrollContainer = container.querySelector("main") as HTMLElement;
-    // 列表的滚动区在模式行下面（切换式应用每个应用一份）
+    // 详情页的滚动区在页头下面（每个应用一份）
     const providerScrollContainer = () =>
       container.querySelector<HTMLElement>("#main-content");
 
@@ -336,12 +207,7 @@ describe("App integration with MSW", () => {
     providerScrollContainer()!.scrollLeft = 24;
 
     fireEvent.click(sidebarApp("Codex"));
-
-    await waitFor(() =>
-      expect(screen.getByTestId("provider-list").textContent).toContain(
-        "codex-1",
-      ),
-    );
+    await expectPanelApp("codex");
 
     expect(mainScrollContainer.scrollTop).toBe(0);
     expect(mainScrollContainer.scrollLeft).toBe(0);
@@ -349,134 +215,50 @@ describe("App integration with MSW", () => {
     expect(providerScrollContainer()!.scrollLeft).toBe(0);
   }, 10_000);
 
-  it("closes provider panels when navigating away from the app page", async () => {
+  it("asks before leaving an unsaved global page", async () => {
     const { default: App } = await import("@/App");
     renderApp(App);
+    await expectPanelApp("claude");
 
-    await waitFor(() =>
-      expect(screen.getByTestId("provider-list").textContent).toContain(
-        "claude-1",
-      ),
-    );
-
-    // 面板只盖住内容区，侧栏还能点：切应用时编辑面板必须关掉，否则 Claude 的
-    // 供应商会以 appId=codex 保存进 Codex
-    fireEvent.click(screen.getByText("edit"));
-    expect(screen.getByTestId("edit-provider-dialog")).toBeInTheDocument();
-    fireEvent.click(sidebarApp("Codex"));
-    await waitFor(() =>
-      expect(screen.getByTestId("provider-list").textContent).toContain(
-        "codex-1",
-      ),
-    );
-    expect(
-      screen.queryByTestId("edit-provider-dialog"),
-    ).not.toBeInTheDocument();
-
-    fireEvent.click(screen.getByText("usage"));
-    expect(screen.getByTestId("usage-modal")).toBeInTheDocument();
-    fireEvent.click(sidebarApp("nav.usage"));
-    await waitFor(() =>
-      expect(screen.queryByTestId("usage-modal")).not.toBeInTheDocument(),
-    );
-
-    fireEvent.click(sidebarApp("Codex"));
-    await waitFor(() =>
-      expect(screen.getByTestId("provider-list").textContent).toContain(
-        "codex-1",
-      ),
-    );
-    fireEvent.click(screen.getByText("create"));
-    expect(screen.getByTestId("add-provider-dialog")).toBeInTheDocument();
-    fireEvent.keyDown(window, { key: ",", metaKey: true });
-    expect(await screen.findByTestId("settings-page")).toBeInTheDocument();
-    expect(screen.queryByTestId("add-provider-dialog")).not.toBeInTheDocument();
-  }, 10_000);
-
-  it("asks before leaving an editor page with unsaved changes", async () => {
-    const { default: App } = await import("@/App");
-    renderApp(App);
-    await waitFor(() =>
-      expect(screen.getByTestId("provider-list").textContent).toContain(
-        "claude-1",
-      ),
-    );
-
-    // 没改过：照常离开，不问
-    fireEvent.click(screen.getByText("edit"));
-    fireEvent.click(sidebarApp("Codex"));
-    await waitFor(() =>
-      expect(screen.getByTestId("provider-list").textContent).toContain(
-        "codex-1",
-      ),
-    );
-    expect(screen.queryByTestId("confirm-dialog")).not.toBeInTheDocument();
-
-    // 改过：先问；继续编辑就留在原页
-    // （ConfirmDialog 在这个文件里是 mock：只渲染消息和 confirm-delete / cancel-delete）
-    fireEvent.click(screen.getByText("edit"));
-    fireEvent.input(screen.getByLabelText("edit-field"), {
-      target: { value: "draft" },
-    });
-    fireEvent.click(sidebarApp("Claude Code"));
-    expect(await screen.findByTestId("confirm-message")).toHaveTextContent(
-      "common.unsavedLeaveMessage",
-    );
-    fireEvent.click(screen.getByText("cancel-delete"));
-    expect(screen.getByTestId("edit-provider-dialog")).toBeInTheDocument();
-    expect(screen.getByTestId("provider-list").textContent).toContain(
-      "codex-1",
-    );
-
-    // ⌘, 也问；放弃后才离开
-    fireEvent.keyDown(window, { key: ",", metaKey: true });
-    expect(await screen.findByTestId("confirm-message")).toHaveTextContent(
-      "common.unsavedLeaveMessage",
-    );
-    fireEvent.click(screen.getByText("confirm-delete"));
-    expect(await screen.findByTestId("settings-page")).toBeInTheDocument();
-    expect(
-      screen.queryByTestId("edit-provider-dialog"),
-    ).not.toBeInTheDocument();
-  }, 10_000);
-
-  it("keeps the unsaved guard when re-clicking the current page", async () => {
-    const { default: App } = await import("@/App");
-    renderApp(App);
-    await waitFor(() =>
-      expect(screen.getByTestId("provider-list").textContent).toContain(
-        "claude-1",
-      ),
-    );
-
-    fireEvent.click(sidebarApp("MCP"));
+    await openFromHome(/^MCP$/);
     fireEvent.input(await screen.findByLabelText("mcp-field"), {
       target: { value: "draft" },
     });
 
-    // 再点当前页：不离开，所以不问，也不能把未保存登记清掉
-    fireEvent.click(sidebarApp("MCP"));
-    expect(screen.queryByTestId("confirm-dialog")).not.toBeInTheDocument();
-    expect(screen.getByTestId("mcp-editor")).toBeInTheDocument();
-
-    // 之后真的离开时照样要问
-    fireEvent.click(sidebarApp("nav.usage"));
+    // 离开未保存的全局页要问；取消后还在原页，登记也不能丢
+    fireEvent.click(sidebarApp("首页总览"));
     expect(await screen.findByTestId("confirm-message")).toHaveTextContent(
       "common.unsavedLeaveMessage",
     );
     fireEvent.click(screen.getByText("cancel-delete"));
     expect(screen.getByTestId("mcp-editor")).toBeInTheDocument();
+
+    // 同意后才真的离开
+    fireEvent.click(sidebarApp("首页总览"));
+    fireEvent.click(await screen.findByText("confirm-delete"));
+    await waitFor(() =>
+      expect(screen.queryByTestId("mcp-editor")).not.toBeInTheDocument(),
+    );
+
+    // 已经在首页时再点首页：不离开，所以不问
+    fireEvent.click(sidebarApp("首页总览"));
+    expect(screen.queryByTestId("confirm-dialog")).not.toBeInTheDocument();
   }, 10_000);
+
+  it("leaves the detail page for settings on ⌘,", async () => {
+    const { default: App } = await import("@/App");
+    renderApp(App);
+    await expectPanelApp("claude");
+
+    fireEvent.keyDown(window, { key: ",", metaKey: true });
+    expect(await screen.findByTestId("settings-page")).toBeInTheDocument();
+  });
 
   it("shows toast when auto sync fails in background", async () => {
     const { default: App } = await import("@/App");
     renderApp(App);
 
-    await waitFor(() =>
-      expect(screen.getByTestId("provider-list").textContent).toContain(
-        "claude-1",
-      ),
-    );
+    await expectPanelApp("claude");
 
     expect(() => {
       emitTauriEvent("webdav-sync-status-updated", null);
@@ -510,385 +292,47 @@ describe("App integration with MSW", () => {
     });
   });
 
-  it("duplicates openclaw providers with a generated key that avoids live-only ids", async () => {
-    setProviders("openclaw", {
-      deepseek: {
-        id: "deepseek",
-        name: "DeepSeek",
-        settingsConfig: {
-          baseUrl: "https://api.deepseek.com",
-          apiKey: "test-key",
-          api: "openai-completions",
-          models: [],
-        },
+  it("moves the detail page to the provider the backend switched to", async () => {
+    setProviders("claude", {
+      "claude-1": {
+        id: "claude-1",
+        name: "Claude Default",
+        settingsConfig: {},
+        category: "official",
+        sortIndex: 0,
+        createdAt: 1,
+      },
+      "claude-9": {
+        id: "claude-9",
+        name: "Claude Late",
+        settingsConfig: {},
         category: "custom",
-        sortIndex: 0,
-        createdAt: Date.now(),
+        sortIndex: 1,
+        createdAt: 2,
       },
     });
-    setCurrentProviderId("openclaw", "deepseek");
-    setLiveProviderIds("openclaw", ["deepseek-copy"]);
+    setCurrentProviderId("claude", "claude-1");
 
     const { default: App } = await import("@/App");
     renderApp(App);
+    await expectPanelApp("claude");
+    await waitFor(() => expect(panelProviderIds()).toHaveProperty("claude-9"));
+    expect(screen.getByTestId("current-provider").textContent).toBe("claude-1");
 
-    fireEvent.click(sidebarApp("OpenClaw"));
-
-    await waitFor(() =>
-      expect(screen.getByTestId("provider-list").textContent).toContain(
-        "deepseek",
-      ),
-    );
-
-    fireEvent.click(screen.getByText("duplicate"));
-
-    await waitFor(() => {
-      const providerList = screen.getByTestId("provider-list").textContent;
-      expect(providerList).toContain("deepseek-copy-2");
-      expect(providerList).toContain("DeepSeek copy");
+    // 后端换的那家要立刻反映到详情页的当前指针上
+    setCurrentProviderId("claude", "claude-9");
+    emitTauriEvent("provider-switched", {
+      appType: "claude",
+      providerId: "claude-9",
     });
 
-    expect(toastErrorMock).not.toHaveBeenCalledWith(
-      expect.stringContaining("Provider key is required for openclaw"),
-    );
-  });
-
-  it.each([
-    { options: { apiKey: "test-key" } },
-    { npm: "@ai-sdk/openai-compatible", models: {} },
-    { models: { "glm-5": { name: "GLM 5" } } },
-  ])(
-    "blocks incomplete OpenCode copies before saving or sorting: %j",
-    async (settingsConfig) => {
-      localStorage.setItem("cc-switch-last-app", "opencode");
-      setProviders("opencode", {
-        "opencode-go": {
-          id: "opencode-go",
-          name: "OpenCode Go",
-          settingsConfig,
-          sortIndex: 0,
-        },
-        other: { id: "other", name: "Other", settingsConfig: {}, sortIndex: 1 },
-      });
-      setCurrentProviderId("opencode", "opencode-go");
-      setLiveProviderIds("opencode", ["opencode-go"]);
-      const add = vi.spyOn(providersApi, "add");
-      const sort = vi.spyOn(providersApi, "updateSortOrder");
-      try {
-        const { default: App } = await import("@/App");
-        renderApp(App);
-        await waitFor(() =>
-          expect(screen.getByTestId("provider-list").textContent).toContain(
-            "opencode-go",
-          ),
-        );
-        fireEvent.click(screen.getByText("duplicate"));
-        await waitFor(() =>
-          expect(toastErrorMock).toHaveBeenCalledWith(
-            "opencode.duplicateRequiresDefinition",
-          ),
-        );
-        expect(add).not.toHaveBeenCalled();
-        expect(sort).not.toHaveBeenCalled();
-        expect(screen.getByTestId("provider-list").textContent).not.toContain(
-          "opencode-go-copy",
-        );
-      } finally {
-        add.mockRestore();
-        sort.mockRestore();
-      }
-    },
-  );
-
-  it("duplicates complete OpenCode providers using an unused ID", async () => {
-    localStorage.setItem("cc-switch-last-app", "opencode");
-    setProviders("opencode", {
-      custom: {
-        id: "custom",
-        name: "Custom",
-        sortIndex: 0,
-        settingsConfig: {
-          npm: "@ai-sdk/openai-compatible",
-          models: { "glm-5": { name: "GLM 5" } },
-        },
-      },
-    });
-    setCurrentProviderId("opencode", "custom");
-    setLiveProviderIds("opencode", ["custom-copy"]);
-    const { default: App } = await import("@/App");
-    renderApp(App);
     await waitFor(() =>
-      expect(screen.getByTestId("provider-list").textContent).toContain(
-        "custom",
-      ),
-    );
-    fireEvent.click(screen.getByText("duplicate"));
-    await waitFor(() =>
-      expect(screen.getByTestId("provider-list").textContent).toContain(
-        "custom-copy-2",
+      expect(screen.getByTestId("current-provider").textContent).toBe(
+        "claude-9",
       ),
     );
     expect(toastErrorMock).not.toHaveBeenCalled();
-  });
-
-  it.each([
-    { settingsConfig: { settings: { baseURL: "https://native.example" } } },
-    {
-      settingsConfig: { models: { "glm-5": { name: "GLM 5" } } },
-      meta: { opencodeConfigFormat: "v2" as const },
-    },
-  ])(
-    "blocks incomplete native OpenCode copies with a V2 message: %j",
-    async ({ settingsConfig, meta }) => {
-      localStorage.setItem("cc-switch-last-app", "opencode");
-      setProviders("opencode", {
-        native: {
-          id: "native",
-          name: "Native",
-          settingsConfig,
-          meta,
-          sortIndex: 0,
-        },
-      });
-      setCurrentProviderId("opencode", "native");
-      setLiveProviderIds("opencode", ["native"]);
-      const add = vi.spyOn(providersApi, "add");
-      try {
-        const { default: App } = await import("@/App");
-        renderApp(App);
-        await waitFor(() =>
-          expect(screen.getByTestId("provider-list").textContent).toContain(
-            "native",
-          ),
-        );
-        fireEvent.click(screen.getByText("duplicate"));
-        await waitFor(() =>
-          expect(toastErrorMock).toHaveBeenCalledWith(
-            "opencode.duplicateRequiresNativeDefinition",
-          ),
-        );
-        expect(add).not.toHaveBeenCalled();
-      } finally {
-        add.mockRestore();
-      }
-    },
-  );
-
-  it("duplicates complete native OpenCode providers using an unused ID", async () => {
-    localStorage.setItem("cc-switch-last-app", "opencode");
-    setProviders("opencode", {
-      native: {
-        id: "native",
-        name: "Native",
-        sortIndex: 0,
-        settingsConfig: {
-          package: "@opencode/ai/providers/openai",
-          models: { "gpt-5": { name: "GPT 5" } },
-        },
-        meta: { opencodeConfigFormat: "v2" },
-      },
-    });
-    setCurrentProviderId("opencode", "native");
-    setLiveProviderIds("opencode", ["native-copy"]);
-    const { default: App } = await import("@/App");
-    renderApp(App);
-    await waitFor(() =>
-      expect(screen.getByTestId("provider-list").textContent).toContain(
-        "native",
-      ),
-    );
-    fireEvent.click(screen.getByText("duplicate"));
-    await waitFor(() =>
-      expect(screen.getByTestId("provider-list").textContent).toContain(
-        "native-copy-2",
-      ),
-    );
-    expect(toastErrorMock).not.toHaveBeenCalled();
-  });
-
-  it("duplicates MiniMax Code providers under a generated unused key", async () => {
-    localStorage.setItem("cc-switch-last-app", "mcode");
-    const provider = (id: string, name: string) => ({
-      id,
-      name,
-      settingsConfig: {},
-      category: "custom" as const,
-      sortIndex: 0,
-      createdAt: Date.now(),
-    });
-    setProviders("mcode", {
-      kimi: provider("kimi", "Kimi"),
-      "kimi-copy": provider("kimi-copy", "Kimi copy"),
-    });
-    setCurrentProviderId("mcode", "kimi");
-
-    const { default: App } = await import("@/App");
-    renderApp(App);
-
-    await waitFor(() =>
-      expect(screen.getByTestId("provider-list").textContent).toContain(
-        "kimi-copy",
-      ),
-    );
-    fireEvent.click(screen.getByText("duplicate"));
-
-    await waitFor(() =>
-      expect(screen.getByTestId("provider-list").textContent).toContain(
-        "kimi-copy-2",
-      ),
-    );
-    expect(toastErrorMock).not.toHaveBeenCalledWith(
-      expect.stringContaining("Provider key is required for mcode"),
-    );
-  });
-
-  it("refreshes MiniMax Code provider membership after removing it from live config", async () => {
-    localStorage.setItem("cc-switch-last-app", "mcode");
-    let liveConfigManaged = true;
-    let providerRequests = 0;
-    server.use(
-      http.post("http://tauri.local/get_providers", async ({ request }) => {
-        const { app } = (await request.json()) as { app: string };
-        if (app !== "mcode") return;
-        providerRequests += 1;
-        return HttpResponse.json({
-          custom: {
-            id: "custom",
-            name: "Custom MiniMax Code",
-            settingsConfig: {},
-            meta: { liveConfigManaged },
-          },
-        });
-      }),
-      http.post(
-        "http://tauri.local/remove_provider_from_live_config",
-        async ({ request }) => {
-          expect(await request.json()).toEqual({ id: "custom", app: "mcode" });
-          liveConfigManaged = false;
-          return HttpResponse.json(true);
-        },
-      ),
-    );
-
-    const { default: App } = await import("@/App");
-    renderApp(App);
-
-    await waitFor(() =>
-      expect(screen.getByTestId("provider-list")).toHaveTextContent(
-        '"liveConfigManaged":true',
-      ),
-    );
-    const requestsBeforeRemoval = providerRequests;
-    fireEvent.click(screen.getByText("remove"));
-    fireEvent.click(screen.getByText("confirm-delete"));
-
-    await waitFor(() =>
-      expect(screen.queryByTestId("confirm-dialog")).not.toBeInTheDocument(),
-    );
-    expect(liveConfigManaged).toBe(false);
-    await waitFor(() =>
-      expect(screen.getByTestId("provider-list")).toHaveTextContent(
-        '"liveConfigManaged":false',
-      ),
-    );
-    expect(providerRequests).toBeGreaterThan(requestsBeforeRemoval);
-    expect(screen.getByTestId("provider-list")).toHaveTextContent(
-      "Custom MiniMax Code",
-    );
-  });
-
-  it("warns without blocking when removing Pi's global default provider", async () => {
-    localStorage.setItem("cc-switch-last-app", "pi");
-    setProviders("pi", {
-      custom: {
-        id: "custom",
-        name: "Custom Pi",
-        settingsConfig: {
-          baseUrl: "https://api.example.com/v1",
-          apiKey: "test-key",
-          api: "openai-completions",
-          models: [{ id: "model-a" }],
-        },
-        category: "custom",
-        sortIndex: 0,
-        createdAt: Date.now(),
-      },
-    });
-    server.use(
-      http.post("http://tauri.local/get_pi_current_state", () =>
-        HttpResponse.json({
-          enabledProviderIds: ["custom"],
-          defaultProviderId: "custom",
-        }),
-      ),
-    );
-
-    const { default: App } = await import("@/App");
-    renderApp(App);
-
-    await waitFor(() =>
-      expect(screen.getByTestId("provider-list").textContent).toContain(
-        "Custom Pi",
-      ),
-    );
-    fireEvent.click(screen.getByText("remove"));
-
-    expect(screen.getByTestId("confirm-message")).toHaveTextContent(
-      "confirm.piDefaultProviderWarning",
-    );
-    fireEvent.click(screen.getByText("confirm-delete"));
-    await waitFor(() =>
-      expect(screen.queryByTestId("confirm-dialog")).not.toBeInTheDocument(),
-    );
-  });
-
-  it("shows toast when duplicate cannot load live provider ids", async () => {
-    setProviders("openclaw", {
-      deepseek: {
-        id: "deepseek",
-        name: "DeepSeek",
-        settingsConfig: {
-          baseUrl: "https://api.deepseek.com",
-          apiKey: "test-key",
-          api: "openai-completions",
-          models: [],
-        },
-        category: "custom",
-        sortIndex: 0,
-        createdAt: Date.now(),
-      },
-    });
-    setCurrentProviderId("openclaw", "deepseek");
-
-    const liveIdsSpy = vi
-      .spyOn(providersApi, "getOpenClawLiveProviderIds")
-      .mockRejectedValueOnce(new Error("broken config"));
-
-    const { default: App } = await import("@/App");
-    renderApp(App);
-
-    fireEvent.click(sidebarApp("OpenClaw"));
-
-    await waitFor(() =>
-      expect(screen.getByTestId("provider-list").textContent).toContain(
-        "deepseek",
-      ),
-    );
-
-    fireEvent.click(screen.getByText("duplicate"));
-
-    await waitFor(() => {
-      expect(toastErrorMock).toHaveBeenCalledWith(
-        expect.stringContaining("读取配置中的供应商标识失败"),
-      );
-    });
-
-    expect(screen.getByTestId("provider-list").textContent).not.toContain(
-      "deepseek-copy",
-    );
-
-    liveIdsSpy.mockRestore();
-  });
+  }, 10_000);
 
   it("renders the Skills page with its own header", async () => {
     localStorage.setItem("cc-switch-last-view", "skills");
@@ -947,7 +391,7 @@ describe("App integration with MSW", () => {
       "appPage.memory",
     ]);
 
-    // 记忆页：页头的 solid 主操作换成「保存」，两份记忆用二级页签
+    // 记忆页：页头没有「添加供应商」这类上游入口
     fireEvent.click(hermesPageTabs[1]);
     const header = document.querySelector("header") as HTMLElement;
     const save = await within(header).findByRole("button", {

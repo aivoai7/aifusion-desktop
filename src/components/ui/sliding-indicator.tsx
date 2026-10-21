@@ -63,15 +63,17 @@ export function useSlidingIndicator<T extends HTMLElement>(
   return { ref, rect, animate };
 }
 
-const MOTION =
-  "transition-[transform,width,height] duration-200 ease-out motion-reduce:transition-none";
+/** 页签横线只滑横向，用 transform 最省；160ms 比上游快一档。 */
+const RAIL_MOTION =
+  "transition-[transform,width] duration-150 ease-out motion-reduce:transition-none";
 
 /** 滑块挪的是 left / top，不用 transform，理由见 SegmentThumb。 */
 const THUMB_MOTION =
-  "transition-[left,top,width,height] duration-200 ease-out motion-reduce:transition-none";
+  "transition-[left,top,width,height] duration-150 ease-out motion-reduce:transition-none";
 
 /**
- * 分段控件的白底凸起块，垫在选中项下面。按钮自己要 relative + 不画底色。
+ * 分段控件的凸起块，垫在选中项下面：卡片底 + 发丝描边 + 小阴影。
+ * 按钮自己要 relative + 不画底色。
  * 不用 transform 滑：WebKit 给 transform 过渡开合成层，压在滑块上的按钮也被提成层，
  * 层按整像素对齐，图标在滑动开始和结束时会抖半个像素。
  */
@@ -90,21 +92,16 @@ export function SegmentThumb({
     <span
       aria-hidden="true"
       className={cn(
-        "pointer-events-none absolute bg-surface shadow-v7-sm",
+        "pointer-events-none absolute border border-hairline bg-surface shadow-sm",
         animate && THUMB_MOTION,
         className,
       )}
-      style={{
-        left: rect.x,
-        top: rect.y,
-        width: rect.width,
-        height: rect.height,
-      }}
+      style={{ left: rect.x, top: rect.y, width: rect.width, height: rect.height }}
     />
   );
 }
 
-/** 页签的下划线：贴着容器底边，只滑横向位置和宽度。 */
+/** 页签的强调横线：贴着容器底边，azure 2px，只滑横向位置和宽度。 */
 export function TabUnderline({
   rect,
   animate,
@@ -119,8 +116,8 @@ export function TabUnderline({
     <span
       aria-hidden="true"
       className={cn(
-        "pointer-events-none absolute bottom-0 left-0 h-0.5 rounded-full bg-fg-1",
-        animate && MOTION,
+        "pointer-events-none absolute bottom-0 left-0 h-[2px] rounded-full bg-action",
+        animate && RAIL_MOTION,
         className,
       )}
       style={{ transform: `translateX(${rect.x}px)`, width: rect.width }}

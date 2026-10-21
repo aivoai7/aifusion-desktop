@@ -42,19 +42,20 @@ const REVEAL_FALLBACK: Duration = Duration::from_millis(600);
 /// 点托盘图标关面板时，失焦隐藏先于点击事件到达；这段时间内的点击当作「关」，不再弹出。
 const BLUR_CLICK_GRACE: Duration = Duration::from_millis(300);
 
+// 卡片圆角三平台统一 10px —— Ink & Grid 的浮层圆角（前端 rounded-panel）。
 #[cfg(target_os = "macos")]
 mod style {
     pub const LAYOUT: &str = "floating";
     pub const GLASS: &str = "native";
     pub const CARD_GAP: f64 = 8.0;
-    pub const RADIUS: f64 = 14.0;
+    pub const RADIUS: f64 = 10.0;
 }
 #[cfg(target_os = "windows")]
 mod style {
     pub const LAYOUT: &str = "joined";
     pub const GLASS: &str = "frosted";
     pub const CARD_GAP: f64 = 0.0;
-    pub const RADIUS: f64 = 8.0;
+    pub const RADIUS: f64 = 10.0;
 }
 #[cfg(not(any(target_os = "macos", target_os = "windows")))]
 mod style {
@@ -62,7 +63,7 @@ mod style {
     /// 没有原生模糊：网页自己画兼容的毛玻璃
     pub const GLASS: &str = "frosted";
     pub const CARD_GAP: f64 = 0.0;
-    pub const RADIUS: f64 = 12.0;
+    pub const RADIUS: f64 = 10.0;
 }
 
 // ─── 文案 ────────────────────────────────────────────────────────────────────

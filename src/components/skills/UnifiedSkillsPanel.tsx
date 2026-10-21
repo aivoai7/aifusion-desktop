@@ -6,6 +6,7 @@ import {
   ArrowUpCircle,
   Check,
   ChevronDown,
+  Library,
   Loader2,
   MoreHorizontal,
   Plus,
@@ -27,7 +28,6 @@ import { HoverTip } from "@/components/ui/hover-tip";
 import { Checkbox } from "@/components/ui/checkbox";
 import { AppPageHeader } from "@/components/shell/AppPageHeader";
 import { AppGlyph, APP_DISPLAY_NAME } from "@/components/shell/AppGlyph";
-import { SkillsIcon } from "@/components/BrandIcons";
 import {
   type ImportSkillSelection,
   type InstalledSkill,
@@ -901,7 +901,7 @@ const UnifiedSkillsPanel: React.FC<UnifiedSkillsPanelProps> = ({
 
   const header = (
     <AppPageHeader
-      icon={<SkillsIcon size={20} />}
+      icon={<Library className="h-5 w-5" strokeWidth={1.5} />}
       title="Skills"
       titleExtra={
         <>

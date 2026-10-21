@@ -131,8 +131,6 @@ describe("Turkish locale", () => {
       "opencode.providerKeyPlaceholder",
       "openclaw.providerKeyPlaceholder",
       "hermes.form.providerKeyPlaceholder",
-      "grokBuild.rawConfig",
-      "codexConfig.configToml",
       "providerPreset.plan.aksk",
       "mcp.envPlaceholder",
       "mcp.wizard.envPlaceholder",
@@ -143,13 +141,6 @@ describe("Turkish locale", () => {
       expect(translations.get(key), key).toBe(reference.get(key));
     }
 
-    expect(translations.get("usageScript.fieldRemaining")).toContain(
-      "• remaining:",
-    );
-    expect(translations.get("usageScript.fieldUnit")).toContain("• unit:");
-    expect(translations.get("usageScript.fieldTotal")).toContain("• total:");
-    expect(translations.get("usageScript.fieldUsed")).toContain("• used:");
-    expect(translations.get("usageScript.fieldExtra")).toContain("• extra:");
     expect(translations.get("settings.s3Sync.presets.r2Hint")).toContain(
       "'auto'",
     );

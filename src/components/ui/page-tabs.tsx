@@ -3,9 +3,10 @@ import { cn } from "@/lib/utils";
 import { TabUnderline, useSlidingIndicator } from "./sliding-indicator";
 
 /**
- * 下划线页签：页面级导航（换的是整块内容，例如用量页的「请求日志 / 供应商 / …」、
- * OpenClaw 的「供应商 / 工作区 / 配置」）。
+ * 下划线页签：页面级导航（换的是整块内容，例如用量页的「请求日志 / 供应商 / …」）。
  * 分段控件只留给模式和页内筛选，两者别混用。
+ * Ink & Grid 的选中态靠 2px azure 横线 + 一级文字，不加底色，
+ * 横线是一块独立的滑块（TabUnderline），切换时从上一项滑过去。
  */
 export interface PageTabItem<T extends string> {
   value: T;
@@ -25,8 +26,8 @@ export interface PageTabsProps<T extends string> {
   /** 与 tabpanel 关联时传入 */
   controls?: string;
   /**
-   * default：一级页签（36 高、13px）；sm：一级页签下面的二级页签（32 高、12px、
-   * 不画整行底线，只在选中项下面画线），两层叠在一起时层级才分得清。
+   * default：一级页签（36 高、13px，压住整行底线）；
+   * sm：一级页签下面的二级页签（32 高、12px，不画整行底线），两层叠起来层级才分得清。
    */
   size?: "default" | "sm";
   className?: string;
@@ -51,6 +52,7 @@ export function PageTabs<T extends string>({
     value,
   );
 
+  // 方向键 / Home / End 在可用页签间循环，焦点跟着一起走（tablist 约定）
   const onKeyDown = (event: React.KeyboardEvent<HTMLButtonElement>) => {
     const index = enabled.findIndex((item) => item.value === value);
     let next = -1;
@@ -69,9 +71,8 @@ export function PageTabs<T extends string>({
   return (
     <div
       className={cn(
-        small
-          ? "flex h-8 items-end gap-3"
-          : "flex h-9 items-end gap-4 border-b border-border",
+        "flex items-end gap-4",
+        small ? "h-8 gap-3" : "hairline-b h-9",
         className,
       )}
     >
@@ -84,7 +85,6 @@ export function PageTabs<T extends string>({
           small ? "gap-3" : "gap-4",
         )}
       >
-        {/* 下划线单独一条，切换时滑过去；一级页签压住整行底线 */}
         <TabUnderline
           rect={indicator.rect}
           animate={indicator.animate}
@@ -108,11 +108,11 @@ export function PageTabs<T extends string>({
               onClick={() => onValueChange(item.value)}
               onKeyDown={onKeyDown}
               className={cn(
-                "h-full whitespace-nowrap border-b-2 px-0.5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:text-fg-3",
+                "h-full whitespace-nowrap border-b-2 border-transparent px-0.5 transition-colors duration-150",
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/45 disabled:text-fg-3",
                 small
                   ? "inline-flex items-center gap-1.5 text-caption"
                   : "-mb-px text-body",
-                "border-transparent",
                 selected
                   ? "font-semibold text-fg-1"
                   : "font-medium text-fg-2 hover:text-fg-1",

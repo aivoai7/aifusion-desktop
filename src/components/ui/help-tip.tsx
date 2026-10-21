@@ -4,16 +4,15 @@ import { CircleHelp } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 /**
- * 说明卡（v7 第八轮「?」，规格见 docs/research/2026-09-30-ui-design-v7/HELP_BRIEF.md）。
+ * 说明卡（Ink & Grid「?」）：解释规则和术语，不放会丢东西、要重启这类后果。
  *
  * - 悬停 300ms 打开，移开 200ms 关闭（移进卡片不关）；键盘聚焦立即打开。
  *   只认键盘聚焦（:focus-visible）：弹层打开时 Radix 会把焦点自动放到里面第一个可聚焦元素，
  *   「?」常常就是那个，鼠标点开弹层不该顺带弹出说明卡。
  * - 点一下固定，Escape 或点别处关闭。
  * - 不抢焦点（modal=false），卡片里不放按钮、表单、链接。
- * - 只放规则和术语解释；会丢东西、要重启这类后果写在按钮、确认框或 toast 里，不进这里。
  *
- * 深色小气泡（tooltip.tsx）只给纯图标按钮报名字，不放说明句子。
+ * 反色小气泡（tooltip.tsx）只给纯图标按钮报名字，不放说明句子。
  */
 
 const OPEN_DELAY = 300;
@@ -116,10 +115,10 @@ function HelpCard({
         onCloseAutoFocus={(event) => event.preventDefault()}
         onPointerEnter={onPointerEnter}
         onPointerLeave={onPointerLeave}
-        className="z-[120] w-max max-w-[300px] rounded-[8px] border border-border bg-surface px-3 pb-2.5 pt-[9px] text-caption text-fg-1 shadow-v7-md outline-none data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=closed]:animate-out data-[state=closed]:fade-out-0"
+        className="z-[120] w-max max-w-[280px] rounded-panel border border-hairline bg-popover px-3 pb-2.5 pt-2 text-caption leading-relaxed text-fg-1 shadow-af-pop outline-none duration-120 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=closed]:animate-out data-[state=closed]:fade-out-0"
       >
         {title ? (
-          <span className="mb-0.5 block font-semibold">{title}</span>
+          <span className="mb-0.5 block font-semibold text-fg-1">{title}</span>
         ) : null}
         {children}
       </PopoverPrimitive.Content>
@@ -169,7 +168,8 @@ export function HelpTip({
             hover.onClick();
           }}
           className={cn(
-            "-my-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full align-middle text-fg-3 transition-colors hover:bg-subtle hover:text-fg-1 data-[state=open]:bg-subtle data-[state=open]:text-fg-1",
+            "-my-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full align-middle text-fg-3",
+            "transition-colors hover:bg-subtle hover:text-fg-1 data-[state=open]:bg-selected data-[state=open]:text-fg-1",
             className,
           )}
         >

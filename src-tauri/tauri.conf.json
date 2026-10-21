@@ -22,6 +22,7 @@
         "minWidth": 900,
         "minHeight": 600,
         "visible": false,
+        "additionalBrowserArgs": "--disable-features=msWebOOUI,msPdfOOUI,msSmartScreenProtection,CalculateNativeWinOcclusion --proxy-bypass-list=tauri.localhost;ipc.localhost;localhost;127.0.0.1",
         "resizable": true,
         "fullscreen": false,
         "center": true

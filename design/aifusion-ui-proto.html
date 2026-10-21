@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>AIFusion 桌面端 · 界面重构原型（首页总览 + 客户端详情）</title>
+<style>
+  :root{
+    --bg-app:#1c1c1e; --bg-sidebar:#161618; --bg-subtle:#26262a; --bg-selected:#313136;
+    --bg-card:#2e2e33; --border:#3a3a40; --border-strong:#4a4a52;
+    --text-1:#e4e4e7; --text-2:#ababb3; --text-3:#9a9aa2;
+    --action-bg:#ea580c; --action-hover:#f06d1f; --action-text:#fb923c; --action-soft:rgba(249,115,21,.12);
+    --success:#4ade80; --direct:#4a8fd9; --route:#2a9d8f; --warning:#fbbf24; --danger:#f87171;
+    --r-panel:10px; --r-dialog:14px; --r-hero:20px;
+    --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;background:var(--bg-sidebar);color:var(--text-1);
+    font:400 13px/20px -apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei",Roboto,sans-serif;
+    -webkit-font-smoothing:antialiased;display:flex;overflow:hidden;
+  }
+  button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+  ::-webkit-scrollbar{width:10px;height:10px}
+  ::-webkit-scrollbar-thumb{background:#3f3f46;border-radius:8px;border:3px solid transparent;background-clip:content-box}
+  ::-webkit-scrollbar-thumb:hover{background:#52525b;background-clip:content-box}
+
+  /* ---------- 侧栏 ---------- */
+  .sidebar{width:236px;flex:0 0 236px;display:flex;flex-direction:column;background:var(--bg-sidebar);border-right:1px solid #232327;height:100vh}
+  .brand{display:flex;align-items:center;gap:9px;padding:14px 14px 12px}
+  .brand img{width:26px;height:26px;border-radius:7px}
+  .brand b{font-size:14px;font-weight:600;letter-spacing:.1px}
+  .nav{flex:1;overflow-y:auto;padding:0 8px 8px}
+  .nav-group{margin-top:14px}
+  .nav-title{padding:0 8px 6px;font-size:11px;color:var(--text-3);letter-spacing:.3px}
+  .nav-item{display:flex;align-items:center;gap:9px;width:100%;padding:7px 8px;border-radius:8px;color:var(--text-2);text-align:left}
+  .nav-item:hover{background:#1f1f23;color:var(--text-1)}
+  .nav-item.active{background:var(--bg-selected);color:var(--text-1);font-weight:500}
+  .nav-item .glyph{width:20px;height:20px;flex:0 0 20px;border-radius:6px;display:grid;place-items:center;font-size:9px;font-weight:700;color:#fff;letter-spacing:-.2px}
+  .nav-item .label{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .dot{width:6px;height:6px;flex:0 0 6px;border-radius:50%;background:var(--success);box-shadow:0 0 0 3px rgba(74,222,128,.14)}
+  .dot.off{background:var(--text-3);box-shadow:none}
+  .wallet{margin:8px;padding:12px;border-radius:var(--r-panel);background:var(--bg-card);border:1px solid #35353b}
+  .wallet .k{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-3)}
+  .wallet .v{margin-top:5px;font-size:19px;font-weight:600;letter-spacing:-.2px}
+  .wallet .v small{margin-left:5px;font-size:11px;font-weight:500;color:var(--text-3)}
+  .wallet .hint{margin-top:2px;font-size:11px;color:var(--text-3)}
+
+  /* ---------- 主区 ---------- */
+  .main{flex:1;min-width:0;height:100vh;overflow-y:auto;background:var(--bg-app);border-radius:12px 0 0 0}
+  .topbar{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:10px;padding:13px 22px;background:rgba(28,28,30,.86);backdrop-filter:blur(10px);border-bottom:1px solid #26262a}
+  .topbar h1{margin:0;font-size:15px;font-weight:600}
+  .topbar .sub{font-size:12px;color:var(--text-3)}
+  .spacer{flex:1}
+  .content{padding:20px 22px 40px;max-width:1180px}
+
+  .btn{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;border:1px solid var(--border-strong);background:#333338;color:var(--text-1);font-size:12px;line-height:18px;white-space:nowrap}
+  .btn:hover{background:#3b3b41}
+  .btn.primary{background:var(--action-bg);border-color:transparent;color:#fff;font-weight:500}
+  .btn.primary:hover{background:var(--action-hover)}
+  .btn.ghost{background:none;border-color:transparent;color:var(--text-2)}
+  .btn.ghost:hover{background:#242428;color:var(--text-1)}
+  .btn.sm{padding:3px 9px;font-size:11px}
+  .btn:disabled{opacity:.45;cursor:not-allowed}
+
+  .badge{display:inline-flex;align-items:center;gap:5px;padding:2px 9px;border-radius:999px;font-size:11px;font-weight:500}
+  .badge.ok{background:rgba(74,222,128,.12);color:var(--success)}
+  .badge.direct{background:rgba(74,143,217,.14);color:#8fb8e6}
+  .badge.route{background:rgba(42,157,143,.14);color:#7cc4ba}
+  .badge.muted{background:#2c2c31;color:var(--text-3)}
+
+  /* ---------- 平台卡 ---------- */
+  .hero{position:relative;overflow:hidden;border-radius:var(--r-hero);border:1px solid #3a3a41;
+    background:radial-gradient(120% 150% at 88% -30%,rgba(249,115,21,.20),transparent 58%),var(--bg-card);
+    padding:18px 20px}
+  .hero-top{display:flex;align-items:center;gap:11px}
+  .hero-top img{width:34px;height:34px;border-radius:9px;background:#202024;padding:3px;border:1px solid #3f3f46}
+  .hero-top .name{font-size:15px;font-weight:600}
+  .hero-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;margin-top:16px;background:#3a3a41;border:1px solid #3a3a41;border-radius:12px;overflow:hidden}
+  .stat{background:#2b2b30;padding:11px 13px;min-width:0}
+  .stat .k{font-size:11px;color:var(--text-3);display:flex;align-items:center;gap:5px}
+  .stat .v{margin-top:3px;font-size:14px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .stat .v.mono{font-family:var(--mono);font-size:12.5px;font-weight:500}
+  .hero-foot{display:flex;align-items:center;gap:8px;margin-top:14px;flex-wrap:wrap}
+  .hero-foot .note{font-size:11px;color:var(--text-3)}
+
+  /* ---------- 区块 ---------- */
+  .section{margin-top:24px}
+  .section-head{display:flex;align-items:baseline;gap:9px;margin-bottom:11px}
+  .section-head h2{margin:0;font-size:13px;font-weight:600;letter-spacing:.2px}
+  .section-head .hint{font-size:11.5px;color:var(--text-3)}
+
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(258px,1fr));gap:10px}
+  .card{position:relative;text-align:left;background:var(--bg-card);border:1px solid #35353b;border-radius:var(--r-panel);padding:13px;transition:.12s}
+  .card:hover{border-color:#4d4d55;background:#323237}
+  .card .row1{display:flex;align-items:center;gap:9px}
+  .card .glyph{width:26px;height:26px;flex:0 0 26px;border-radius:8px;display:grid;place-items:center;font-size:10px;font-weight:700;color:#fff;letter-spacing:-.3px}
+  .card .nm{flex:1;min-width:0;font-size:13px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .card .models{margin-top:10px;display:flex;flex-direction:column;gap:4px}
+  .card .m{display:flex;align-items:center;gap:7px;font-size:11.5px;color:var(--text-2);min-width:0}
+  .card .m .tag{flex:0 0 auto;font-size:10px;color:var(--text-3);background:#26262a;border:1px solid #35353b;border-radius:4px;padding:0 4px}
+  .card .m .id{font-family:var(--mono);font-size:11.5px;color:var(--text-1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .card .foot{margin-top:11px;display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:11px;color:var(--text-3)}
+  .card .go{color:var(--action-text)}
+
+  .empty{border:1px dashed #3f3f46;border-radius:var(--r-panel);padding:22px;text-align:center;color:var(--text-3);font-size:12px;background:#26262a}
+
+  /* ---------- 详情页 ---------- */
+  .back{display:inline-flex;align-items:center;gap:5px;color:var(--text-2);font-size:12px;margin-bottom:12px}
+  .back:hover{color:var(--text-1)}
+  .head{display:flex;align-items:center;gap:12px}
+  .head .glyph{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;font-size:13px;font-weight:700;color:#fff}
+  .head h1{margin:0;font-size:17px;font-weight:600}
+  .head .sub{font-size:11.5px;color:var(--text-3)}
+  .panel{margin-top:16px;background:var(--bg-card);border:1px solid #35353b;border-radius:var(--r-panel);overflow:hidden}
+  .rows{display:grid;grid-template-columns:minmax(120px,168px) 1fr}
+  .rows>dt,.rows>dd{padding:12px 16px;border-top:1px solid #35353b;min-width:0}
+  .rows>dt{color:var(--text-3);font-size:12px;background:#2a2a2f}
+  .rows>dd{display:flex;align-items:center;gap:10px;font-size:13px}
+  .rows>:nth-child(-n+2){border-top:0}
+  .rows dd .val{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .rows dd .val.mono{font-family:var(--mono);font-size:12px}
+  .kv-note{font-size:11.5px;color:var(--text-3)}
+  .chips{display:flex;flex-wrap:wrap;gap:7px}
+  .chip{display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border-radius:999px;background:#26262a;border:1px solid #35353b;font-size:12px;color:var(--text-2)}
+  .chip:hover{border-color:#4d4d55;color:var(--text-1)}
+  .chip .n{font-size:10.5px;color:var(--text-3)}
+
+  /* ---------- 弹层 ---------- */
+  .mask{position:fixed;inset:0;background:rgba(0,0,0,.6);display:grid;place-items:center;z-index:40;padding:24px}
+  .dlg{width:640px;max-width:100%;max-height:86vh;display:flex;flex-direction:column;background:var(--bg-app);border:1px solid #3f3f46;border-radius:var(--r-dialog);box-shadow:0 24px 64px rgba(0,0,0,.5)}
+  .dlg header{display:flex;align-items:flex-start;gap:12px;padding:16px 18px 12px}
+  .dlg header h3{margin:0;font-size:15px;font-weight:600}
+  .dlg header p{margin:3px 0 0;font-size:11.5px;color:var(--text-3)}
+  .dlg .body{padding:0 18px;overflow:hidden;display:flex;flex-direction:column;gap:12px;min-height:0}
+  .dlg footer{display:flex;justify-content:flex-end;gap:8px;padding:14px 18px 16px}
+  .pair{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .fld{display:flex;flex-direction:column;gap:5px;font-size:11px;color:var(--text-3)}
+  .sel{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 10px;border-radius:8px;background:#26262a;border:1px solid #3a3a40;font-family:var(--mono);font-size:12px;color:var(--text-1);cursor:pointer}
+  .sel:hover{border-color:#4d4d55}
+  .sel .caret{color:var(--text-3);font-size:9px}
+  select.sel{appearance:none;-webkit-appearance:none;width:100%;padding:7px 26px 7px 10px;outline:none;
+    background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="8" height="5"><path d="M0 0l4 5 4-5z" fill="%239a9aa2"/></svg>');
+    background-repeat:no-repeat;background-position:right 9px center}
+  select.sel:focus{border-color:var(--action-text)}
+  select.sel option{background:#26262a;color:var(--text-1);font-family:var(--mono)}
+  .search{display:flex;align-items:center;gap:8px}
+  .search input{flex:1;padding:7px 10px;border-radius:8px;background:#26262a;border:1px solid #3a3a40;color:var(--text-1);font:inherit;font-size:12px;outline:none}
+  .search input:focus{border-color:var(--action-text)}
+  .count{font-size:11.5px;color:var(--text-2)}
+  .list{border:1px solid #3a3a40;border-radius:var(--r-panel);overflow-y:auto;max-height:46vh;background:#26262a}
+  .grp{position:sticky;top:0;z-index:1;padding:5px 13px;background:#2f2f35;border-bottom:1px solid #3a3a40;font-size:11px;color:var(--text-2)}
+  .opt{display:flex;align-items:center;gap:10px;padding:7px 13px;border-top:1px solid #303036;cursor:pointer}
+  .opt:first-child{border-top:0}
+  .opt:hover{background:#2f2f35}
+  .opt input{appearance:none;width:15px;height:15px;flex:0 0 15px;border:1.5px solid #5b5b64;border-radius:4px;background:#1f1f23;display:grid;place-items:center;cursor:pointer}
+  .opt input[type=radio]{border-radius:50%}
+  .opt input:checked{background:var(--action-bg);border-color:var(--action-bg)}
+  .opt input:checked::after{content:"";width:8px;height:8px;background:#fff;border-radius:1px;clip-path:polygon(14% 47%,0 61%,39% 100%,100% 22%,85% 8%,37% 70%)}
+  .opt input[type=radio]:checked::after{width:6px;height:6px;border-radius:50%;clip-path:none}
+  .opt .id{flex:1;min-width:0;font-family:var(--mono);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .opt .lb{font-size:10.5px;color:var(--action-text);background:var(--action-soft);padding:1px 6px;border-radius:4px}
+  .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);z-index:60;background:#1f1f23;border:1px solid #4a4a52;color:var(--text-1);padding:9px 15px;border-radius:10px;font-size:12.5px;box-shadow:0 12px 32px rgba(0,0,0,.45);opacity:0;transition:.18s;pointer-events:none}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(-4px)}
+  .proto-flag{display:inline-flex;align-items:center;gap:6px;font-size:11px;color:var(--text-3);border:1px dashed #4a4a52;border-radius:999px;padding:2px 9px}
+  .hidden{display:none !important}
+</style>
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="brand"><img id="brandLogo" alt="AIFusion" /><b>AIFusion</b></div>
+    <nav class="nav" id="nav"></nav>
+    <div class="wallet">
+      <div class="k">钱包余额</div>
+      <div class="v" id="walletV">—</div>
+      <div class="hint" id="walletHint"></div>
+    </div>
+  </aside>
+
+  <main class="main" id="main"></main>
+  <div id="modalRoot"></div>
+  <div class="toast" id="toast"></div>
+
+<script>
+const DATA = {"generatedFrom":"live sqlite + live platform API","apps":[{"app":"claude","name":"AIFusion","icon":"openai","iconColor":"#6366F1","category":"third_party","isCurrent":true,"models":{"main":"claude-sonnet-5","light":"glm-5.3-flash","list":[]}},{"app":"claude-desktop","name":"AIFusion","icon":"openai","iconColor":"#6366F1","category":"third_party","isCurrent":true,"models":{"main":null,"light":null,"list":[]}},{"app":"codex","name":"AIFusion","icon":"openai","iconColor":"#6366F1","category":"third_party","isCurrent":true,"models":{"main":"claude-sonnet-5","light":null,"list":[]}},{"app":"gemini","name":"AIFusion","icon":"openai","iconColor":"#6366F1","category":"third_party","isCurrent":true,"models":{"main":"claude-sonnet-5","light":null,"list":[]}},{"app":"grokbuild","name":"AIFusion","icon":"openai","iconColor":"#6366F1","category":"third_party","isCurrent":true,"models":{"main":"claude-sonnet-5","light":null,"list":[]}},{"app":"opencode","name":"aifusion","icon":"openai","iconColor":"#6366F1","category":"third_party","isCurrent":true,"models":{"main":null,"light":null,"list":["glm-5.3-flash","claude-sonnet-5"]}},{"app":"openclaw","name":"AIFusion","icon":"openai","iconColor":"#6366F1","category":"third_party","isCurrent":true,"models":{"main":null,"light":null,"list":["claude-sonnet-5","glm-5.3-flash"]}},{"app":"hermes","name":"AIFusion","icon":"openai","iconColor":"#6366F1","category":"third_party","isCurrent":true,"models":{"main":null,"light":null,"list":["claude-sonnet-5","glm-5.3-flash"]}},{"app":"pi","name":"aifusion","icon":"openai","iconColor":"#6366F1","category":"third_party","isCurrent":true,"models":{"main":null,"light":null,"list":["claude-sonnet-5","glm-5.3-flash"]}},{"app":"mcode","name":"AIFusion","icon":"openai","iconColor":"#6366F1","category":"third_party","isCurrent":true,"models":{"main":null,"light":null,"list":["glm-5.3-flash","claude-sonnet-5"]}}],"platformModels":[{"id":"claude-fable-5","provider":"anthropic"},{"id":"claude-fable-5-1","provider":"anthropic"},{"id":"claude-haiku-4-5","provider":"anthropic"},{"id":"claude-haiku-4-5-20251001","provider":"anthropic"},{"id":"claude-haiku-5-5","provider":"anthropic"},{"id":"claude-opus-4-6","provider":"anthropic"},{"id":"claude-opus-4-7","provider":"anthropic"},{"id":"claude-opus-4-8","provider":"anthropic"},{"id":"claude-opus-5","provider":"anthropic"},{"id":"claude-opus-5-5","provider":"anthropic"},{"id":"claude-sonnet-4-6","provider":"anthropic"},{"id":"claude-sonnet-5","provider":"anthropic"},{"id":"claude-sonnet-5-5","provider":"anthropic"},{"id":"doubao-seed-2.0-lite","provider":"bytedance"},{"id":"doubao-seed-2.1-pro","provider":"bytedance"},{"id":"deepseek-flash","provider":"deepseek"},{"id":"deepseek-flash-1017","provider":"deepseek"},{"id":"deepseek-flash-free","provider":"deepseek"},{"id":"deepseek-v4-flash","provider":"deepseek"},{"id":"deepseek-v4-flash-free","provider":"deepseek"},{"id":"deepseek-v4-flash-vision-exp","provider":"deepseek"},{"id":"deepseek-v4-pro","provider":"deepseek"},{"id":"deepseek-v4-pro-260425","provider":"deepseek"},{"id":"gemini-3.1-flash-image","provider":"google"},{"id":"gemini-3.1-pro-preview","provider":"google"},{"id":"gemini-3.5-flash","provider":"google"},{"id":"gemini-3.5-flash-lite","provider":"google"},{"id":"gemini-3.6-flash","provider":"google"},{"id":"gemini-3.7-flash","provider":"google"},{"id":"gemini-3.8-flash","provider":"google"},{"id":"gemini-4-argon","provider":"google"},{"id":"gemini-nano-banana-2.1","provider":"google"},{"id":"MiniMax-M3","provider":"minimax"},{"id":"kimi-k3","provider":"moonshotai"},{"id":"kimi-k3[1M]","provider":"moonshotai"},{"id":"gpt-5.4","provider":"openai"},{"id":"gpt-5.4-mini","provider":"openai"},{"id":"gpt-5.5","provider":"openai"},{"id":"gpt-5.6-luna","provider":"openai"},{"id":"gpt-5.6-sol","provider":"openai"},{"id":"gpt-5.6-terra","provider":"openai"},{"id":"gpt-6-astra","provider":"openai"},{"id":"gpt-6-luna","provider":"openai"},{"id":"gpt-6-sol","provider":"openai"},{"id":"gpt-6.1-sol","provider":"openai"},{"id":"gpt-image-2","provider":"openai"},{"id":"gpt-image-2.5-flare","provider":"openai"},{"id":"gpt-image-2.5-sunburst","provider":"openai"},{"id":"qwen3.7-flash","provider":"qwen"},{"id":"qwen3.8-max","provider":"qwen"},{"id":"grok-4.6","provider":"xai"},{"id":"grok-4.7","provider":"xai"},{"id":"mimo-v2.6-flash","provider":"xiaomi"},{"id":"mimo-v2.6-pro","provider":"xiaomi"},{"id":"glm-5.2","provider":"z.ai"},{"id":"glm-5.3","provider":"z.ai"},{"id":"glm-5.3-flash","provider":"z.ai"},{"id":"glm-5.3-flash-free","provider":"z.ai"}],"wallet":{"balance_usd":10000,"currency_code":"USD","low_balance":false},"counts":{"mcp_servers":1,"skills":0,"prompts":0,"skill_repos":4,"profiles":0},"health":[{"provider_id":"claude-desktop-official","app_type":"claude-desktop","is_healthy":1,"consecutive_failures":0,"last_success_at":"2026-10-20T05:35:15.495216900+00:00","last_failure_at":null,"last_error":null,"updated_at":"2026-10-20T05:35:15.495216900+00:00"}],"claudeDesktop":{"main":"claude-sonnet-5","light":"glm-5.3-flash"}};
+
+/* 10 个客户端：形状决定模型怎么配（pair=主+轻量 / single=只有一个 / list=多选模型表） */
+const APPS = [
+  {id:"claude",        label:"Claude Code",    mono:"CC", color:"#d97757", shape:"pair"},
+  {id:"claude-desktop",label:"Claude Desktop", mono:"CD", color:"#c2613f", shape:"pair"},
+  {id:"codex",         label:"Codex",          mono:"CX", color:"#10a37f", shape:"single"},
+  {id:"gemini",        label:"Gemini CLI",     mono:"GM", color:"#3367d6", shape:"single"},
+  {id:"grokbuild",     label:"Grok Build",     mono:"GK", color:"#5b5b64", shape:"single"},
+  {id:"opencode",      label:"OpenCode",       mono:"OC", color:"#0f766e", shape:"list"},
+  {id:"openclaw",      label:"OpenClaw",       mono:"OW", color:"#b91c1c", shape:"list"},
+  {id:"hermes",        label:"Hermes",         mono:"HM", color:"#7c3aed", shape:"list"},
+  {id:"pi",            label:"Pi",             mono:"PI", color:"#ea580c", shape:"list"},
+  {id:"mcode",         label:"MiniMax Code",   mono:"MM", color:"#2563eb", shape:"list"},
+];
+/* 各客户端模型写进哪个本机文件（不含任何地址或密钥） */
+const LIVE = {
+  "claude":"~/.claude/settings.json",
+  "claude-desktop":"Claude-3p configLibrary + 本地转换服务",
+  "codex":"~/.codex/config.toml",
+  "gemini":"~/.gemini/settings.json",
+  "grokbuild":"~/.grok/config.toml",
+  "opencode":"~/.config/opencode/opencode.json",
+  "openclaw":"~/.openclaw/ 配置",
+  "hermes":"~/.hermes/ 配置",
+  "pi":"~/.pi/agent/models.json",
+  "mcode":"~/.mcode/ 配置",
+};
+const MODE = {"claude-desktop":"route"};   /* Claude Desktop 走本地转换，其余直连 */
+
+/* ---- 运行时状态：全部来自本机真实配置快照 ---- */
+const state = {
+  view:"home",
+  app:null,
+  models:{},
+};
+for (const a of APPS) {
+  const row = DATA.apps.find(x=>x.app===a.id) || {models:{}};
+  const m = row.models||{};
+  state.models[a.id] = {
+    main: m.main || (m.list&&m.list[0]) || null,
+    light: m.light || null,
+    list: m.list || (m.main?[m.main]:[]),
+  };
+}
+/* Claude Desktop 的真实模型在路由映射里（sonnet/opus→主模型，haiku→轻量） */
+if (DATA.claudeDesktop) {
+  state.models["claude-desktop"] = {main:DATA.claudeDesktop.main, light:DATA.claudeDesktop.light, list:[]};
+}
+
+const $ = s=>document.querySelector(s);
+const esc = s=>String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const byId = id=>APPS.find(a=>a.id===id);
+const providers = (()=>{const m=new Map();for(const x of DATA.platformModels){if(!m.has(x.provider))m.set(x.provider,[]);m.get(x.provider).push(x.id);}return [...m.entries()];})();
+
+function toast(msg){const el=$("#toast");el.textContent=msg;el.classList.add("show");clearTimeout(toast.t);toast.t=setTimeout(()=>el.classList.remove("show"),2600);}
+
+function glyph(a,cls){return `<span class="${cls}" style="background:${a.color}">${a.mono}</span>`;}
+
+function modelSummary(id){
+  const s=state.models[id];const a=byId(id);
+  if(a.shape==="list") return s.list.length? `${s.list.length} 个模型` : "未选择模型";
+  if(!s.main) return "未选择模型";
+  return a.shape==="pair"&&s.light? `${s.main}（轻量：${s.light}）` : s.main;
+}
+
+/* 本机 usage_daily_rollups 汇总；没有记录时如实说没有，不编数字 */
+function usageFor(id){
+  const rows=(DATA.recentUsage||[]).filter(u=>u.app_type===id);
+  if(!rows.length) return '<span style="color:var(--text-3)">本机暂无记录</span>';
+  const req=rows.reduce((s,u)=>s+(u.request_count||0),0);
+  const usd=rows.reduce((s,u)=>s+(u.total_cost_usd||0),0);
+  return `${req} 次请求 · $${usd.toFixed(2)}（近 ${rows.length} 天）`;
+}
+
+/* ---------------- 侧栏 ---------------- */
+function renderNav(){
+  const home=`<button class="nav-item ${state.view==="home"?"active":""}" data-go="home">
+      <span class="glyph" style="background:#3f3f46">⌂</span><span class="label">首页总览</span></button>`;
+  const items=APPS.map(a=>`<button class="nav-item ${state.view==="app"&&state.app===a.id?"active":""}" data-go="app:${a.id}">
+      ${glyph(a,"glyph")}<span class="label">${a.label}</span><span class="dot"></span></button>`).join("");
+  $("#nav").innerHTML=`<div class="nav-group">${home}</div>
+    <div class="nav-group"><div class="nav-title">客户端</div>${items}</div>`;
+  $("#nav").querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>{
+    const [v,p]=b.dataset.go.split(":"); if(v==="app"){openApp(p);}else{state.view="home";state.app=null;} render();
+  });
+}
+function renderWallet(){
+  const w=DATA.wallet||{};
+  $("#walletV").innerHTML=`$${Number(w.balance_usd||0).toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2})}<small>${esc(w.currency_code||"USD")}</small>`;
+  $("#walletHint").textContent = w.low_balance? "余额不足，请及时充值" : "平台美元钱包 · 实时";
+}
+
+/* ---------------- 平台卡 ---------------- */
+function heroCard(){
+  const defs=APPS.map(a=>state.models[a.id].main).filter(Boolean)
+    .concat(APPS.flatMap(a=>state.models[a.id].list));
+  const tally={};for(const id of defs)tally[id]=(tally[id]||0)+1;
+  const common=Object.keys(tally).sort((x,y)=>tally[y]-tally[x])[0]||"—";
+  return `<section class="hero">
+    <div class="hero-top"><img id="heroLogo" alt="" /><div style="flex:1;min-width:0">
+      <div class="name">AIFusion 平台</div>
+      <div style="font-size:11.5px;color:var(--text-3)">供应商与渠道由平台统一管理，登录即自动下发，客户端无需手动配置</div>
+    </div><span class="badge ok"><span class="dot"></span>已连接</span></div>
+    <div class="hero-stats">
+      <div class="stat"><div class="k">钱包余额</div><div class="v">$${Number((DATA.wallet||{}).balance_usd||0).toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2})} <span style="font-size:11px;color:var(--text-3);font-weight:500">USD</span></div></div>
+      <div class="stat"><div class="k">已接入客户端</div><div class="v">${APPS.length} / ${APPS.length}</div></div>
+      <div class="stat"><div class="k">平台可选模型</div><div class="v">${DATA.platformModels.length} 个 <span style="font-size:11px;color:var(--text-3);font-weight:500">${providers.length} 家厂商</span></div></div>
+      <div class="stat"><div class="k">最常用模型</div><div class="v mono">${esc(common)}</div></div>
+    </div>
+    <div class="hero-foot">
+      <button class="btn" data-act="manage">管理连接</button>
+      <button class="btn" data-act="relogin">重新登录</button>
+      <button class="btn ghost" data-act="check">检查更新</button>
+      <span class="note">已是最新 · 检查更新走平台发布接口</span>
+    </div>
+  </section>`;
+}
+
+/* ---------------- 首页 ---------------- */
+function renderHome(){
+  const cards=APPS.map(a=>{
+    const s=state.models[a.id];
+    const mode=MODE[a.id]==="route"
+      ? `<span class="badge route">本地转换</span>` : `<span class="badge direct">直连</span>`;
+    let lines;
+    if(a.shape==="list"){
+      lines=`<div class="m"><span class="tag">模型</span><span class="id">${s.list.length} 个已选</span></div>
+             <div class="m"><span class="tag">首个</span><span class="id">${esc(s.list[0]||"—")}</span></div>`;
+    }else{
+      lines=`<div class="m"><span class="tag">主模型</span><span class="id">${esc(s.main||"—")}</span></div>`+
+        (a.shape==="pair"?`<div class="m"><span class="tag">轻量</span><span class="id">${esc(s.light||"同主模型")}</span></div>`:"");
+    }
+    return `<button class="card" data-open="${a.id}">
+      <div class="row1">${glyph(a,"glyph")}<span class="nm">${a.label}</span><span class="dot"></span></div>
+      <div class="models">${lines}</div>
+      <div class="foot">${mode}<span class="go">配置详情 →</span></div></button>`;
+  }).join("");
+
+  const usage = DATA.recentUsage && DATA.recentUsage.length
+    ? `<div class="grid">${DATA.recentUsage.slice(0,4).map(u=>`<div class="card"><div class="row1"><span class="nm">${esc(byId(u.app_type)?byId(u.app_type).label:u.app_type)}</span></div><div class="models"><div class="m"><span class="tag">请求</span><span class="id">${u.request_count}</span></div><div class="m"><span class="tag">模型</span><span class="id">${esc(u.model||"—")}</span></div></div></div>`).join("")}</div>`
+    : `<div class="empty">本机还没有用量记录 —— 客户端产生请求后，这里会按天汇总请求数、Token 与花费。</div>`;
+
+  return `<div class="topbar"><h1>首页总览</h1><span class="sub">平台、客户端与用量一屏可见</span><span class="spacer"></span>
+      <span class="proto-flag">原型 · 数据为本机真实快照</span></div>
+    <div class="content">
+      ${heroCard()}
+      <section class="section"><div class="section-head"><h2>客户端</h2><span class="hint">10 个客户端已由平台自动授权，点卡片进入详情改模型</span></div>
+        <div class="grid">${cards}</div></section>
+      <section class="section"><div class="section-head"><h2>更多功能</h2><span class="hint">沿用现有页面，重构只改入口位置</span></div>
+        <div class="chips">
+          <button class="chip" data-act="soon">MCP<span class="n">${DATA.counts.mcp_servers}</span></button>
+          <button class="chip" data-act="soon">Skills<span class="n">${DATA.counts.skill_repos} 个仓库</span></button>
+          <button class="chip" data-act="soon">提示词<span class="n">${DATA.counts.prompts}</span></button>
+          <button class="chip" data-act="soon">会话</button>
+          <button class="chip" data-act="soon">用量统计</button>
+        </div></section>
+      <section class="section"><div class="section-head"><h2>最近用量</h2><span class="hint">来源：本机 usage_daily_rollups</span></div>${usage}</section>
+    </div>`;
+}
+
+/* ---------------- 客户端详情 ---------------- */
+function renderApp(){
+  const a=byId(state.app);const s=state.models[a.id];
+  const mode=MODE[a.id]==="route"
+    ? `<span class="badge route">本地转换</span><span class="kv-note">经本机转换服务转成 OpenAI 兼容请求</span>`
+    : `<span class="badge direct">直连</span><span class="kv-note">客户端直接请求平台网关</span>`;
+  const modelVal = a.shape==="list"
+    ? `<span class="val">${s.list.length} 个模型：<span class="mono" style="color:var(--text-2)">${esc(s.list.join("、"))}</span></span>`
+    : `<span class="val mono">${esc(s.main||"未选择")}${a.shape==="pair"&&s.light?`<span style="color:var(--text-3);font-family:inherit"> （轻量：${esc(s.light)}）</span>`:""}</span>`;
+  return `<div class="topbar"><h1>${a.label}</h1><span class="sub">平台连接</span><span class="spacer"></span>
+      <button class="btn ghost sm" data-act="more">更多操作</button></div>
+    <div class="content">
+      <button class="back" data-go="home">← 返回首页总览</button>
+      <div class="head">${glyph(a,"glyph")}<div style="flex:1;min-width:0"><h1>${a.label}</h1>
+        <div class="sub">由 AIFusion 平台自动授权 · 无需填写地址与密钥</div></div>
+        <span class="badge ok"><span class="dot"></span>已接入平台</span></div>
+      <div class="panel"><dl class="rows">
+        <dt>模型</dt><dd>${modelVal}<button class="btn sm" data-act="model">选择模型</button></dd>
+        <dt>连接方式</dt><dd>${mode}</dd>
+        <dt>配置落点</dt><dd><span class="val mono" style="font-size:12px;color:var(--text-2)">${esc(LIVE[a.id]||"")}</span><span class="kv-note">保存后立即写入</span></dd>
+        <dt>最近用量</dt><dd><span class="val">${usageFor(a.id)}</span><button class="btn sm ghost" data-act="soon">查看统计</button></dd>
+        <dt>应用更新</dt><dd><span class="val">已是最新</span><button class="btn sm ghost" data-act="check">检查更新</button></dd>
+      </dl></div>
+      <section class="section"><div class="section-head"><h2>更多功能</h2><span class="hint">这些页面作用于全部客户端</span></div>
+        <div class="chips">
+          <button class="chip" data-act="soon">MCP<span class="n">${DATA.counts.mcp_servers}</span></button>
+          <button class="chip" data-act="soon">Skills<span class="n">${DATA.counts.skill_repos}</span></button>
+          <button class="chip" data-act="soon">提示词<span class="n">${DATA.counts.prompts}</span></button>
+          <button class="chip" data-act="soon">会话</button>
+          <button class="chip" data-act="soon">用量统计</button>
+        </div></section>
+      <section class="section"><div class="section-head"><h2>切换到其他客户端</h2></div>
+        <div class="grid">${APPS.filter(x=>x.id!==a.id).map(x=>{
+          const t=state.models[x.id];
+          return `<button class="card" data-open="${x.id}"><div class="row1">${glyph(x,"glyph")}<span class="nm">${x.label}</span><span class="dot"></span></div>
+            <div class="models"><div class="m"><span class="tag">模型</span><span class="id">${esc(modelSummary(x.id))}</span></div></div>
+            <div class="foot">${MODE[x.id]==="route"?"<span class='badge route'>本地转换</span>":"<span class='badge direct'>直连</span>"}<span class="go">→</span></div></button>`;
+        }).join("")}</div></section>
+    </div>`;
+}
+
+/* ---------------- 模型弹层 ---------------- */
+let draft=null;
+function selHtml(role){
+  const opts=[...new Set(DATA.platformModels.map(m=>m.id))];
+  const cur=role==="main"?draft.main:draft.light;
+  if(cur&&!opts.includes(cur))opts.unshift(cur);          // 本机在用但平台已下架的模型也要能看见
+  const head=role==="light"?`<option value="">同主模型</option>`:`<option value="">未选择</option>`;
+  return `<select class="sel" data-role="${role}">${head}${opts.map(id=>
+    `<option value="${esc(id)}"${cur===id?" selected":""}>${esc(id)}</option>`).join("")}</select>`;
+}
+function openApp(id){state.view="app";state.app=id;render();}
+function openModelDialog(id){
+  const a=byId(id);const cur=state.models[id];
+  draft={app:id,q:"",main:cur.main,light:cur.light,list:[...cur.list]};
+  renderModal();
+}
+function renderModal(){
+  if(!draft){$("#modalRoot").innerHTML="";return;}
+  const a=byId(draft.app);
+  const q=draft.q.trim().toLowerCase();
+  const all=DATA.platformModels;
+  const visible=all.filter(m=>!q||m.id.toLowerCase().includes(q)||m.provider.toLowerCase().includes(q));
+  const sel=new Set(draft.list);
+  const groups=new Map();
+  for(const m of (q?visible:all)){ if(q&&!visible.includes(m))continue;
+    if(!groups.has(m.provider))groups.set(m.provider,[]); groups.get(m.provider).push(m);}
+  const listHtml=visible.length? [...groups.entries()].map(([p,arr])=>`
+    <div class="grp">${esc(p)}</div>
+    ${arr.map(m=>{
+      if(a.shape==="list"){
+        return `<label class="opt"><input type="checkbox" data-pick="${esc(m.id)}" ${sel.has(m.id)?"checked":""}/><span class="id">${esc(m.id)}</span></label>`;
+      }
+      return `<label class="opt"><input type="radio" name="main" data-pick="${esc(m.id)}" ${draft.main===m.id?"checked":""}/><span class="id">${esc(m.id)}</span>${draft.light===m.id?'<span class="lb">轻量</span>':""}</label>`;
+    }).join("")}`).join("") : `<div class="empty" style="border:0;background:none">没有匹配的模型</div>`;
+
+  $("#modalRoot").innerHTML=`<div class="mask" data-close="1"><div class="dlg" role="dialog" aria-modal="true">
+    <header><div style="flex:1"><h3>${a.label} 的模型</h3>
+      <p>${a.shape==="list"?"可多选：客户端模型列表会按勾选重建":"选好后会立刻写入该客户端的配置"}</p></div>
+      <button class="btn ghost sm" data-act="refresh">重新获取</button></header>
+    <div class="body">
+      ${a.shape!=="list"?`<div class="pair">
+        <label class="fld">主模型${selHtml("main")}</label>
+        ${a.shape==="pair"?`<label class="fld">轻量模型${selHtml("light")}</label>`:""}
+      </div>`:""}
+      <div class="search">
+        ${a.shape==="list"?`<input id="q" placeholder="搜索模型或厂商" value="${esc(draft.q)}"/>
+          <button class="btn sm" data-act="all">全选可见</button>
+          <button class="btn sm" data-act="none">全不选</button>`:`<input id="q" placeholder="搜索模型或厂商" value="${esc(draft.q)}"/>`}
+      </div>
+      <div class="count">${a.shape==="list"
+        ? `已选 ${draft.list.length} / 共 ${all.length}`
+        : `主模型：<span style="font-family:var(--mono)">${esc(draft.main||"—")}</span> · 共 ${all.length} 个可选`}
+      </div>
+      <div class="list">${listHtml}</div>
+    </div>
+    <footer><button class="btn" data-act="cancel">取消</button>
+      <button class="btn primary" data-act="apply">应用</button></footer>
+  </div></div>`;
+
+  const box=$("#modalRoot");
+  box.querySelectorAll("[data-role]").forEach(s=>s.onchange=e=>{
+    const v=e.target.value||null;
+    if(e.target.dataset.role==="main")draft.main=v; else draft.light=v;
+    renderModal();
+  });
+  box.querySelectorAll("[data-pick]").forEach(inp=>inp.onchange=e=>{
+    const id=e.target.dataset.pick;
+    if(a.shape==="list"){ draft.list=e.target.checked?[...new Set([...draft.list,id])]:draft.list.filter(x=>x!==id); }
+    else { draft.main=id; }
+    renderModal();
+  });
+  const qi=$("#q"); if(qi){qi.oninput=e=>{draft.q=e.target.value;renderModal();const n=$("#q");n.focus();n.setSelectionRange(n.value.length,n.value.length);};}
+  box.querySelector("[data-close]").onclick=e=>{if(e.target.dataset.close)close();};
+  const allBtn=box.querySelector("[data-act=all]");
+  const noneBtn=box.querySelector("[data-act=none]");
+  if(allBtn)allBtn.onclick=()=>{draft.list=[...new Set([...draft.list,...visible.map(m=>m.id)])];renderModal();};
+  if(noneBtn)noneBtn.onclick=()=>{draft.list=[];renderModal();};
+  box.querySelector("[data-act=cancel]").onclick=close;
+  box.querySelector("[data-act=refresh]").onclick=()=>toast("原型不请求接口；真机走 GET /v1/models");
+  box.querySelector("[data-act=apply]").onclick=()=>{
+    if(a.shape!=="list"&&!draft.main){toast("请选择主模型");return;}
+    if(a.shape==="list"&&draft.list.length===0){toast("请至少选择一个模型");return;}
+    state.models[draft.app]={main:draft.main,light:a.shape==="pair"&&draft.light!==draft.main?draft.light:null,list:a.shape==="list"?draft.list:[draft.main]};
+    const t=draft.app;close();render();
+    toast(`已写入 ${byId(t).label} · ${LIVE[t]||"本机配置"}`);
+  };
+}
+function close(){draft=null;$("#modalRoot").innerHTML="";}
+
+/* ---------------- 渲染 ---------------- */
+function render(){
+  renderNav();renderWallet();
+  $("#main").innerHTML = state.view==="home"? renderHome() : renderApp();
+  const m=$("#main");
+  m.querySelectorAll("[data-open]").forEach(b=>b.onclick=()=>openApp(b.dataset.open));
+  m.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>{state.view="home";state.app=null;render();});
+  m.querySelectorAll("[data-act]").forEach(b=>b.onclick=()=>{
+    const a=b.dataset.act;
+    if(a==="model"){openModelDialog(state.app);return;}
+    if(a==="check"){toast("原型不请求接口；真机走平台发布检查");return;}
+    if(a==="manage"){toast("管理连接：登录方式 / 退出登录 / 密钥来源，落在详情页");return;}
+    if(a==="relogin"){toast("重新登录：唤起系统浏览器完成平台授权");return;}
+    if(a==="more"){toast("更多操作：打开配置目录 / 重新下发 / 断开平台");return;}
+    if(a==="soon"){toast("沿用现有页面，本次重构不改其内部实现");}
+  });
+  const h=$("#heroLogo"); if(h) h.src=$("#brandLogo").src;
+  m.scrollTop=0;
+}
+
+/* 品牌标：与真机同源的蓝色 AF（内联 SVG，避免外链） */
+$("#brandLogo").src="data:image/svg+xml;utf8,"+encodeURIComponent(
+`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4aa3ff"/><stop offset="1" stop-color="#2f6bff"/></linearGradient></defs><rect width="64" height="64" rx="14" fill="url(#g)"/><path d="M20 44 L32 18 L44 44 L37 44 L32 32 L27 44 Z" fill="#fff"/><circle cx="32" cy="49" r="3" fill="#fff"/></svg>`);
+
+render();
+</script>
+</body>
+</html>

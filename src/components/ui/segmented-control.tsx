@@ -3,9 +3,10 @@ import { cn } from "@/lib/utils";
 import { SegmentThumb, useSlidingIndicator } from "./sliding-indicator";
 
 /**
- * 分段控件（v7 AUTHORING「分段控件」+ R1）：按钮组 + aria-pressed，不是 tablist。
- * 轨道 --bg-subtle，内衬 3px；选中项 --bg-card + 小阴影。内圆角 = 外圆角 − 内衬。
- * 选中块是一块单独的滑块（SegmentThumb），切换时从上一项滑过去。
+ * 分段控件（Ink & Grid）：按钮组 + aria-pressed，不是 tablist。
+ * 轨道是弱底（--bg-subtle）+ 发丝描边，内衬 3px；选中项是一块独立的凸起滑块
+ * （SegmentThumb），切换时从上一项滑过去。内圆角 = 外圆角 − 内衬。
+ * 模式和页内筛选用它；换整块内容的页面导航用 PageTabs，两者别混用。
  */
 export interface SegmentedItem<T extends string> {
   value: T;
@@ -43,22 +44,23 @@ export function SegmentedControl<T extends string>({
     '[aria-pressed="true"]',
     value,
   );
+  const shell = size === "md" ? "h-9 rounded-panel" : "h-7 rounded-lg";
+  const inner = size === "md" ? "rounded-[7px]" : "rounded-[5px]";
+  const cell =
+    size === "md" ? "rounded-[7px] px-3.5 text-body" : "rounded-[5px] px-2.5 text-caption";
+
   return (
     <div
       ref={indicator.ref}
       role="group"
       aria-label={rest["aria-label"]}
       className={cn(
-        "relative inline-flex items-stretch bg-subtle p-[3px]",
-        size === "md" ? "h-9 rounded-[10px]" : "h-7 rounded-[8px]",
+        "relative inline-flex items-stretch border border-hairline bg-subtle p-[3px]",
+        shell,
         className,
       )}
     >
-      <SegmentThumb
-        rect={indicator.rect}
-        animate={indicator.animate}
-        className={size === "md" ? "rounded-[7px]" : "rounded-[5px]"}
-      />
+      <SegmentThumb rect={indicator.rect} animate={indicator.animate} className={inner} />
       {items.map((item) => {
         const pressed = item.value === value;
         const Icon = item.icon;
@@ -70,10 +72,12 @@ export function SegmentedControl<T extends string>({
             disabled={item.disabled}
             onClick={() => onValueChange(item.value)}
             className={cn(
-              "relative inline-flex items-center justify-center gap-1.5 whitespace-nowrap font-medium text-fg-2 transition-colors duration-150 hover:text-fg-1 disabled:cursor-not-allowed disabled:opacity-45",
-              size === "md"
-                ? "rounded-[7px] px-3.5 text-body"
-                : "rounded-[5px] px-2.5 text-caption",
+              "relative inline-flex items-center justify-center gap-1.5 whitespace-nowrap font-medium",
+              "text-fg-2 transition-colors duration-150 hover:text-fg-1",
+              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/45",
+              "disabled:cursor-not-allowed disabled:opacity-45",
+              inner,
+              cell,
               item.className,
               pressed && "text-fg-1",
             )}

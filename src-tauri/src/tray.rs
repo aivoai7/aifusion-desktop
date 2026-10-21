@@ -100,7 +100,7 @@ pub struct TrayTexts {
     pub needs_routing_suffix: &'static str,
     pub official_blocked_suffix: &'static str,
     pub open_app_page: &'static str,
-    pub add_provider: &'static str,
+    pub empty_app: &'static str,
     pub almost_out: &'static str,
     pub needs_attention: &'static str,
     pub problem_service_down: &'static str,
@@ -203,7 +203,7 @@ impl TrayTexts {
                 needs_routing_suffix: " (needs routing)…",
                 official_blocked_suffix: " (official plans don't go through routing)",
                 open_app_page: "Open {app} page",
-                add_provider: "Add provider…",
+                empty_app: "Not set up yet",
                 almost_out: "almost out",
                 needs_attention: "needs attention",
                 problem_service_down: "The routing service isn't running (port {port})",
@@ -263,7 +263,7 @@ impl TrayTexts {
                 texts.needs_routing_suffix = " (yönlendirme gerekir)…";
                 texts.official_blocked_suffix = " (resmî abonelikler yönlendirmeyi kullanmaz)";
                 texts.open_app_page = "{app} sayfasını aç";
-                texts.add_provider = "Sağlayıcı ekle…";
+                texts.empty_app = "Henüz yapılandırılmadı";
                 texts.almost_out = "bitmek üzere";
                 texts.needs_attention = "ilgilenilmesi gerekiyor";
                 texts.problem_service_down = "Yönlendirme hizmeti çalışmıyor (port {port})";
@@ -318,7 +318,7 @@ impl TrayTexts {
                 needs_routing_suffix: "（ルーティングが必要）…",
                 official_blocked_suffix: "（公式サブスクリプションはルーティングを通りません）",
                 open_app_page: "{app} のページを開く",
-                add_provider: "プロバイダーを追加…",
+                empty_app: "未設定",
                 almost_out: "残りわずか",
                 needs_attention: "対応が必要",
                 problem_service_down: "ルーティングサービスが動いていません（ポート {port}）",
@@ -375,7 +375,7 @@ impl TrayTexts {
                 needs_routing_suffix: "（需要路由）…",
                 official_blocked_suffix: "（官方訂閱不經過路由）",
                 open_app_page: "開啟 {app} 頁面",
-                add_provider: "新增供應商…",
+                empty_app: "尚未配置",
                 almost_out: "快用完",
                 needs_attention: "需要處理",
                 problem_service_down: "路由服務沒在執行（連接埠 {port}）",
@@ -430,7 +430,7 @@ impl TrayTexts {
                 needs_routing_suffix: "（需要路由）…",
                 official_blocked_suffix: "（官方订阅不经过路由）",
                 open_app_page: "打开 {app} 页面",
-                add_provider: "添加供应商…",
+                empty_app: "尚未配置",
                 almost_out: "快用完",
                 needs_attention: "需要处理",
                 problem_service_down: "路由服务没在运行（端口 {port}）",
@@ -1870,12 +1870,8 @@ fn app_entry(
     let app = snapshot.app.as_str();
     if snapshot.providers.is_empty() {
         return TrayEntry::item(
-            format!("nav:add:{app}"),
-            format!(
-                "{} · {}",
-                app_display_name(&snapshot.app),
-                texts.add_provider
-            ),
+            format!("nav:app:{app}"),
+            format!("{} · {}", app_display_name(&snapshot.app), texts.empty_app),
         );
     }
     TrayEntry::Submenu {
@@ -2061,8 +2057,8 @@ pub struct PanelApp {
     pub attention: Option<&'static str>,
     pub quota: Option<PanelQuota>,
     /// 还没有供应商：点这一行去添加。
-    pub add_id: Option<String>,
-    pub add_text: String,
+    pub empty_id: Option<String>,
+    pub empty_text: String,
     pub rows: Vec<PanelRow>,
 }
 
@@ -2283,11 +2279,11 @@ pub(crate) fn collect_panel_model(app_state: &AppState) -> Result<PanelModel, Ap
             header,
             attention: snapshot.needs_attention.then_some(texts.needs_attention),
             quota,
-            add_id: snapshot
+            empty_id: snapshot
                 .providers
                 .is_empty()
-                .then(|| format!("nav:add:{app}")),
-            add_text: texts.add_provider.to_string(),
+                .then(|| format!("nav:app:{app}")),
+            empty_text: texts.empty_app.to_string(),
             rows,
         });
     }
@@ -2643,7 +2639,7 @@ pub struct TrayNavigation {
     /// 设置分组（`routing`）
     #[serde(skip_serializing_if = "Option::is_none")]
     pub section: Option<String>,
-    /// `needsRoute`：弹「需要路由」对话框；`add`：开始添加供应商
+    /// `needsRoute`：这家要路由，主界面按应用页的提示处理
     #[serde(skip_serializing_if = "Option::is_none")]
     pub intent: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -2660,7 +2656,7 @@ impl TrayNavigation {
 static PENDING_NAVIGATION: Lazy<Mutex<Option<TrayNavigation>>> = Lazy::new(|| Mutex::new(None));
 
 /// 解析 `nav:…` 菜单 id：`nav:main`、`nav:settings:<分组>`、`nav:app:<应用>[:…]`、
-/// `nav:add:<应用>`、`nav:needs:<应用>:<供应商 id>`。
+/// `nav:needs:<应用>:<供应商 id>`。
 fn parse_nav_id(id: &str) -> Option<TrayNavigation> {
     let rest = id.strip_prefix("nav:")?;
     let mut parts = rest.splitn(3, ':');
@@ -2681,11 +2677,6 @@ fn parse_nav_id(id: &str) -> Option<TrayNavigation> {
         },
         "app" => TrayNavigation {
             app: Some(app(target?)?),
-            ..Default::default()
-        },
-        "add" => TrayNavigation {
-            app: Some(app(target?)?),
-            intent: Some("add".to_string()),
             ..Default::default()
         },
         "needs" => TrayNavigation {
@@ -4091,7 +4082,7 @@ mod tests {
                 "打开 AIFusion",
                 "---",
                 "Claude Code · Kimi For Coding",
-                "Grok Build · 添加供应商…",
+                "Grok Build · 尚未配置",
                 "---",
                 "轻量模式",
                 "---",
@@ -4099,7 +4090,7 @@ mod tests {
                 "退出 AIFusion",
             ]
         );
-        assert!(matches!(&menu[3], TrayEntry::Item { id, .. } if id == "nav:add:grokbuild"));
+        assert!(matches!(&menu[3], TrayEntry::Item { id, .. } if id == "nav:app:grokbuild"));
         assert!(matches!(&menu[8], TrayEntry::Item { id, .. } if id == "quit"));
     }
 
@@ -4675,10 +4666,9 @@ mod tests {
             })
         );
         assert_eq!(
-            parse_nav_id("nav:add:grokbuild"),
+            parse_nav_id("nav:app:grokbuild"),
             Some(TrayNavigation {
                 app: Some("grokbuild".to_string()),
-                intent: Some("add".to_string()),
                 ..Default::default()
             })
         );

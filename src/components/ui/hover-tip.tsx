@@ -31,7 +31,7 @@ function keepClosedUnlessKeyboard(event: React.FocusEvent) {
 }
 
 /**
- * 全局悬停提示：移上去立即显示深色胶囊。自带 0 延迟的 Provider，放在哪里都能用。
+ * 全局悬停提示：移上去立即显示反色小气泡。自带 0 延迟的 Provider，放在哪里都能用。
  * 纯图标按钮一律用它报操作内容；按钮自己仍要有 aria-label。
  *
  * 只认键盘带来的聚焦：菜单 / 弹层关闭时 Radix 会把焦点还给触发按钮，

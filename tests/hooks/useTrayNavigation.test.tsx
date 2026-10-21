@@ -37,7 +37,7 @@ describe("parseTrayNavigation", () => {
     ).toEqual({ app: "claude", intent: "needsRoute", providerId: "copilot" });
     expect(parseTrayNavigation({ app: "grokbuild", intent: "add" })).toEqual({
       app: "grokbuild",
-      intent: "add",
+      intent: undefined,
       providerId: undefined,
     });
     expect(parseTrayNavigation({ section: "routing" })).toEqual({

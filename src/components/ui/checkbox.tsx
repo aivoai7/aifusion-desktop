@@ -7,12 +7,19 @@ type CheckedState = boolean | "indeterminate";
 interface CheckboxProps
   extends Omit<
     React.InputHTMLAttributes<HTMLInputElement>,
-    "checked" | "type"
+    "checked" | "type" | "onChange"
   > {
   checked?: CheckedState;
+  onChange?: React.ChangeEventHandler<HTMLInputElement>;
   onCheckedChange?: (checked: boolean) => void;
 }
 
+/**
+ * 勾选框：原生 input（表单、键盘、屏幕阅读器都不用另外桥接），外观走 index.css 的
+ * .ui-checkbox —— 16px 见方、4px 圆角、发丝描边，选中是 azure 底 + 反白勾，
+ * 半选（indeterminate）是横杠。半选只由 checked 决定，DOM 的 indeterminate 属性
+ * 在每个渲染周期同步一次，避免受控更新后残留。
+ */
 const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
   (
     {
@@ -26,14 +33,12 @@ const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
     ref,
   ) => {
     const inputRef = React.useRef<HTMLInputElement>(null);
-    const isIndeterminate = checked === "indeterminate";
+    const mixed = checked === "indeterminate";
 
     React.useImperativeHandle(ref, () => inputRef.current as HTMLInputElement);
 
     React.useLayoutEffect(() => {
-      if (inputRef.current) {
-        inputRef.current.indeterminate = isIndeterminate;
-      }
+      if (inputRef.current) inputRef.current.indeterminate = mixed;
     });
 
     return (
@@ -41,13 +46,13 @@ const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
         {...props}
         ref={inputRef}
         type="checkbox"
-        checked={isIndeterminate ? false : checked}
-        aria-checked={isIndeterminate ? "mixed" : ariaChecked}
+        className={cn("ui-checkbox", className)}
+        checked={mixed ? false : checked}
+        aria-checked={mixed ? "mixed" : ariaChecked}
         onChange={(event) => {
           onChange?.(event);
           onCheckedChange?.(event.target.checked);
         }}
-        className={cn("ui-checkbox", className)}
       />
     );
   },

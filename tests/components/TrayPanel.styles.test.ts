@@ -40,8 +40,9 @@ function cardFor(platform: "windows" | "macos", dark: boolean) {
 describe("TrayPanel backgrounds stay scoped to each platform", () => {
   it.each([false, true])("keeps Windows cards opaque (dark=%s)", (dark) => {
     const style = cardFor("windows", dark);
+    // Ink & Grid 卡面：浅墨白 / 深墨蓝，必须是实色（整窗 Acrylic 已移除）
     expect(style.backgroundColor).toBe(
-      dark ? "rgb(36, 36, 40)" : "rgb(235, 235, 237)",
+      dark ? "rgb(16, 23, 37)" : "rgb(247, 249, 253)",
     );
     expect(getComputedStyle(root).backgroundColor).toBe("rgba(0, 0, 0, 0)");
   });
@@ -50,10 +51,11 @@ describe("TrayPanel backgrounds stay scoped to each platform", () => {
     "preserves the macOS overlay on native glass (dark=%s)",
     (dark) => {
       const style = cardFor("macos", dark);
+      // 玻璃在原生层，网页只叠一层很淡的墨色
       expect(style.backgroundColor).toBe(
-        dark ? "rgba(24, 24, 27, 0.08)" : "rgba(255, 255, 255, 0.06)",
+        dark ? "rgba(16, 23, 37, 0.5)" : "rgba(244, 246, 251, 0.55)",
       );
-      expect(style.boxShadow).toContain("0 6px 16px");
+      expect(style.boxShadow).toContain("0 8px 20px");
       expect(getComputedStyle(root).backgroundColor).toBe("rgba(0, 0, 0, 0)");
     },
   );

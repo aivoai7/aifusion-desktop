@@ -11,8 +11,9 @@ import {
 import { cn } from "@/lib/utils";
 
 /**
- * 通知条（v7 AUTHORING「通知条」）：圆角 10，左侧 16px 图标，不用左边框强调色。
- * 应用页的通知槽（NoticeSlot）里排成一列，按严重程度从上到下。
+ * 通知条（Ink & Grid）：soft 底色 + 左侧 2px 强调条，10px 圆角，不用整圈彩框。
+ * 每条通知自带 tone 的图标色，文字一级色、说明二级色；右侧放 compact 按钮。
+ * 应用页的通知槽（NoticeSlot）里按严重程度从上到下排一列。
  */
 export type NoticeTone =
   | "neutral"
@@ -24,22 +25,44 @@ export type NoticeTone =
 
 const TONE: Record<
   NoticeTone,
-  { box: string; icon: string; Icon: LucideIcon }
+  { box: string; rail: string; icon: string; Icon: LucideIcon }
 > = {
-  neutral: { box: "bg-subtle", icon: "text-fg-2", Icon: Info },
+  neutral: {
+    box: "bg-subtle",
+    rail: "bg-fg-3",
+    icon: "text-fg-2",
+    Icon: Info,
+  },
   warning: {
     box: "bg-warning-soft",
+    rail: "bg-warning",
     icon: "text-warning-text",
     Icon: AlertTriangle,
   },
   danger: {
     box: "bg-danger-soft",
+    rail: "bg-danger",
     icon: "text-danger-text",
     Icon: CircleAlert,
   },
-  route: { box: "bg-route-soft", icon: "text-route-text", Icon: Route },
-  stack: { box: "bg-stack-soft", icon: "text-stack-text", Icon: Layers },
-  direct: { box: "bg-direct-soft", icon: "text-direct-text", Icon: Info },
+  route: {
+    box: "bg-route-soft",
+    rail: "bg-route",
+    icon: "text-route-text",
+    Icon: Route,
+  },
+  stack: {
+    box: "bg-stack-soft",
+    rail: "bg-stack",
+    icon: "text-stack-text",
+    Icon: Layers,
+  },
+  direct: {
+    box: "bg-direct-soft",
+    rail: "bg-direct",
+    icon: "text-direct-text",
+    Icon: Info,
+  },
 };
 
 export interface NoticeProps {
@@ -72,13 +95,20 @@ export function Notice({
   return (
     <div
       className={cn(
-        "flex gap-2.5 rounded-panel py-2.5 pe-3.5 ps-[19px] text-body text-fg-1",
+        "relative flex gap-2.5 overflow-hidden rounded-panel py-2.5 pe-3 ps-4 text-body text-fg-1",
         // 只有一行时整行上下居中；有第二行时图标对齐第一行
         children ? "items-start" : "items-center",
         style.box,
         className,
       )}
     >
+      <span
+        aria-hidden="true"
+        className={cn(
+          "absolute inset-y-0 start-0 w-[2px] shrink-0",
+          style.rail,
+        )}
+      />
       <Icon
         aria-hidden="true"
         strokeWidth={1.5}
@@ -100,7 +130,7 @@ export function Notice({
           type="button"
           aria-label={dismissLabel}
           onClick={onDismiss}
-          className="-me-1 inline-flex h-6 w-6 shrink-0 items-center justify-center self-center rounded-control text-fg-2 transition-colors hover:bg-black/5 hover:text-fg-1 dark:hover:bg-white/10"
+          className="-me-1 inline-flex h-6 w-6 shrink-0 items-center justify-center self-center rounded-control text-fg-2 transition-colors hover:bg-subtle hover:text-fg-1"
         >
           <X className="h-4 w-4" strokeWidth={1.5} />
         </button>
@@ -110,7 +140,7 @@ export function Notice({
 }
 
 /**
- * 通知槽：一直渲染的 role="status" 容器（R4），操作后出现的提示放进来才会被读出。
+ * 通知槽：一直渲染的 role="status" 容器（屏幕阅读器会在操作后读出新增内容）。
  * 页面一打开就在的提示不要用 role="alert"。
  */
 export function NoticeSlot({

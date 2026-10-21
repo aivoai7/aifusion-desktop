@@ -31,6 +31,7 @@ import { initializeInputModality } from "@/lib/inputModality";
 
 installGlobalErrorHandlers();
 
+
 // 根据平台添加 body class，便于平台特定样式
 try {
   const ua = navigator.userAgent || "";

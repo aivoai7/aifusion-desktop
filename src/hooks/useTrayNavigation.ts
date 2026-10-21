@@ -9,8 +9,8 @@ import { SETTINGS_SECTIONS, type SettingsSection } from "@/lib/navigation";
 export interface TrayNavigation {
   app?: AppId;
   section?: SettingsSection;
-  /** `needsRoute`：弹「需要路由」对话框；`add`：开始添加供应商 */
-  intent?: "needsRoute" | "add";
+  /** `needsRoute`：这家需要路由，主界面把用户带到那个应用的详情页 */
+  intent?: "needsRoute";
   providerId?: string;
 }
 
@@ -29,16 +29,13 @@ export function parseTrayNavigation(
   if (section) return { section };
   const app = APP_IDS.find((id) => id === raw.app);
   if (!app) return null;
-  const intent =
-    raw.intent === "needsRoute" || raw.intent === "add"
-      ? raw.intent
-      : undefined;
+  const intent = raw.intent === "needsRoute" ? raw.intent : undefined;
   if (intent === "needsRoute" && !raw.providerId) return { app };
   return { app, intent, providerId: raw.providerId };
 }
 
 /**
- * 托盘里点「打开 X 页面」「（需要路由）…」「添加供应商…」和问题区：后端先打开主窗口，留下一条
+ * 托盘里点「打开 X 页面」「（需要路由）…」和问题区：后端先打开主窗口，留下一条
  * 导航再发 `tray-navigate`。轻量模式下窗口是新建的，事件可能早于监听，所以挂载时也取一次。
  */
 export function useTrayNavigation(

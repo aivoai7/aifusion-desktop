@@ -66,8 +66,8 @@ export interface PanelApp {
   header: string | null;
   attention: string | null;
   quota: PanelQuota | null;
-  addId: string | null;
-  addText: string;
+  emptyId: string | null;
+  emptyText: string;
   rows: PanelRow[];
 }
 

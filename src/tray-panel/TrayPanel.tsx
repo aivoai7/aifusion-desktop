@@ -53,9 +53,9 @@ const SUB_MAX_HEIGHT = 540;
 const HOVER_OPEN_MS = 90;
 const HOVER_SWITCH_MS = 180;
 
-const ROW_HOVER = "hover:bg-black/[0.06] dark:hover:bg-white/[0.08]";
+const ROW_HOVER = "hover:bg-subtle";
 const FOCUS_RING =
-  "outline-none focus-visible:ring-2 focus-visible:ring-blue-500/60";
+  "outline-none focus-visible:ring-2 focus-visible:ring-ring/45";
 
 function readTab(): Tab {
   try {
@@ -123,29 +123,29 @@ function QuotaBlock({
           <div key={index} className="flex items-center gap-2">
             <span
               className={cn(
-                "shrink-0 text-[11px] tabular-nums",
-                line.warn ? "text-amber-500" : "text-muted-foreground",
+                "af-num shrink-0 text-badge",
+                line.warn ? "text-warning-text" : "text-fg-3",
               )}
             >
               {line.text}
             </span>
             {line.left != null && (
-              <span className="h-1 min-w-6 flex-1 overflow-hidden rounded-full bg-black/10 dark:bg-white/10">
+              <span className="h-[3px] min-w-6 flex-1 overflow-hidden rounded-full bg-hairline-strong">
                 <span
                   className={cn(
                     "block h-full rounded-full",
                     line.left <= 0
-                      ? "bg-red-500"
+                      ? "bg-danger"
                       : line.warn
-                        ? "bg-amber-500"
-                        : "bg-blue-500",
+                        ? "bg-warning"
+                        : "bg-action",
                   )}
                   style={{ width: `${Math.max(line.left, 2)}%` }}
                 />
               </span>
             )}
             {when && (
-              <span className="shrink-0 text-[10.5px] tabular-nums text-muted-foreground">
+              <span className="af-num shrink-0 text-badge text-fg-3">
                 {texts.resetsAt.replace("{when}", when)}
               </span>
             )}
@@ -153,13 +153,11 @@ function QuotaBlock({
         );
       })}
       {quota.resetCredits != null && quota.resetCredits > 0 && (
-        <span className="text-[11px] text-muted-foreground">
+        <span className="af-num text-badge text-fg-3">
           {texts.resetCredits.replace("{count}", String(quota.resetCredits))}
         </span>
       )}
-      {quota.note && (
-        <span className="text-[11px] text-amber-500">{quota.note}</span>
-      )}
+      {quota.note && <span className="text-badge text-warning-text">{quota.note}</span>}
     </div>
   );
 }
@@ -184,8 +182,8 @@ function AppRow({
   onOpen: () => void;
 }) {
   const Chevron = side === "left" ? ChevronLeft : ChevronRight;
-  const subtitle = app.addId
-    ? app.addText
+  const subtitle = app.emptyId
+    ? app.emptyText
     : [app.current, app.mode].filter(Boolean).join(" · ");
   return (
     <button
@@ -196,39 +194,44 @@ function AppRow({
       onMouseLeave={onLeave}
       onClick={onOpen}
       className={cn(
-        "flex w-full items-start gap-3 rounded-[10px] px-2.5 py-2 text-left transition-colors",
+        "relative flex w-full items-start gap-2.5 rounded-panel px-2 py-2 text-left transition-colors duration-100",
         FOCUS_RING,
-        active ? "bg-blue-500/[0.16]" : ROW_HOVER,
+        active ? "bg-selected" : ROW_HOVER,
       )}
     >
-      <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-black/[0.05] dark:bg-white/[0.08]">
+      {/* 选中行左缘一条 2px azure 竖条，和主界面侧栏同一套选中语言 */}
+      {active && (
+        <span
+          aria-hidden="true"
+          className="absolute -start-[2px] top-1/2 h-[20px] w-[2px] -translate-y-1/2 rounded-full bg-action"
+        />
+      )}
+      <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-control border border-hairline bg-subtle">
         <AppGlyph app={app.app} size={20} badgeClassName="bg-transparent" />
       </span>
       <span className="min-w-0 flex-1">
         <span className="flex items-center gap-1.5">
           <span
             className={cn(
-              "truncate text-[13.5px] font-semibold",
-              active && "text-blue-500",
+              "truncate text-strong",
+              active ? "text-action-text" : "text-fg-1",
             )}
           >
             {app.name}
           </span>
           {app.attention && (
-            <span className="shrink-0 rounded bg-amber-500/15 px-1 text-[10px] font-medium text-amber-600 dark:text-amber-400">
+            <span className="shrink-0 rounded-[5px] bg-warning-soft px-1 text-badge font-medium text-warning-text">
               {app.attention}
             </span>
           )}
         </span>
-        <span className="block truncate text-xs text-muted-foreground">
-          {subtitle}
-        </span>
+        <span className="block truncate text-caption text-fg-3">{subtitle}</span>
         {app.quota && <QuotaBlock quota={app.quota} texts={texts} />}
       </span>
-      {app.addId ? (
-        <Plus className="mt-2 h-4 w-4 shrink-0 text-muted-foreground" />
+      {app.emptyId ? (
+        <Plus className="mt-2 h-4 w-4 shrink-0 text-fg-3" />
       ) : (
-        <Chevron className="mt-2 h-4 w-4 shrink-0 text-muted-foreground" />
+        <Chevron className="mt-2 h-4 w-4 shrink-0 text-fg-3" />
       )}
     </button>
   );
@@ -254,13 +257,11 @@ function SubRow({
   onAction: (id: string) => void;
 }) {
   if (row.kind === "separator") {
-    return (
-      <div className="mx-2 my-1 h-px bg-black/[0.08] dark:bg-white/[0.08]" />
-    );
+    return <div className="mx-2 my-1.5 h-px bg-hairline" />;
   }
   if (row.kind === "label") {
     return (
-      <div className="px-3 py-1 text-[11px] text-muted-foreground">
+      <div className="px-3 pb-1 pt-2.5 text-badge font-medium uppercase tracking-[0.08em] text-fg-3">
         {row.text}
       </div>
     );
@@ -275,16 +276,16 @@ function SubRow({
       disabled={!row.enabled}
       onClick={() => onAction(row.id)}
       className={cn(
-        "flex w-full gap-2.5 rounded-lg px-2.5 py-1.5 text-left transition-colors",
+        "flex w-full gap-2.5 rounded-control px-2 py-1.5 text-left transition-colors duration-100",
         // 带额度的行高，图标和「使用中」贴着第一行
         provider?.quota ? "items-start" : "items-center",
         FOCUS_RING,
-        row.enabled ? ROW_HOVER : "cursor-default opacity-55",
+        row.enabled ? ROW_HOVER : "cursor-default opacity-45",
       )}
     >
-      <span className="flex h-6 w-6 shrink-0 items-center justify-center">
+      <span className="flex h-6 w-6 shrink-0 items-center justify-center text-fg-2">
         {row.checked ? (
-          <Check className="h-4 w-4 text-blue-500" strokeWidth={2.5} />
+          <Check className="h-4 w-4 text-action" strokeWidth={2.5} />
         ) : provider ? (
           <ProviderIcon
             icon={provider.icon ?? undefined}
@@ -295,20 +296,16 @@ function SubRow({
         ) : null}
       </span>
       <span className="min-w-0 flex-1">
-        <span className="block truncate text-[13px] font-medium">
-          {row.text}
-        </span>
+        <span className="block truncate text-body text-fg-1">{row.text}</span>
         {hint && (
-          <span className="block truncate text-[11px] text-muted-foreground">
-            {hint}
-          </span>
+          <span className="block truncate text-caption text-fg-3">{hint}</span>
         )}
         {provider?.quota && (
           <QuotaBlock quota={provider.quota} texts={texts} compact />
         )}
       </span>
       {row.checked && provider && (
-        <span className="shrink-0 text-[11px] font-medium text-blue-500">
+        <span className="shrink-0 text-badge font-medium text-action-text">
           {texts.inUse}
         </span>
       )}
@@ -341,29 +338,29 @@ function SubPanel({
 
   return (
     <>
-      <div className="shrink-0 px-4 pb-2 pt-3">
-        <div className="truncate text-[14px] font-semibold">{app.name}</div>
-        <div className="truncate text-xs text-muted-foreground">
+      <div className="hairline-b shrink-0 px-3.5 pb-2.5 pt-3">
+        <div className="truncate text-title">{app.name}</div>
+        <div className="truncate text-caption text-fg-3">
           {app.header ?? texts.switchProvider}
         </div>
       </div>
       {providerCount > 4 && (
-        <div className="shrink-0 px-3 pb-2">
-          <label className="flex items-center gap-2 rounded-lg bg-black/[0.05] px-2.5 py-1.5 dark:bg-white/[0.08]">
-            <Search className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+        <div className="shrink-0 px-2.5 pb-2">
+          <label className="flex items-center gap-2 rounded-control border border-hairline bg-subtle px-2 py-1.5">
+            <Search className="h-3.5 w-3.5 shrink-0 text-fg-3" />
             <input
               ref={searchRef}
               value={query}
               onChange={(event) => onQuery(event.target.value)}
               placeholder={texts.searchPlaceholder}
-              className="min-w-0 flex-1 bg-transparent text-[13px] outline-none placeholder:text-muted-foreground"
+              className="min-w-0 flex-1 bg-transparent text-body text-fg-1 outline-none placeholder:text-fg-3"
             />
           </label>
         </div>
       )}
       <div className="tp-scroll min-h-0 flex-1 px-1.5 pb-1.5">
         {shown.length === 0 ? (
-          <div className="px-3 py-4 text-center text-xs text-muted-foreground">
+          <div className="px-3 py-4 text-center text-caption text-fg-3">
             {texts.noMatch}
           </div>
         ) : (
@@ -400,13 +397,13 @@ function FooterButton({
       title={title}
       onClick={onClick}
       className={cn(
-        "flex items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left text-[13px] transition-colors",
+        "flex items-center gap-2.5 rounded-control px-2 py-1.5 text-left text-body text-fg-2 transition-colors duration-100",
         FOCUS_RING,
         ROW_HOVER,
         className,
       )}
     >
-      <span className="flex h-5 w-5 shrink-0 items-center justify-center text-muted-foreground">
+      <span className="flex h-5 w-5 shrink-0 items-center justify-center text-fg-3">
         {icon}
       </span>
       <span className="truncate">{text}</span>
@@ -489,7 +486,7 @@ export function TrayPanel() {
   const apps = state?.apps ?? [];
   const openEntry =
     tab === "config"
-      ? apps.find((app) => app.app === openApp && !app.addId)
+      ? apps.find((app) => app.app === openApp && !app.emptyId)
       : undefined;
 
   /**
@@ -628,7 +625,7 @@ export function TrayPanel() {
 
   const openSub = useCallback((app: PanelApp | null) => {
     window.clearTimeout(hoverTimer.current);
-    setOpenApp(app && !app.addId ? app.app : null);
+    setOpenApp(app && !app.emptyId ? app.app : null);
     setQuery("");
   }, []);
 
@@ -688,7 +685,7 @@ export function TrayPanel() {
       const back = forward === "ArrowLeft" ? "ArrowRight" : "ArrowLeft";
       if (event.key === forward && target?.dataset.appRow) {
         const app = apps.find((entry) => entry.app === target.dataset.appRow);
-        if (app && !app.addId) {
+        if (app && !app.emptyId) {
           event.preventDefault();
           openSub(app);
           window.setTimeout(() => {
@@ -768,27 +765,27 @@ export function TrayPanel() {
           ...cornerStyle("main"),
         }}
       >
-        <div className="flex shrink-0 items-center px-4 pb-2 pt-3">
-          <span className="text-[15px] font-semibold">AIFusion</span>
+        <div className="flex shrink-0 items-center px-3.5 pb-2 pt-3">
+          <span className="text-title">AIFusion</span>
           <button
             type="button"
             title={texts.settings}
             aria-label={texts.settings}
             onClick={() => action("nav:settings:general")}
             className={cn(
-              "ms-auto flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground",
+              "ms-auto flex h-7 w-7 items-center justify-center rounded-control text-fg-3 transition-colors duration-100",
               FOCUS_RING,
               ROW_HOVER,
             )}
           >
-            <Settings className="h-4 w-4" />
+            <Settings className="h-4 w-4" strokeWidth={1.75} />
           </button>
         </div>
 
-        <div className="shrink-0 px-3 pb-2">
+        <div className="shrink-0 px-2.5 pb-2">
           <div
             role="tablist"
-            className="flex rounded-lg bg-black/[0.06] p-0.5 dark:bg-white/[0.08]"
+            className="flex rounded-control border border-hairline bg-subtle p-[3px]"
           >
             {(["config", "usage"] as const).map((value) => (
               <button
@@ -798,11 +795,11 @@ export function TrayPanel() {
                 aria-selected={tab === value}
                 onClick={() => changeTab(value)}
                 className={cn(
-                  "flex-1 rounded-md py-1 text-xs font-medium transition-colors",
+                  "flex-1 rounded-[4px] py-1 text-body transition-colors duration-100",
                   FOCUS_RING,
                   tab === value
-                    ? "bg-white text-foreground shadow-sm dark:bg-white/[0.16]"
-                    : "text-muted-foreground hover:text-foreground",
+                    ? "bg-surface font-medium text-fg-1 shadow-sm"
+                    : "text-fg-3 hover:text-fg-1",
                 )}
               >
                 {value === "config" ? texts.configTab : texts.usageTab}
@@ -820,7 +817,7 @@ export function TrayPanel() {
                   type="button"
                   onClick={() => action(problem.id)}
                   className={cn(
-                    "flex items-start gap-2 rounded-lg px-2.5 py-1.5 text-left text-xs text-amber-600 dark:text-amber-400",
+                    "flex items-start gap-2 rounded-control px-2 py-1.5 text-left text-caption text-warning-text",
                     FOCUS_RING,
                     ROW_HOVER,
                   )}
@@ -830,7 +827,7 @@ export function TrayPanel() {
                 </button>
               ))}
               {state.feedback && (
-                <div className="px-2.5 py-1 text-[11.5px] text-muted-foreground">
+                <div className="px-2 py-1 text-caption text-fg-3">
                   {state.feedback}
                 </div>
               )}
@@ -844,8 +841,8 @@ export function TrayPanel() {
                   onHover={() => hoverApp(app)}
                   onLeave={() => window.clearTimeout(hoverTimer.current)}
                   onOpen={() =>
-                    app.addId
-                      ? action(app.addId)
+                    app.emptyId
+                      ? action(app.emptyId)
                       : openSub(openApp === app.app ? null : app)
                   }
                 />
@@ -856,34 +853,32 @@ export function TrayPanel() {
           )}
         </div>
 
-        <div className="shrink-0 border-t border-black/[0.08] px-1.5 py-1.5 dark:border-white/[0.08]">
+        <div className="hairline-t shrink-0 px-1.5 py-1.5">
           <button
             type="button"
             role="switch"
             aria-checked={state.lightweight}
             onClick={() => action("lightweight_mode")}
             className={cn(
-              "flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left text-[13px]",
+              "flex w-full items-center gap-2.5 rounded-control px-2 py-1.5 text-left text-body text-fg-2",
               FOCUS_RING,
               ROW_HOVER,
             )}
           >
-            <span className="flex h-5 w-5 shrink-0 items-center justify-center text-muted-foreground">
-              <Feather className="h-4 w-4" />
+            <span className="flex h-5 w-5 shrink-0 items-center justify-center text-fg-3">
+              <Feather className="h-4 w-4" strokeWidth={1.75} />
             </span>
             <span className="flex-1">{texts.lightweightMode}</span>
             <span
               className={cn(
-                "relative h-[18px] w-8 shrink-0 rounded-full transition-colors",
-                state.lightweight
-                  ? "bg-blue-500"
-                  : "bg-black/15 dark:bg-white/20",
+                "relative h-[18px] w-[30px] shrink-0 rounded-full transition-colors duration-150",
+                state.lightweight ? "bg-action" : "bg-control-off",
               )}
             >
               <span
                 className={cn(
-                  "absolute top-[2px] h-[14px] w-[14px] rounded-full bg-white shadow transition-[left]",
-                  state.lightweight ? "left-[16px]" : "left-[2px]",
+                  "absolute top-[2px] h-[14px] w-[14px] rounded-full bg-white shadow-sm transition-transform duration-150",
+                  state.lightweight ? "translate-x-[15px]" : "translate-x-[3px]",
                 )}
               />
             </span>

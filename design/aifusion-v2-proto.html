@@ -1,0 +1,564 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>AIFusion · 全新视觉方向 v2（Ink & Grid）</title>
+<style>
+  /* ── Ink & Grid 设计 token（与 cc-switch 的暖橙玻璃卡完全不同源）──────── */
+  :root {
+    --bg: #0a0e17;
+    --panel: #101725;
+    --panel-2: #141d2e;
+    --panel-3: #1a2437;
+    --hairline: rgba(255, 255, 255, .075);
+    --hairline-strong: rgba(255, 255, 255, .14);
+    --fg-1: #e8edf7;
+    --fg-2: #9aa6bf;
+    --fg-3: #66738f;
+    --azure: #4c8dff;
+    --azure-deep: #2f6ae0;
+    --azure-soft: rgba(76, 141, 255, .13);
+    --teal: #35d6c0;
+    --teal-soft: rgba(53, 214, 192, .12);
+    --amber: #ffb020;
+    --amber-soft: rgba(255, 176, 32, .12);
+    --rose: #ff5a6e;
+    --rose-soft: rgba(255, 90, 110, .12);
+    --violet: #9b8cff;
+    --violet-soft: rgba(155, 140, 255, .13);
+    --r-card: 10px;
+    --r-ctl: 6px;
+    --sp: 4px;
+    --mono: ui-monospace, "JetBrains Mono", "SFMono-Regular", Consolas, monospace;
+    --sans: "Inter", "Segoe UI Variable", "Microsoft YaHei UI", system-ui, sans-serif;
+    --shadow: 0 1px 0 rgba(255,255,255,.04) inset, 0 8px 24px rgba(0,0,0,.35);
+  }
+  html.light {
+    --bg: #f4f6fb;
+    --panel: #ffffff;
+    --panel-2: #f7f9fd;
+    --panel-3: #eef2f9;
+    --hairline: rgba(16, 24, 40, .09);
+    --hairline-strong: rgba(16, 24, 40, .16);
+    --fg-1: #101728;
+    --fg-2: #4c5871;
+    --fg-3: #7c889f;
+    --azure-soft: rgba(47, 106, 224, .09);
+    --teal-soft: rgba(13, 148, 136, .1);
+    --amber-soft: rgba(180, 120, 0, .1);
+    --rose-soft: rgba(214, 45, 66, .09);
+    --violet-soft: rgba(109, 86, 224, .1);
+    --teal: #0d9488; --amber: #b47800; --rose: #d62d42; --violet: #6d56e0;
+    --shadow: 0 1px 2px rgba(16,24,40,.06), 0 6px 18px rgba(16,24,40,.05);
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--fg-1); font: 13px/1.55 var(--sans); letter-spacing: -.006em; }
+  ::-webkit-scrollbar { width: 9px; height: 9px; }
+  ::-webkit-scrollbar-thumb { background: var(--panel-3); border-radius: 99px; border: 2px solid transparent; background-clip: padding-box; }
+
+  /* ── 原型导航条（非应用 UI）──────────────────────────────────────── */
+  .proto { position: fixed; top: 10px; right: 14px; z-index: 99; display: flex; gap: 6px; align-items: center;
+    background: rgba(10,14,23,.82); backdrop-filter: blur(10px); border: 1px solid var(--hairline-strong);
+    border-radius: 99px; padding: 5px 8px; }
+  html.light .proto { background: rgba(255,255,255,.9); }
+  .proto button { font: 11px var(--sans); color: var(--fg-2); background: transparent; border: 0; border-radius: 99px; padding: 4px 9px; cursor: pointer; }
+  .proto button.on { background: var(--azure); color: #fff; }
+  .proto .sep { width: 1px; height: 14px; background: var(--hairline-strong); }
+
+  /* ── 应用骨架 ─────────────────────────────────────────────────────── */
+  .win { height: 100vh; display: grid; grid-template-rows: 44px 1fr; border: 1px solid var(--hairline); overflow: hidden; }
+  .tb { display: flex; align-items: center; gap: 12px; padding: 0 10px 0 14px; border-bottom: 1px solid var(--hairline); background: var(--panel); }
+  .brand { display: flex; align-items: center; gap: 8px; font-weight: 620; letter-spacing: -.02em; }
+  .mark { width: 20px; height: 20px; border-radius: 5px; background: linear-gradient(150deg, var(--azure), var(--violet));
+    display: grid; place-items: center; font: 700 10px var(--mono); color: #fff; }
+  .crumb { color: var(--fg-3); font-size: 12px; }
+  .crumb b { color: var(--fg-2); font-weight: 500; }
+  .search { margin-left: auto; display: flex; align-items: center; gap: 7px; width: 210px; height: 26px; padding: 0 9px;
+    border: 1px solid var(--hairline); border-radius: var(--r-ctl); background: var(--panel-2); color: var(--fg-3); font-size: 12px; }
+  .wallet { display: flex; align-items: baseline; gap: 5px; height: 26px; padding: 0 10px; border: 1px solid var(--hairline);
+    border-radius: 99px; background: var(--panel-2); font-family: var(--mono); font-size: 12px; }
+  .wallet span { color: var(--fg-3); font-size: 10px; font-family: var(--sans); }
+  .wctl { display: flex; gap: 2px; }
+  .wctl i { width: 26px; height: 20px; border-radius: 4px; display: grid; place-items: center; color: var(--fg-3); font: 11px var(--mono); }
+  .wctl i:hover { background: var(--panel-3); }
+
+  .body { display: grid; grid-template-columns: 236px 1fr; min-height: 0; }
+  .nav { border-right: 1px solid var(--hairline); background: var(--panel); padding: 12px 8px; overflow-y: auto; }
+  .nav h4 { margin: 14px 8px 5px; font: 500 10px/1 var(--sans); letter-spacing: .09em; text-transform: uppercase; color: var(--fg-3); }
+  .nav h4:first-child { margin-top: 0; }
+  .nav a { display: flex; align-items: center; gap: 9px; height: 30px; padding: 0 9px; border-radius: var(--r-ctl);
+    color: var(--fg-2); text-decoration: none; font-size: 12.5px; position: relative; }
+  .nav a:hover { background: var(--panel-2); color: var(--fg-1); }
+  .nav a.on { background: var(--azure-soft); color: var(--fg-1); font-weight: 520; }
+  .nav a.on::before { content: ""; position: absolute; left: -8px; top: 7px; bottom: 7px; width: 2px; border-radius: 0 2px 2px 0; background: var(--azure); }
+  .gl { width: 15px; height: 15px; border-radius: 4px; display: grid; place-items: center; font: 700 9px var(--mono);
+    color: var(--fg-2); background: var(--panel-3); border: 1px solid var(--hairline); flex: none; }
+  .nav a.on .gl { border-color: color-mix(in srgb, var(--azure) 45%, transparent); color: var(--azure); background: color-mix(in srgb, var(--azure) 12%, transparent); }
+  .nav .dot { margin-left: auto; width: 5px; height: 5px; border-radius: 99px; background: var(--teal); }
+  .nav .dot.warn { background: var(--amber); }
+  .nav .num { margin-left: auto; font: 10px var(--mono); color: var(--fg-3); }
+
+  .main { overflow-y: auto; min-width: 0; }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 22px 26px 60px; }
+  .h1 { font-size: 19px; font-weight: 600; letter-spacing: -.022em; margin: 0; }
+  .sub { color: var(--fg-3); font-size: 12px; margin: 3px 0 20px; }
+  .sec { display: flex; align-items: baseline; gap: 10px; margin: 26px 0 10px; }
+  .sec h2 { font-size: 13px; font-weight: 590; margin: 0; letter-spacing: -.01em; }
+  .sec p { margin: 0; color: var(--fg-3); font-size: 11.5px; }
+
+  /* 卡片：发丝边 + 无光晕 + hover 强调条（区别于上游 20px 玻璃暖橙卡） */
+  .card { background: var(--panel); border: 1px solid var(--hairline); border-radius: var(--r-card); box-shadow: var(--shadow); }
+  .card.pad { padding: 16px; }
+  .row { display: flex; align-items: center; gap: 10px; }
+  .grid4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; }
+  .kpi { padding: 14px 16px; border-right: 1px solid var(--hairline); }
+  .kpi:last-child { border-right: 0; }
+  .kpi label { display: block; font-size: 11px; color: var(--fg-3); margin-bottom: 5px; }
+  .kpi b { font: 600 26px/1 var(--mono); letter-spacing: -.03em; font-variant-numeric: tabular-nums; }
+  .kpi b em { font: 500 12px var(--sans); font-style: normal; color: var(--fg-3); margin-left: 4px; }
+  .kpi small { display: block; margin-top: 5px; font-size: 11px; color: var(--fg-3); }
+
+  .btn { display: inline-flex; align-items: center; gap: 6px; height: 27px; padding: 0 11px; border-radius: var(--r-ctl);
+    border: 1px solid var(--hairline-strong); background: var(--panel-2); color: var(--fg-1); font: 500 12px var(--sans); cursor: pointer; }
+  .btn:hover { background: var(--panel-3); }
+  .btn.pri { background: var(--azure-deep); border-color: var(--azure-deep); color: #fff; }
+  .btn.pri:hover { background: var(--azure); }
+  .btn.ghost { background: transparent; border-color: transparent; color: var(--fg-2); }
+  .btn.ghost:hover { background: var(--panel-2); color: var(--fg-1); }
+  .chip { display: inline-flex; align-items: center; gap: 5px; height: 20px; padding: 0 8px; border-radius: 99px;
+    font: 500 11px var(--sans); border: 1px solid transparent; }
+  .chip.ok { color: var(--teal); background: var(--teal-soft); border-color: color-mix(in srgb, var(--teal) 28%, transparent); }
+  .chip.info { color: var(--azure); background: var(--azure-soft); border-color: color-mix(in srgb, var(--azure) 28%, transparent); }
+  .chip.warn { color: var(--amber); background: var(--amber-soft); border-color: color-mix(in srgb, var(--amber) 28%, transparent); }
+  .chip.mute { color: var(--fg-3); background: var(--panel-2); border-color: var(--hairline); }
+
+  table { width: 100%; border-collapse: collapse; }
+  th, td { text-align: left; padding: 9px 14px; border-bottom: 1px solid var(--hairline); font-size: 12.5px; vertical-align: middle; }
+  th { font: 500 11px var(--sans); color: var(--fg-3); text-transform: uppercase; letter-spacing: .06em; background: var(--panel-2); }
+  tr:last-child td { border-bottom: 0; }
+  tbody tr:hover td { background: color-mix(in srgb, var(--panel-2) 60%, transparent); }
+  td.mono, .mono { font-family: var(--mono); font-variant-numeric: tabular-nums; font-size: 12px; }
+  td.right, th.right { text-align: right; }
+  .spec { display: grid; grid-template-columns: 132px 1fr; }
+  .spec dt { padding: 11px 0 11px 16px; color: var(--fg-3); font-size: 12px; border-bottom: 1px solid var(--hairline); }
+  .spec dd { margin: 0; padding: 11px 16px 11px 0; border-bottom: 1px solid var(--hairline); font-size: 12.5px; }
+  .spec dt:last-of-type, .spec dd:last-of-type { border-bottom: 0; }
+
+  /* 客户端九宫格：单色字块 + 品牌色点，不用上游彩色 logo */
+  .apps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .app { position: relative; padding: 13px 14px; background: var(--panel); border: 1px solid var(--hairline);
+    border-radius: var(--r-card); cursor: pointer; overflow: hidden; }
+  .app::after { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 2px; background: var(--azure);
+    transform: scaleY(0); transition: transform .16s ease; }
+  .app:hover::after { transform: scaleY(1); }
+  .app:hover { border-color: var(--hairline-strong); }
+  .app h3 { margin: 0 0 9px; font-size: 12.5px; font-weight: 570; display: flex; align-items: center; gap: 7px; }
+  .app dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 3px 10px; font-size: 11.5px; }
+  .app dt { color: var(--fg-3); }
+  .app dd { margin: 0; font-family: var(--mono); font-size: 11.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .app footer { margin-top: 10px; display: flex; align-items: center; gap: 6px; }
+
+  .bar { height: 6px; border-radius: 99px; background: var(--panel-3); overflow: hidden; display: flex; }
+  .bar i { display: block; height: 100%; }
+  .spark { display: flex; align-items: flex-end; gap: 3px; height: 46px; }
+  .spark i { flex: 1; background: color-mix(in srgb, var(--azure) 55%, transparent); border-radius: 2px 2px 0 0; min-height: 2px; }
+  .spark i.hi { background: var(--azure); }
+  .heat { display: grid; grid-template-columns: repeat(28, 1fr); gap: 3px; }
+  .heat i { aspect-ratio: 1; border-radius: 2px; background: var(--panel-3); }
+  .tabs { display: flex; gap: 2px; border-bottom: 1px solid var(--hairline); margin-bottom: 16px; }
+  .tabs button { background: transparent; border: 0; border-bottom: 2px solid transparent; padding: 7px 12px; margin-bottom: -1px;
+    color: var(--fg-3); font: 500 12.5px var(--sans); cursor: pointer; }
+  .tabs button.on { color: var(--fg-1); border-bottom-color: var(--azure); }
+  .sw { width: 32px; height: 18px; border-radius: 99px; background: var(--panel-3); position: relative; border: 1px solid var(--hairline-strong); }
+  .sw::after { content: ""; position: absolute; top: 2px; left: 2px; width: 12px; height: 12px; border-radius: 99px; background: var(--fg-3); }
+  .sw.on { background: var(--azure-deep); border-color: var(--azure-deep); }
+  .sw.on::after { left: 16px; background: #fff; }
+  .screen { display: none; }
+  .screen.on { display: block; }
+  .split { display: grid; grid-template-columns: 1fr 300px; gap: 14px; align-items: start; }
+  .note { font-size: 11.5px; color: var(--fg-3); }
+  .kbd { font: 11px var(--mono); border: 1px solid var(--hairline-strong); border-bottom-width: 2px; border-radius: 4px; padding: 1px 5px; color: var(--fg-2); }
+  .token { display: flex; align-items: center; gap: 8px; padding: 7px 0; border-bottom: 1px solid var(--hairline); font-size: 12px; }
+  .token i { width: 26px; height: 26px; border-radius: 6px; border: 1px solid var(--hairline-strong); }
+  .type { display: flex; align-items: baseline; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--hairline); }
+  .type span { font: 10.5px var(--mono); color: var(--fg-3); width: 150px; flex: none; }
+</style>
+</head>
+<body>
+
+<div class="proto">
+  <button data-s="ds" class="on">设计系统</button>
+  <button data-s="home">首页总览</button>
+  <button data-s="client">客户端详情</button>
+  <button data-s="mcp">MCP</button>
+  <button data-s="skills">Skills</button>
+  <button data-s="usage">用量</button>
+  <button data-s="sessions">会话</button>
+  <button data-s="settings">设置</button>
+  <div class="sep"></div>
+  <button id="theme">☾ / ☀</button>
+</div>
+
+<div class="win">
+  <div class="tb">
+    <div class="brand"><div class="mark">AF</div>AIFusion</div>
+    <div class="crumb" id="crumb">工作台 / <b>设计系统</b></div>
+    <div class="search">搜索客户端、模型、命令<span style="margin-left:auto" class="kbd">⌘K</span></div>
+    <div class="wallet">$10,000.00 <span>USD</span></div>
+    <div class="wctl"><i>—</i><i>▢</i><i>✕</i></div>
+  </div>
+
+  <div class="body">
+    <nav class="nav">
+      <h4>工作台</h4>
+      <a data-s="home"><span class="gl">⌂</span>首页总览</a>
+      <h4>客户端</h4>
+      <a data-s="client"><span class="gl">CC</span>Claude Code<span class="dot"></span></a>
+      <a data-s="client"><span class="gl">CD</span>Claude Desktop<span class="dot"></span></a>
+      <a data-s="client"><span class="gl">CX</span>Codex<span class="dot"></span></a>
+      <a data-s="client"><span class="gl">GM</span>Gemini CLI<span class="dot"></span></a>
+      <a data-s="client"><span class="gl">GB</span>Grok Build<span class="dot"></span></a>
+      <a data-s="client"><span class="gl">OC</span>OpenCode<span class="dot"></span></a>
+      <a data-s="client"><span class="gl">OW</span>OpenClaw<span class="dot"></span></a>
+      <a data-s="client"><span class="gl">HM</span>Hermes<span class="dot"></span></a>
+      <a data-s="client"><span class="gl">PI</span>Pi<span class="dot"></span></a>
+      <a data-s="client"><span class="gl">MM</span>MiniMax Code<span class="dot"></span></a>
+      <h4>工具与数据</h4>
+      <a data-s="mcp"><span class="gl">M</span>MCP<span class="num">12</span></a>
+      <a data-s="skills"><span class="gl">S</span>Skills<span class="num">34</span></a>
+      <a data-s="usage"><span class="gl">U</span>用量统计</a>
+      <a data-s="sessions"><span class="gl">V</span>会话<span class="num">218</span></a>
+      <h4>系统</h4>
+      <a data-s="settings"><span class="gl">⚙</span>设置</a>
+      <a><span class="gl">↗</span>检查更新<span class="dot warn"></span></a>
+    </nav>
+
+    <div class="main">
+      <div class="wrap">
+
+        <!-- ══ 设计系统 ══════════════════════════════════════════════ -->
+        <section class="screen on" id="s-ds">
+          <h1 class="h1">Ink & Grid · 全新视觉语言</h1>
+          <p class="sub">与 cc-switch 的「暖橙 + 20px 玻璃卡 + 彩色 logo 侧栏」彻底分开：深蓝墨底、发丝分隔线、等宽数字、2px 强调条、单色字块图标。</p>
+
+          <div class="split">
+            <div>
+              <div class="sec"><h2>色板</h2><p>明暗双套，同一组变量名，落地时直接替换 src/index.css</p></div>
+              <div class="card pad">
+                <div class="token"><i style="background:#0a0e17"></i><div><b>--bg</b> · #0A0E17</div><div class="note" style="margin-left:auto">应用底</div></div>
+                <div class="token"><i style="background:#101725"></i><div><b>--panel</b> · #101725</div><div class="note" style="margin-left:auto">卡片 / 侧栏</div></div>
+                <div class="token"><i style="background:#141d2e"></i><div><b>--panel-2</b> · #141D2E</div><div class="note" style="margin-left:auto">控件底 / 表头</div></div>
+                <div class="token"><i style="background:#4c8dff"></i><div><b>--azure</b> · #4C8DFF</div><div class="note" style="margin-left:auto">主操作（替换上游橙 #F97316）</div></div>
+                <div class="token"><i style="background:#35d6c0"></i><div><b>--teal</b> · #35D6C0</div><div class="note" style="margin-left:auto">已连接 / 正常</div></div>
+                <div class="token"><i style="background:#ffb020"></i><div><b>--amber</b> · #FFB020</div><div class="note" style="margin-left:auto">待处理 / 可升级</div></div>
+                <div class="token"><i style="background:#ff5a6e"></i><div><b>--rose</b> · #FF5A6E</div><div class="note" style="margin-left:auto">错误 / 余额不足</div></div>
+                <div class="token" style="border:0"><i style="background:#9b8cff"></i><div><b>--violet</b> · #9B8CFF</div><div class="note" style="margin-left:auto">模型 / 数据强调</div></div>
+              </div>
+
+              <div class="sec"><h2>字阶</h2><p>标题收紧字距，数字一律等宽 tabular</p></div>
+              <div class="card pad">
+                <div class="type"><span>19 / 600 / -.022</span><b style="font-size:19px;font-weight:600;letter-spacing:-.022em">首页总览</b></div>
+                <div class="type"><span>13 / 590</span><b style="font-size:13px;font-weight:590">客户端 · 点卡片进入详情</b></div>
+                <div class="type"><span>12.5 / 400</span><span style="font-size:12.5px">正文与表格单元格，行高 1.55</span></div>
+                <div class="type"><span>26 / 600 mono</span><b style="font:600 26px var(--mono);font-variant-numeric:tabular-nums">$10,000.00</b></div>
+                <div class="type" style="border:0"><span>11 / 400 / .09em</span><span style="font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--fg-3)">SECTION LABEL</span></div>
+              </div>
+            </div>
+
+            <div>
+              <div class="sec"><h2>组件</h2></div>
+              <div class="card pad" style="display:flex;flex-direction:column;gap:12px">
+                <div class="row"><button class="btn pri">保存模型</button><button class="btn">检查更新</button><button class="btn ghost">取消</button></div>
+                <div class="row"><span class="chip ok">已连接</span><span class="chip info">直连</span><span class="chip warn">1 个可升级</span><span class="chip mute">未配置</span></div>
+                <div class="row"><div class="sw on"></div><span class="note">写入 live 配置</span></div>
+                <div class="row"><div class="sw"></div><span class="note">显示在菜单栏</span></div>
+                <div class="search" style="width:100%;margin:0">搜索模型…</div>
+                <div class="bar"><i style="width:62%;background:var(--azure)"></i><i style="width:23%;background:var(--violet)"></i><i style="width:15%;background:var(--teal)"></i></div>
+                <div class="note">圆角：卡片 10px / 控件 6px / 徽章 99px；边框统一 1px 发丝线，不用上游的暖橙光晕与玻璃模糊。</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ══ 首页总览 ══════════════════════════════════════════════ -->
+        <section class="screen" id="s-home">
+          <h1 class="h1">首页总览</h1>
+          <p class="sub">平台、客户端与用量一屏可见</p>
+
+          <div class="card">
+            <div class="row" style="padding:14px 16px;border-bottom:1px solid var(--hairline)">
+              <div class="mark" style="width:26px;height:26px;border-radius:7px;font-size:11px">AF</div>
+              <div><b style="font-size:13px;font-weight:570">AIFusion 平台</b>
+                <div class="note" style="margin-top:1px">模型与密钥由平台统一管理，登录即自动下发</div></div>
+              <span class="chip ok" style="margin-left:8px">已连接</span>
+              <div class="row" style="margin-left:auto;gap:8px">
+                <button class="btn">重新登录</button>
+                <button class="btn pri">管理连接</button>
+              </div>
+            </div>
+            <div class="grid4">
+              <div class="kpi"><label>钱包余额</label><b>$10,000.00<em>USD</em></b><small>实时读取平台钱包</small></div>
+              <div class="kpi"><label>已接入客户端</label><b>10<em>/ 10</em></b><small>全部完成密钥下发</small></div>
+              <div class="kpi"><label>平台可选模型</label><b>58<em>个</em></b><small>11 家厂商</small></div>
+              <div class="kpi"><label>最常用模型</label><b style="font-size:19px">claude-sonnet-5</b><small>轻量 glm-5.3-flash</small></div>
+            </div>
+            <div class="row" style="padding:11px 16px;border-top:1px solid var(--hairline)">
+              <span class="chip warn">1 个可升级</span><span class="note">Claude Desktop 有新版本</span>
+              <div style="margin-left:auto" class="row"><button class="btn">检查更新</button><button class="btn pri">全部升级</button></div>
+            </div>
+          </div>
+
+          <div class="sec"><h2>客户端</h2><p>点卡片进入详情改模型</p></div>
+          <div class="apps">
+            <div class="app"><h3><span class="gl">CC</span>Claude Code</h3>
+              <dl><dt>主模型</dt><dd>claude-sonnet-5</dd><dt>轻量</dt><dd>glm-5.3-flash</dd></dl>
+              <footer><span class="chip info">直连</span><span class="note" style="margin-left:auto">配置详情 →</span></footer></div>
+            <div class="app"><h3><span class="gl">CD</span>Claude Desktop</h3>
+              <dl><dt>主模型</dt><dd>claude-sonnet-5</dd><dt>轻量</dt><dd>glm-5.3-flash</dd></dl>
+              <footer><span class="chip info">直连</span><span class="chip warn">可升级</span></footer></div>
+            <div class="app"><h3><span class="gl">CX</span>Codex</h3>
+              <dl><dt>主模型</dt><dd>claude-sonnet-5</dd><dt>落点</dt><dd>~/.codex/config.toml</dd></dl>
+              <footer><span class="chip info">直连</span><span class="note" style="margin-left:auto">配置详情 →</span></footer></div>
+            <div class="app"><h3><span class="gl">OC</span>OpenCode</h3>
+              <dl><dt>模型表</dt><dd>2 个模型</dd><dt>首个</dt><dd>glm-5.3-flash</dd></dl>
+              <footer><span class="chip info">直连</span></footer></div>
+            <div class="app"><h3><span class="gl">OW</span>OpenClaw</h3>
+              <dl><dt>模型表</dt><dd>2 个模型</dd><dt>首个</dt><dd>claude-sonnet-5</dd></dl>
+              <footer><span class="chip info">直连</span></footer></div>
+            <div class="app"><h3><span class="gl">PI</span>Pi</h3>
+              <dl><dt>模型表</dt><dd>2 个模型</dd><dt>首个</dt><dd>claude-sonnet-5</dd></dl>
+              <footer><span class="chip info">直连</span></footer></div>
+          </div>
+
+          <div class="sec"><h2>最近用量</h2><p>近 7 天，来自本机用量记录</p></div>
+          <div class="card pad">
+            <div class="spark">
+              <i style="height:12%"></i><i style="height:34%"></i><i style="height:22%"></i><i style="height:58%"></i>
+              <i style="height:41%"></i><i style="height:76%"></i><i class="hi" style="height:100%"></i>
+            </div>
+            <div class="row" style="margin-top:12px;gap:22px">
+              <div><label class="note">请求</label><div class="mono" style="font-size:15px">1</div></div>
+              <div><label class="note">花费</label><div class="mono" style="font-size:15px">$0.00</div></div>
+              <div><label class="note">Token</label><div class="mono" style="font-size:15px">47</div></div>
+              <div style="margin-left:auto"><button class="btn">查看统计</button></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ══ 客户端详情 ════════════════════════════════════════════ -->
+        <section class="screen" id="s-client">
+          <div class="row" style="margin-bottom:4px">
+            <span class="gl" style="width:26px;height:26px;font-size:11px">CX</span>
+            <h1 class="h1">Codex</h1><span class="chip ok" style="margin-left:6px">已接入</span>
+            <div style="margin-left:auto" class="row"><button class="btn">打开配置目录</button><button class="btn pri">选择模型</button></div>
+          </div>
+          <p class="sub">直连平台网关 · 配置由 AIFusion 写入</p>
+
+          <div class="tabs">
+            <button class="on">概览</button><button>配置文件</button><button>MCP</button><button>Skills</button>
+          </div>
+
+          <div class="split">
+            <div class="card">
+              <dl class="spec">
+                <dt>主模型</dt><dd><span class="mono">claude-sonnet-5</span> <span class="note">· anthropic</span></dd>
+                <dt>连接方式</dt><dd>直连 <span class="note">· 客户端直接请求平台网关，不经本机代理</span></dd>
+                <dt>配置落点</dt><dd><span class="mono">~/.codex/config.toml</span> <span class="note">· 保存后立即写入</span></dd>
+                <dt>密钥来源</dt><dd>平台登录自动下发 <span class="chip mute">本机保存</span></dd>
+                <dt>最近用量</dt><dd><span class="mono">1 次请求 · 47 Token · $0.00</span></dd>
+                <dt>应用更新</dt><dd>已是最新版本 <span class="mono">v4.15.0</span></dd>
+                <dt>更多功能</dt><dd class="note">MCP · Skills · 提示词 · 会话 · 用量统计（作用于全部客户端）</dd>
+              </dl>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:12px">
+              <div class="card pad">
+                <label class="note">可用模型（2）</label>
+                <table style="margin-top:6px">
+                  <tbody>
+                    <tr><td class="mono">claude-sonnet-5</td><td class="right note">anthropic</td></tr>
+                    <tr><td class="mono">glm-5.3-flash</td><td class="right note">zhipu</td></tr>
+                  </tbody>
+                </table>
+              </div>
+              <div class="card pad">
+                <label class="note">切换到其他客户端</label>
+                <div class="row" style="flex-wrap:wrap;gap:5px;margin-top:8px">
+                  <span class="chip mute">Claude Code</span><span class="chip mute">Claude Desktop</span>
+                  <span class="chip mute">Gemini CLI</span><span class="chip mute">Grok Build</span>
+                  <span class="chip mute">OpenCode</span><span class="chip mute">OpenClaw</span>
+                  <span class="chip mute">Hermes</span><span class="chip mute">Pi</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ══ MCP ═══════════════════════════════════════════════════ -->
+        <section class="screen" id="s-mcp">
+          <h1 class="h1">MCP</h1><p class="sub">管理全部客户端的 MCP 服务，改动即时写入各客户端配置</p>
+          <div class="row" style="margin-bottom:14px">
+            <div class="tabs" style="border:0;margin:0">
+              <button class="on">已安装 12</button><button>发现</button>
+            </div>
+            <div style="margin-left:auto" class="row"><div class="search" style="margin:0">搜索服务…</div><button class="btn pri">添加服务</button></div>
+          </div>
+          <div class="card">
+            <table>
+              <thead><tr><th>服务</th><th>类型</th><th>作用范围</th><th class="right">状态</th></tr></thead>
+              <tbody>
+                <tr><td><b>filesystem</b><div class="note">npx -p @modelcontextprotocol/server-filesystem</div></td>
+                  <td class="mono">stdio</td><td class="note">Claude Code · Codex · OpenCode</td>
+                  <td class="right"><span class="chip ok">已启用</span></td></tr>
+                <tr><td><b>github</b><div class="note">npx -p @modelcontextprotocol/server-github</div></td>
+                  <td class="mono">stdio</td><td class="note">全部 10 个客户端</td>
+                  <td class="right"><span class="chip ok">已启用</span></td></tr>
+                <tr><td><b>playwright</b><div class="note">npx -y @playwright/mcp</div></td>
+                  <td class="mono">stdio</td><td class="note">Claude Code</td>
+                  <td class="right"><span class="chip mute">已停用</span></td></tr>
+                <tr><td><b>internal-api</b><div class="note">http://127.0.0.1:8790/mcp</div></td>
+                  <td class="mono">http</td><td class="note">Hermes · Pi</td>
+                  <td class="right"><span class="chip warn">连接失败</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- ══ Skills ════════════════════════════════════════════════ -->
+        <section class="screen" id="s-skills">
+          <h1 class="h1">Skills</h1><p class="sub">从仓库安装技能，按客户端启用</p>
+          <div class="row" style="margin-bottom:14px">
+            <div class="tabs" style="border:0;margin:0"><button class="on">已安装 34</button><button>发现</button><button>仓库</button></div>
+            <div style="margin-left:auto" class="row"><span class="chip warn">6 个可更新</span><button class="btn">全部更新</button><button class="btn pri">安装技能</button></div>
+          </div>
+          <div class="apps" style="grid-template-columns:repeat(2,1fr)">
+            <div class="app"><h3><span class="gl">PD</span>pdf <span class="chip mute" style="margin-left:auto">v1.2</span></h3>
+              <div class="note">读取、拆分、合并 PDF 文档</div>
+              <dl style="margin-top:9px"><dt>来源</dt><dd>anthropic/skills</dd><dt>启用</dt><dd>4 / 10 客户端</dd></dl>
+              <footer><div class="sw on"></div><span class="note">已启用</span><span class="note" style="margin-left:auto">更新 →</span></footer></div>
+            <div class="app"><h3><span class="gl">FD</span>frontend-design <span class="chip warn" style="margin-left:auto">可更新</span></h3>
+              <div class="note">生成成体系的界面与组件规范</div>
+              <dl style="margin-top:9px"><dt>来源</dt><dd>anthropic/skills</dd><dt>启用</dt><dd>2 / 10 客户端</dd></dl>
+              <footer><div class="sw on"></div><span class="note">已启用</span><span class="note" style="margin-left:auto">更新 →</span></footer></div>
+          </div>
+        </section>
+
+        <!-- ══ 用量统计 ══════════════════════════════════════════════ -->
+        <section class="screen" id="s-usage">
+          <h1 class="h1">用量统计</h1><p class="sub">本机采集的请求、Token 与花费，按客户端与模型拆分</p>
+          <div class="card" style="margin-bottom:14px">
+            <div class="grid4">
+              <div class="kpi"><label>请求数</label><b>1,284</b><small class="chip ok" style="height:16px;font-size:10px">+18% 环比</small></div>
+              <div class="kpi"><label>花费</label><b>$42.18<em>USD</em></b><small>近 30 天</small></div>
+              <div class="kpi"><label>Token</label><b>8.42<em>M</em></b><small>输入 6.1M / 输出 2.3M</small></div>
+              <div class="kpi"><label>平均单次</label><b>$0.0328</b><small>缓存命中 41%</small></div>
+            </div>
+          </div>
+          <div class="card pad" style="margin-bottom:14px">
+            <div class="row" style="margin-bottom:10px"><b style="font-size:12.5px">每日请求</b>
+              <div style="margin-left:auto" class="row"><span class="chip mute">7 天</span><span class="chip info">30 天</span><span class="chip mute">90 天</span></div></div>
+            <div class="spark" style="height:96px">
+              <i style="height:22%"></i><i style="height:41%"></i><i style="height:35%"></i><i style="height:58%"></i><i style="height:47%"></i>
+              <i style="height:66%"></i><i style="height:72%"></i><i style="height:38%"></i><i style="height:54%"></i><i style="height:81%"></i>
+              <i class="hi" style="height:100%"></i><i style="height:63%"></i><i style="height:44%"></i><i style="height:29%"></i><i style="height:52%"></i>
+            </div>
+          </div>
+          <div class="card">
+            <table>
+              <thead><tr><th>模型</th><th>客户端</th><th class="right">请求</th><th class="right">Token</th><th class="right">花费</th></tr></thead>
+              <tbody>
+                <tr><td class="mono">claude-sonnet-5</td><td class="note">Claude Code · Codex</td><td class="right mono">742</td><td class="right mono">5.1M</td><td class="right mono">$24.90</td></tr>
+                <tr><td class="mono">glm-5.3-flash</td><td class="note">Claude Code · Pi</td><td class="right mono">388</td><td class="right mono">2.4M</td><td class="right mono">$9.12</td></tr>
+                <tr><td class="mono">claude-opus-5</td><td class="note">Claude Desktop</td><td class="right mono">154</td><td class="right mono">0.9M</td><td class="right mono">$8.16</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- ══ 会话 ══════════════════════════════════════════════════ -->
+        <section class="screen" id="s-sessions">
+          <h1 class="h1">会话</h1><p class="sub">读取各客户端本机会话记录，支持检索与逐轮展开</p>
+          <div class="split">
+            <div class="card">
+              <table>
+                <thead><tr><th>标题</th><th>客户端</th><th class="right">轮次</th><th class="right">时间</th></tr></thead>
+                <tbody>
+                  <tr><td><b>重构首页总览的卡片密度</b><div class="note">把 4 个指标压到一行，去掉重复标题</div></td>
+                    <td><span class="chip info">Claude Code</span></td><td class="right mono">38</td><td class="right mono note">今天 11:42</td></tr>
+                  <tr><td><b>Codex 配置落点检查</b><div class="note">确认 config.toml 的 model 行写入正确</div></td>
+                    <td><span class="chip info">Codex</span></td><td class="right mono">12</td><td class="right mono note">今天 10:05</td></tr>
+                  <tr><td><b>Skills 批量更新</b><div class="note">6 个技能拉到最新提交</div></td>
+                    <td><span class="chip info">Pi</span></td><td class="right mono">7</td><td class="right mono note">昨天 18:31</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="card pad">
+              <label class="note">会话详情 · 第 12 / 38 轮</label>
+              <div style="margin-top:10px;border-left:2px solid var(--azure);padding-left:10px">
+                <div class="note">用户</div>
+                <div style="font-size:12.5px;margin-top:2px">把指标行压成一行，去掉重复的卡片标题。</div>
+              </div>
+              <div style="margin-top:12px;border-left:2px solid var(--violet);padding-left:10px">
+                <div class="note">助手 · claude-sonnet-5 · 4.1k token</div>
+                <div style="font-size:12.5px;margin-top:2px">已调整 grid4 布局，KPI 改为发丝分隔的一行四列…</div>
+              </div>
+              <div class="row" style="margin-top:14px"><button class="btn">复制</button><button class="btn ghost">在客户端中打开</button></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ══ 设置 ══════════════════════════════════════════════════ -->
+        <section class="screen" id="s-settings">
+          <h1 class="h1">设置</h1><p class="sub">外观、平台连接与本机行为</p>
+          <div class="split">
+            <div style="display:flex;flex-direction:column;gap:12px">
+              <div class="card">
+                <table>
+                  <tbody>
+                    <tr><td><b>外观</b><div class="note">跟随系统 / 深色 / 浅色</div></td><td class="right"><span class="chip mute">跟随系统</span></td></tr>
+                    <tr><td><b>界面语言</b><div class="note">简体中文 · English · 繁體中文 · 日本語 · Türkçe</div></td><td class="right"><span class="chip mute">简体中文</span></td></tr>
+                    <tr><td><b>开机自启</b></td><td class="right"><div class="sw on" style="display:inline-block;vertical-align:middle"></div></td></tr>
+                    <tr><td><b>显示托盘面板</b><div class="note">托盘里的余额与最近用量</div></td><td class="right"><div class="sw on" style="display:inline-block;vertical-align:middle"></div></td></tr>
+                    <tr><td><b>写入 live 配置</b><div class="note">保存模型或密钥后立即同步到客户端文件</div></td><td class="right"><div class="sw on" style="display:inline-block;vertical-align:middle"></div></td></tr>
+                  </tbody>
+                </table>
+              </div>
+              <div class="card">
+                <table>
+                  <tbody>
+                    <tr><td><b>平台账号</b><div class="note">已登录 · 密钥由本机保存，不在界面显示</div></td><td class="right"><button class="btn">重新登录</button></td></tr>
+                    <tr><td><b>钱包余额</b><div class="note">实时读取平台美元钱包</div></td><td class="right mono">$10,000.00</td></tr>
+                    <tr><td><b>本地数据</b><div class="note">会话、用量与配置存储目录</div></td><td class="right"><button class="btn ghost">打开目录</button></td></tr>
+                    <tr><td><b>关于</b><div class="note">AIFusion 4.0.15 · 检查更新</div></td><td class="right"><button class="btn">检查更新</button></td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <div class="card pad">
+              <label class="note">本页已按 AIFusion 术语重写：不再出现供应商、渠道、接管、聚合等上游说法。</label>
+              <div style="margin-top:10px" class="row"><span class="chip ok">文案全新</span><span class="chip ok">组件自研</span></div>
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const names = { ds: "设计系统", home: "首页总览", client: "客户端 / Codex", mcp: "MCP", skills: "Skills",
+                  usage: "用量统计", sessions: "会话", settings: "设置" };
+  function show(id) {
+    document.querySelectorAll(".screen").forEach((s) => s.classList.toggle("on", s.id === "s-" + id));
+    document.querySelectorAll(".proto button[data-s]").forEach((b) => b.classList.toggle("on", b.dataset.s === id));
+    document.getElementById("crumb").innerHTML = "工作台 / <b>" + names[id] + "</b>";
+    document.querySelector(".main").scrollTop = 0;
+  }
+  document.querySelectorAll("[data-s]").forEach((el) => el.addEventListener("click", (e) => {
+    e.preventDefault(); show(el.dataset.s);
+  }));
+  document.getElementById("theme").addEventListener("click", () => document.documentElement.classList.toggle("light"));
+</script>
+</body>
+</html>

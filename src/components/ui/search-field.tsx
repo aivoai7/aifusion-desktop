@@ -18,7 +18,7 @@ export interface SearchFieldProps
 }
 
 /**
- * 搜索框（docs/design-system.html「输入」）：高 32、圆角 6、左侧 14px 放大镜，
+ * 搜索框（Ink & Grid）：高 32、圆角 6、左侧 14px 放大镜，
  * 有字时右侧出现清除按钮；Esc 先清空，空了才交给外层（关抽屉 / 对话框）。
  */
 export const SearchField = React.forwardRef<HTMLInputElement, SearchFieldProps>(
@@ -36,6 +36,7 @@ export const SearchField = React.forwardRef<HTMLInputElement, SearchFieldProps>(
   ) => {
     const inputRef = React.useRef<HTMLInputElement>(null);
     React.useImperativeHandle(ref, () => inputRef.current as HTMLInputElement);
+
     return (
       <div role="search" className={cn("relative min-w-0", containerClassName)}>
         <Search

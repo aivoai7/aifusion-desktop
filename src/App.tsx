@@ -1,18 +1,11 @@
-import {
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "@/lib/toast";
 import { invoke } from "@tauri-apps/api/core";
 import { useQueryClient } from "@tanstack/react-query";
-import { ExternalLink, MoreHorizontal } from "lucide-react";
+import { ArrowLeft, ExternalLink, MoreHorizontal } from "lucide-react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
-import type { Provider, VisibleApps } from "@/types";
+import type { VisibleApps } from "@/types";
 import { KNOWN_APP_TYPES, type AppTypeFilter } from "@/types/usage";
 import type { EnvConflict } from "@/types/env";
 import {
@@ -22,18 +15,15 @@ import {
   useSettingsQuery,
 } from "@/lib/query";
 import {
-  piApi,
   providersApi,
   settingsApi,
   type AppId,
   type ProviderSwitchEvent,
 } from "@/lib/api";
 import { checkAllEnvConflicts, checkEnvConflicts } from "@/lib/api/env";
-import { useProviderActions } from "@/hooks/useProviderActions";
-import { openclawKeys, useOpenClawHealth } from "@/hooks/useOpenClaw";
-import { hermesKeys, useOpenHermesWebUI } from "@/hooks/useHermes";
+import { useOpenClawHealth } from "@/hooks/useOpenClaw";
+import { useOpenHermesWebUI } from "@/hooks/useHermes";
 import { hermesApi } from "@/lib/api/hermes";
-import type { ProviderEditorSave } from "@/lib/api/providers";
 import { useProxyStatus } from "@/hooks/useProxyStatus";
 import { useUsageCacheBridge } from "@/hooks/useUsageCacheBridge";
 import {
@@ -41,13 +31,8 @@ import {
   useTrayNavigation,
 } from "@/hooks/useTrayNavigation";
 import { useTauriEvent } from "@/hooks/useTauriEvent";
-import { useLastValidValue } from "@/hooks/useLastValidValue";
-import {
-  extractErrorMessage,
-  translatePiProviderMutationError,
-} from "@/utils/errorUtils";
+import { extractErrorMessage } from "@/utils/errorUtils";
 import { isTextEditableTarget } from "@/utils/domUtils";
-import { deepClone } from "@/utils/deepClone";
 import { isLinux, isWindows } from "@/lib/platform";
 import {
   APP_STORAGE_KEY,
@@ -70,26 +55,15 @@ import {
 import { WindowControls } from "@/components/shell/WindowControls";
 import { APP_DISPLAY_NAME, AppGlyph } from "@/components/shell/AppGlyph";
 import { ProfileSwitcher } from "@/components/profiles/ProfileSwitcher";
-import { ProviderList } from "@/components/providers/ProviderList";
 import { PlatformConnectionPanel } from "@/components/providers/PlatformConnectionPanel";
-import { AddProviderDialog } from "@/components/providers/AddProviderDialog";
-import {
-  hasOpencodeDefinition,
-  isNativeOpencodeConfig,
-} from "@/components/providers/forms/helpers/opencodeFormUtils";
-import { EditProviderDialog } from "@/components/providers/EditProviderDialog";
+import { HomeOverview } from "@/components/home/HomeOverview";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
-import { OpenTerminalDialog } from "@/components/providers/OpenTerminalDialog";
 import { discardUnsavedChanges, hasUnsavedChanges } from "@/lib/unsavedChanges";
 import { SettingsPage } from "@/components/settings/SettingsPage";
 import { AppsPage } from "@/components/apps/AppsPage";
 import { checkToolUpdatesInBackground } from "@/components/apps/useToolManagement";
 import { UsagePage } from "@/components/usage/UsagePage";
 import { EnvWarningBanner } from "@/components/env/EnvWarningBanner";
-import { SwitchModePanel } from "@/components/providers/mode/SwitchModePanel";
-import { proxyApi } from "@/lib/api/proxy";
-import type { AppMode, StartupAttachFailure } from "@/types/proxy";
-import UsageScriptModal from "@/components/UsageScriptModal";
 import UnifiedMcpPanel from "@/components/mcp/UnifiedMcpPanel";
 import PromptPanel from "@/components/prompts/PromptPanel";
 import { PROMPT_APP_IDS } from "@/lib/query/prompts";
@@ -108,11 +82,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { SessionManagerPage } from "@/components/sessions/SessionManagerPage";
-import {
-  useDisableCurrentOmo,
-  useDisableCurrentOmoSlim,
-} from "@/lib/query/omo";
-import { invalidatePiProviderCaches, usePiCurrentState } from "@/lib/query/pi";
+import { invalidatePiProviderCaches } from "@/lib/query/pi";
 import WorkspaceFilesPanel from "@/components/workspace/WorkspaceFilesPanel";
 import EnvPanel from "@/components/openclaw/EnvPanel";
 import ToolsPanel from "@/components/openclaw/ToolsPanel";
@@ -122,7 +92,6 @@ import HermesMemoryPanel, {
   HermesMemorySaveButton,
 } from "@/components/hermes/HermesMemoryPanel";
 import { APP_IDS, DEFAULT_VISIBLE_APPS, isModeAppId } from "@/config/appConfig";
-import { SHOW_PROVIDER_CHANNELS } from "@/config/providerChannels";
 
 interface SyncStatusUpdatedPayload {
   source?: string;
@@ -152,35 +121,12 @@ function App() {
     useState<SettingsSection>("general");
   const [appConfigScrollTarget, setAppConfigScrollTarget] = useState<AppId>();
   // 进设置前停留的页面：设置目录里的「← 返回」回到这里
-  const settingsReturnViewRef = useRef<View>("providers");
+  const settingsReturnViewRef = useRef<View>("home");
   const [openclawConfigTab, setOpenclawConfigTab] =
     useState<OpenClawConfigTab>("env");
   const [promptsApp, setPromptsApp] = useState<AppId>(() =>
     PROMPT_APP_IDS.includes(sharedFeatureApp) ? sharedFeatureApp : "claude",
   );
-  const [isAddOpen, setIsAddOpen] = useState(false);
-  // 供应商搜索面板：页头按钮和 ⌘F 都能打开；换应用或离开供应商页就收起
-  const [providerSearchOpen, setProviderSearchOpen] = useState(false);
-  useEffect(() => {
-    setProviderSearchOpen(false);
-  }, [activeApp, currentView]);
-  // 供应商页顶部正在看的那格（直连 / 路由 / 聚合），由 SwitchModePanel 报上来。打开新增、
-  // 编辑时记下当时那格，表单按它选布局：在聚合那格打开就是聚合的简化表单。
-  const [providerModeView, setProviderModeView] = useState<{
-    app: AppId;
-    view: AppMode;
-  } | null>(null);
-  const [formModeView, setFormModeView] = useState<AppMode>();
-  const handleProviderModeViewChange = useCallback(
-    (app: AppId, view: AppMode) => setProviderModeView({ app, view }),
-    [],
-  );
-  // 托盘里点了直连下需要路由的那家：打开应用页后弹「需要路由」对话框
-  const [trayNeedsRoute, setTrayNeedsRoute] = useState<{
-    app: AppId;
-    providerId: string;
-    nonce: number;
-  } | null>(null);
   const [mcpManagementBusy, setMcpManagementBusy] = useState(false);
   const [skillsNavigationBusy, setSkillsNavigationBusy] = useState(false);
   const [promptNavigationBusy, setPromptNavigationBusy] = useState(false);
@@ -233,19 +179,6 @@ function App() {
     void checkToolUpdatesInBackground();
   }, [checkToolUpdatesOnStartup]);
 
-  // 启动时没能接上路由 / 聚合、已退回直连的应用：在对应的应用页提示一次并给「重试」
-  const [startupFailures, setStartupFailures] = useState<
-    StartupAttachFailure[]
-  >([]);
-  useEffect(() => {
-    proxyApi
-      .takeStartupAttachFailures()
-      .then((failures) => {
-        if (failures?.length) setStartupFailures(failures);
-      })
-      .catch(() => undefined);
-  }, []);
-
   // 应用专属页（工作区、记忆…）只属于它的应用；换了应用就回到供应商页
   useEffect(() => {
     if (isAppPage(currentView) && !appPageBelongsTo(currentView, activeApp)) {
@@ -253,20 +186,9 @@ function App() {
     }
   }, [activeApp, currentView]);
 
-  const [editingProvider, setEditingProvider] = useState<Provider | null>(null);
-  const [usageProvider, setUsageProvider] = useState<Provider | null>(null);
-  const [confirmAction, setConfirmAction] = useState<{
-    provider: Provider;
-    action: "remove" | "delete";
-  } | null>(null);
-  const [terminalProvider, setTerminalProvider] = useState<Provider | null>(
-    null,
-  );
   const [envConflicts, setEnvConflicts] = useState<EnvConflict[]>([]);
   const [showEnvBanner, setShowEnvBanner] = useState(false);
 
-  const effectiveEditingProvider = useLastValidValue(editingProvider);
-  const effectiveUsageProvider = useLastValidValue(usageProvider);
   const mainScrollRef = useRef<HTMLElement>(null);
   const providerScrollContainerRef = useRef<HTMLDivElement>(null);
 
@@ -286,104 +208,17 @@ function App() {
     }
   }, [activeApp, currentView]);
 
-  const { isRunning: isProxyRunning, takeoverStatus } = useProxyStatus();
-  const modeAppId = isModeAppId(activeApp) ? activeApp : null;
-  // 换了应用、新面板还没报上来时为 undefined：表单按应用实际生效的模式
-  const currentModeView =
-    providerModeView?.app === activeApp ? providerModeView.view : undefined;
-  const openAddProvider = (modeView: AppMode | undefined) => {
-    setFormModeView(modeView);
-    setIsAddOpen(true);
-  };
-  const currentAppUsesProxy = modeAppId !== null;
-  const isCurrentAppTakeoverActive = modeAppId
-    ? takeoverStatus?.[modeAppId] || false
-    : false;
+  const { isRunning: isProxyRunning } = useProxyStatus();
+  const currentAppUsesProxy = isModeAppId(activeApp);
 
-  const { data, isLoading, refetch } = useProvidersQuery(activeApp, {
+  const { data, refetch } = useProvidersQuery(activeApp, {
     isProxyRunning: currentAppUsesProxy && isProxyRunning,
   });
-  const { data: piCurrentState } = usePiCurrentState(activeApp === "pi");
   const providers = useMemo(() => data?.providers ?? {}, [data]);
   const currentProviderId = data?.currentProviderId ?? "";
   const isOpenClawView = activeApp === "openclaw" && isAppPage(currentView);
   const { data: openclawHealthWarnings = [] } =
     useOpenClawHealth(isOpenClawView);
-  const {
-    addProvider,
-    updateProvider,
-    switchProvider,
-    deleteProvider,
-    saveUsageScript,
-    setAsDefaultModel,
-  } = useProviderActions(
-    activeApp,
-    isProxyRunning && isCurrentAppTakeoverActive,
-  );
-  const handleEnablePiProvider = async (provider: Provider) => {
-    try {
-      await providersApi.switch(provider.id, "pi");
-      await invalidatePiProviderCaches(queryClient);
-      await providersApi.updateTrayMenu().catch((error) => {
-        console.error(
-          "Failed to update tray menu after enabling Pi provider",
-          error,
-        );
-      });
-      toast.success(
-        t("pi.provider.enabled", {
-          defaultValue: "已在 Pi 中启用",
-        }),
-        { closeButton: true },
-      );
-    } catch (error) {
-      const detail = extractErrorMessage(error);
-      toast.error(
-        t("pi.provider.enableFailed", {
-          defaultValue: "无法在 Pi 中启用此供应商",
-        }),
-        {
-          description:
-            translatePiProviderMutationError(detail, t) || detail || undefined,
-          closeButton: true,
-        },
-      );
-    }
-  };
-
-  const disableOmoMutation = useDisableCurrentOmo();
-  const handleDisableOmo = () => {
-    disableOmoMutation.mutate(undefined, {
-      onSuccess: () => {
-        toast.success(t("omo.disabled", { defaultValue: "OMO 已停用" }));
-      },
-      onError: (error: Error) => {
-        toast.error(
-          t("omo.disableFailed", {
-            defaultValue: "停用 OMO 失败: {{error}}",
-            error: extractErrorMessage(error),
-          }),
-        );
-      },
-    });
-  };
-
-  const disableOmoSlimMutation = useDisableCurrentOmoSlim();
-  const handleDisableOmoSlim = () => {
-    disableOmoSlimMutation.mutate(undefined, {
-      onSuccess: () => {
-        toast.success(t("omo.disabled", { defaultValue: "OMO 已停用" }));
-      },
-      onError: (error: Error) => {
-        toast.error(
-          t("omo.disableFailed", {
-            defaultValue: "停用 OMO 失败: {{error}}",
-            error: extractErrorMessage(error),
-          }),
-        );
-      },
-    });
-  };
 
   useEffect(() => {
     let unsubscribe: (() => void) | undefined;
@@ -619,14 +454,6 @@ function App() {
   // ─── 导航 ───────────────────────────────────────────────────────────────
   // MCP / Skills / 提示词在进行中的操作会锁住导航（卸载面板会丢掉进行中的状态）
 
-  // 添加 / 编辑 / 用量脚本面板只盖住内容区，侧栏还能点。离开当前页就把它们关掉：
-  // 面板的 appId 跟着 activeApp 走，开着切应用会把 A 应用的供应商保存进 B 应用
-  const closeProviderPanels = () => {
-    setIsAddOpen(false);
-    setEditingProvider(null);
-    setUsageProvider(null);
-  };
-
   // 整页编辑器里有未保存的修改：先确认，确认放弃后再执行这次导航
   const [pendingLeave, setPendingLeave] = useState<(() => void) | null>(null);
   const confirmLeave = (proceed: () => void) => {
@@ -641,7 +468,6 @@ function App() {
   ) => {
     if (managementBusyRef.current) return;
     if (confirmLeave(() => openSettings(section, appConfigTarget))) return;
-    closeProviderPanels();
     if (currentViewRef.current !== "settings") {
       settingsReturnViewRef.current = currentViewRef.current;
     }
@@ -657,10 +483,18 @@ function App() {
   const selectApp = (app: AppId) => {
     if (managementBusyRef.current) return;
     if (confirmLeave(() => selectApp(app))) return;
-    closeProviderPanels();
     setActiveApp(app);
     localStorage.setItem(APP_STORAGE_KEY, app);
     setCurrentView("providers");
+  };
+
+  /** 首页总览：侧栏第一项，也是客户端详情页「← 返回」的去向。 */
+  const openHome = () => {
+    if (managementBusyRef.current) return;
+    // 再点当前页不会离开：不弹确认，也不能清掉编辑页的未保存登记
+    if (currentViewRef.current === "home") return;
+    if (confirmLeave(() => openHome())) return;
+    setCurrentView("home");
   };
 
   const openPage = (page: GlobalPage | "settings") => {
@@ -672,7 +506,6 @@ function App() {
     // 再点当前页不会离开：不弹确认，也不能清掉编辑页的未保存登记
     if (currentViewRef.current === page) return;
     if (confirmLeave(() => openPage(page))) return;
-    closeProviderPanels();
     if (page === "prompts" && currentViewRef.current !== "prompts") {
       // 提示词页默认选中侧栏里最后选的那个应用
       setPromptsApp(
@@ -691,15 +524,6 @@ function App() {
       }
       if (!navigation.app) return;
       selectApp(navigation.app);
-      // 托盘先换应用：新应用那格还没报上来，按它实际生效的模式
-      if (navigation.intent === "add") openAddProvider(undefined);
-      if (navigation.intent === "needsRoute" && navigation.providerId) {
-        setTrayNeedsRoute({
-          app: navigation.app,
-          providerId: navigation.providerId,
-          nonce: Date.now(),
-        });
-      }
     };
     if (managementBusyRef.current || !confirmLeave(navigate)) navigate();
   });
@@ -753,274 +577,6 @@ function App() {
   const openHermesWebUI = useOpenHermesWebUI(() =>
     setLaunchDashboardOpen(true),
   );
-
-  const handleOpenWebsite = async (url: string) => {
-    try {
-      await settingsApi.openExternal(url);
-    } catch (error) {
-      const detail =
-        extractErrorMessage(error) ||
-        t("notifications.openLinkFailed", {
-          defaultValue: "链接打开失败",
-        });
-      toast.error(detail);
-    }
-  };
-
-  const handleEditProvider = async ({
-    provider,
-    originalId,
-    editorSave,
-  }: {
-    provider: Provider;
-    originalId?: string;
-    editorSave?: ProviderEditorSave;
-  }) => {
-    await updateProvider(provider, originalId, editorSave);
-    setEditingProvider(null);
-  };
-
-  const handleConfirmAction = async () => {
-    if (!confirmAction) return;
-    const { provider, action } = confirmAction;
-
-    if (action === "remove") {
-      // Remove from live config only (for additive mode apps like OpenCode/OpenClaw)
-      // Does NOT delete from database - provider remains in the list
-      try {
-        await providersApi.removeFromLiveConfig(provider.id, activeApp);
-      } catch (error) {
-        const detail = extractErrorMessage(error);
-        const description =
-          activeApp === "pi"
-            ? translatePiProviderMutationError(detail, t) || detail
-            : detail;
-        if (activeApp === "pi") {
-          void invalidatePiProviderCaches(queryClient).catch(() => undefined);
-        }
-        toast.error(t("notifications.removeFromConfigFailed"), {
-          description: description || t("common.unknown"),
-          closeButton: true,
-        });
-        return;
-      }
-      if (activeApp === "pi") {
-        await invalidatePiProviderCaches(queryClient);
-      }
-      // Invalidate queries to refresh the isInConfig state
-      if (activeApp === "opencode") {
-        await queryClient.invalidateQueries({
-          queryKey: ["opencodeLiveProviderIds"],
-        });
-      } else if (activeApp === "openclaw") {
-        await queryClient.invalidateQueries({
-          queryKey: openclawKeys.liveProviderIds,
-        });
-        await queryClient.invalidateQueries({
-          queryKey: openclawKeys.health,
-        });
-      } else if (activeApp === "hermes") {
-        await queryClient.invalidateQueries({
-          queryKey: hermesKeys.liveProviderIds,
-        });
-      } else if (activeApp === "mcode") {
-        await queryClient.invalidateQueries({
-          queryKey: ["providers", "mcode"],
-        });
-      }
-      toast.success(
-        activeApp === "pi"
-          ? t("pi.provider.removed", {
-              defaultValue: "已从 Pi 移除",
-            })
-          : t("notifications.removeFromConfigSuccess", {
-              defaultValue: "已从配置移除",
-            }),
-        { closeButton: true },
-      );
-    } else {
-      try {
-        await deleteProvider(provider.id);
-      } catch {
-        // useDeleteProviderMutation 的 onError 已经弹了错误 toast；确认框照样关掉
-      }
-    }
-    setConfirmAction(null);
-  };
-
-  const generateUniqueProviderCopyKey = (
-    originalKey: string,
-    existingKeys: string[],
-  ): string => {
-    const baseKey = `${originalKey}-copy`;
-
-    if (!existingKeys.includes(baseKey)) {
-      return baseKey;
-    }
-
-    let counter = 2;
-    while (existingKeys.includes(`${baseKey}-${counter}`)) {
-      counter++;
-    }
-    return `${baseKey}-${counter}`;
-  };
-
-  const handleDuplicateProvider = async (provider: Provider) => {
-    if (
-      activeApp === "opencode" &&
-      provider.category !== "omo" &&
-      provider.category !== "omo-slim"
-    ) {
-      // A copy gets a new ID, so it cannot inherit a built-in definition.
-      // Native V2 declarations name their package in `package`, not `npm`.
-      const isNative = isNativeOpencodeConfig(
-        JSON.stringify(provider.settingsConfig),
-        provider.meta?.opencodeConfigFormat,
-      );
-      if (
-        !hasOpencodeDefinition(
-          provider.settingsConfig,
-          isNative ? "package" : "npm",
-        )
-      ) {
-        toast.error(
-          t(
-            isNative
-              ? "opencode.duplicateRequiresNativeDefinition"
-              : "opencode.duplicateRequiresDefinition",
-          ),
-        );
-        return;
-      }
-    }
-
-    const newSortIndex =
-      provider.sortIndex !== undefined ? provider.sortIndex + 1 : undefined;
-
-    const duplicatedProvider: Omit<Provider, "id" | "createdAt"> & {
-      providerKey?: string;
-      addToLive?: boolean;
-    } = {
-      name: `${provider.name} copy`,
-      settingsConfig: deepClone(provider.settingsConfig),
-      websiteUrl: provider.websiteUrl,
-      category: provider.category,
-      sortIndex: newSortIndex, // 复制原 sortIndex + 1
-      meta: provider.meta ? deepClone(provider.meta) : undefined,
-      icon: provider.icon,
-      iconColor: provider.iconColor,
-    };
-
-    if (
-      activeApp === "opencode" ||
-      activeApp === "openclaw" ||
-      activeApp === "hermes" ||
-      activeApp === "pi"
-    ) {
-      let liveProviderIds: string[] = [];
-      try {
-        liveProviderIds =
-          activeApp === "opencode"
-            ? await queryClient.ensureQueryData({
-                queryKey: ["opencodeLiveProviderIds"],
-                queryFn: () => providersApi.getOpenCodeLiveProviderIds(),
-              })
-            : activeApp === "openclaw"
-              ? await queryClient.ensureQueryData({
-                  queryKey: openclawKeys.liveProviderIds,
-                  queryFn: () => providersApi.getOpenClawLiveProviderIds(),
-                })
-              : activeApp === "hermes"
-                ? await queryClient.ensureQueryData({
-                    queryKey: hermesKeys.liveProviderIds,
-                    queryFn: () => providersApi.getHermesLiveProviderIds(),
-                  })
-                : (
-                    await queryClient.ensureQueryData({
-                      queryKey: ["pi", "currentState"],
-                      queryFn: () => piApi.getCurrentState(),
-                    })
-                  ).enabledProviderIds;
-      } catch (error) {
-        console.error(
-          "[App] Failed to load live provider IDs for duplication",
-          error,
-        );
-        const errorMessage = extractErrorMessage(error);
-        toast.error(
-          t("provider.duplicateLiveIdsLoadFailed", {
-            defaultValue: "读取配置中的供应商标识失败，请先修复配置后再试",
-          }) + (errorMessage ? `: ${errorMessage}` : ""),
-        );
-        return;
-      }
-      const existingKeys = Array.from(
-        new Set([...Object.keys(providers), ...liveProviderIds]),
-      );
-      duplicatedProvider.providerKey = generateUniqueProviderCopyKey(
-        provider.id,
-        existingKeys,
-      );
-      duplicatedProvider.addToLive = false;
-    } else if (activeApp === "mcode") {
-      // The MCode list already includes its live custom nodes; the backend
-      // rejects a key that MCode itself owns.
-      duplicatedProvider.providerKey = generateUniqueProviderCopyKey(
-        provider.id,
-        Object.keys(providers),
-      );
-    }
-
-    if (provider.sortIndex !== undefined) {
-      const updates = Object.values(providers)
-        .filter(
-          (p) =>
-            p.sortIndex !== undefined &&
-            p.sortIndex >= newSortIndex! &&
-            p.id !== provider.id,
-        )
-        .map((p) => ({
-          id: p.id,
-          sortIndex: p.sortIndex! + 1,
-        }));
-
-      if (updates.length > 0) {
-        try {
-          await providersApi.updateSortOrder(updates, activeApp);
-        } catch (error) {
-          console.error("[App] Failed to update sort order", error);
-          toast.error(
-            t("provider.sortUpdateFailed", {
-              defaultValue: "排序更新失败",
-            }),
-          );
-          return; // 如果排序更新失败，不继续添加
-        }
-      }
-    }
-
-    await addProvider(duplicatedProvider);
-  };
-
-  const confirmActionMessage = useMemo(() => {
-    if (!confirmAction) return "";
-
-    const message =
-      confirmAction.action === "remove"
-        ? t("confirm.removeProviderMessage", {
-            name: confirmAction.provider.name,
-          })
-        : t("confirm.deleteProviderMessage", {
-            name: confirmAction.provider.name,
-          });
-    const isPiGlobalDefault =
-      activeApp === "pi" &&
-      piCurrentState?.defaultProviderId === confirmAction.provider.id;
-
-    return isPiGlobalDefault
-      ? `${message}\n\n${t("confirm.piDefaultProviderWarning")}`
-      : message;
-  }, [activeApp, confirmAction, piCurrentState?.defaultProviderId, t]);
 
   const handleImportSuccess = async () => {
     try {
@@ -1131,6 +687,17 @@ function App() {
   const renderAppPageHeader = () => (
     <AppPageHeader
       variant="app"
+      leading={
+        <Button
+          variant="quiet"
+          size="compact"
+          onClick={openHome}
+          title={t("home.title", { defaultValue: "首页总览" })}
+        >
+          <ArrowLeft className="h-3.5 w-3.5" />
+          {t("appPage.backHome", { defaultValue: "首页" })}
+        </Button>
+      }
       icon={<AppGlyph app={activeApp} size={20} badgeClassName="bg-app" />}
       title={APP_DISPLAY_NAME[activeApp]}
       subtitle={
@@ -1167,7 +734,7 @@ function App() {
   const renderAppSegments = () => {
     if (activeApp === "openclaw") {
       return (
-        <div className="shrink-0 px-6 pt-2">
+        <div className="shrink-0 px-5 pt-2">
           <PageTabs
             aria-label={APP_DISPLAY_NAME.openclaw}
             idPrefix="openclaw-page"
@@ -1184,7 +751,7 @@ function App() {
     }
     if (activeApp === "hermes") {
       return (
-        <div className="shrink-0 px-6 pt-2">
+        <div className="shrink-0 px-5 pt-2">
           <PageTabs
             aria-label={APP_DISPLAY_NAME.hermes}
             idPrefix="hermes-page"
@@ -1201,128 +768,26 @@ function App() {
     return null;
   };
 
-  const listCallbacks = {
-    onEdit: (provider: Provider) => {
-      setFormModeView(currentModeView);
-      setEditingProvider(provider);
-    },
-    onDelete: (provider: Provider) =>
-      setConfirmAction({ provider, action: "delete" }),
-    onDuplicate: handleDuplicateProvider,
-    onConfigureUsage: setUsageProvider,
-    onOpenWebsite: handleOpenWebsite,
-    onOpenTerminal: activeApp === "claude" ? setTerminalProvider : undefined,
-    onCreate: () => openAddProvider(currentModeView),
-    searchOpen: providerSearchOpen,
-    onSearchOpenChange: setProviderSearchOpen,
-  };
-
-  /**
-   * 这个构建只对接 AIFusion 自有平台：每个应用页不再展示供应商 / 渠道卡片，
-   * 只显示平台连接状态。原来的渠道列表实现保留在 `renderProviderChannels`，
-   * 以后要放开手动管理时把 `providerChannels` 的开关改成 true 即可。
-   */
-  const renderProviderChannels = () => {
-    if (modeAppId) {
-      const startupFailure = startupFailures.find(
-        (failure) => failure.appType === modeAppId,
-      );
-      return (
-        <SwitchModePanel
-          key={modeAppId}
-          app={modeAppId}
+  // 这个构建只对接 AIFusion 自有平台：应用页不展示供应商 / 渠道卡片，只显示平台连接状态
+  const renderProviderList = () => (
+    <div
+      ref={providerScrollContainerRef}
+      id="main-content"
+      className="min-h-0 flex-1 overflow-y-auto scroll-stable overflow-x-hidden px-5 pb-10 pt-4"
+    >
+      <div className="mx-auto w-full max-w-[880px]">
+        <PlatformConnectionPanel
+          app={activeApp}
           providers={providers}
           currentProviderId={currentProviderId}
-          isLoading={isLoading}
-          scrollRef={providerScrollContainerRef}
-          onSwitch={switchProvider}
-          onOpenRoutingSettings={() => openSettings("routing")}
-          needsRouteRequest={
-            trayNeedsRoute?.app === modeAppId ? trayNeedsRoute : undefined
-          }
-          onNeedsRouteHandled={() => setTrayNeedsRoute(null)}
-          onViewChange={handleProviderModeViewChange}
-          startupFailure={startupFailure}
-          onDismissStartupFailure={() =>
-            setStartupFailures((list) =>
-              list.filter((failure) => failure.appType !== modeAppId),
-            )
-          }
-          {...listCallbacks}
+          visibleApps={visibleApps}
+          onOpenKeySettings={() => openSettings("general")}
+          onOpenPage={openPageFromNav}
+          onOpenApp={selectApp}
         />
-      );
-    }
-
-    return (
-      <div
-        ref={providerScrollContainerRef}
-        id="main-content"
-        className="min-h-0 flex-1 overflow-y-auto scroll-stable overflow-x-hidden px-6 pb-12 pt-4"
-      >
-        <div className="space-y-4">
-          <ProviderList
-            {...listCallbacks}
-            providers={providers}
-            currentProviderId={currentProviderId}
-            appId={activeApp}
-            isLoading={isLoading}
-            onSwitch={(provider) =>
-              void (activeApp === "pi"
-                ? handleEnablePiProvider(provider)
-                : switchProvider(provider))
-            }
-            onRemoveFromConfig={
-              activeApp === "opencode" ||
-              activeApp === "openclaw" ||
-              activeApp === "hermes" ||
-              activeApp === "pi" ||
-              activeApp === "mcode"
-                ? (provider) => setConfirmAction({ provider, action: "remove" })
-                : undefined
-            }
-            onDisableOmo={
-              activeApp === "opencode" ? handleDisableOmo : undefined
-            }
-            onDisableOmoSlim={
-              activeApp === "opencode" ? handleDisableOmoSlim : undefined
-            }
-            onSetAsDefault={
-              activeApp === "openclaw"
-                ? (provider, modelId) =>
-                    void setAsDefaultModel(provider, modelId)
-                : activeApp === "hermes"
-                  ? (provider) => void switchProvider(provider)
-                  : undefined
-            }
-          />
-        </div>
       </div>
-    );
-  };
-
-  const renderProviderList = () => {
-    if (SHOW_PROVIDER_CHANNELS) {
-      return renderProviderChannels();
-    }
-
-    return (
-      <div
-        ref={providerScrollContainerRef}
-        id="main-content"
-        className="min-h-0 flex-1 overflow-y-auto scroll-stable overflow-x-hidden px-6 pb-12 pt-4"
-      >
-        <div className="mx-auto w-full max-w-3xl">
-          <PlatformConnectionPanel
-            app={activeApp}
-            providers={providers}
-            currentProviderId={currentProviderId}
-            onOpenKeySettings={() => openSettings("general")}
-            onOpenPage={openPageFromNav}
-          />
-        </div>
-      </div>
-    );
-  };
+    </div>
+  );
 
   const renderAppPage = () => {
     const body = (() => {
@@ -1333,7 +798,7 @@ function App() {
           return (
             <>
               {/* 二级页签：小一号、不画整行底线，挂在一级页签下面 */}
-              <div className="shrink-0 px-6 pt-1">
+              <div className="shrink-0 px-5 pt-1">
                 <PageTabs
                   size="sm"
                   aria-label={t("appPage.openclawConfig")}
@@ -1461,6 +926,17 @@ function App() {
         />
       );
     }
+    if (currentView === "home") {
+      return (
+        <HomeOverview
+          visibleApps={visibleApps}
+          activeApp={activeApp}
+          onOpenApp={selectApp}
+          onOpenPage={openPageFromNav}
+          onOpenKeySettings={() => openSettings("general")}
+        />
+      );
+    }
     return isAppPage(currentView) ? renderAppPage() : renderGlobalPage();
   };
 
@@ -1468,13 +944,14 @@ function App() {
     <WindowControlsContext.Provider
       value={useAppWindowControls ? <WindowControls /> : null}
     >
-      <div className="flex h-screen overflow-hidden bg-app text-fg-1 selection:bg-action/25">
+      <div className="flex h-screen overflow-hidden bg-app text-fg-1 selection:bg-selected">
         <Sidebar
           activeApp={activeApp}
           view={currentView}
           visibleApps={visibleApps}
           settingsSection={settingsSection}
           onSelectApp={selectApp}
+          onSelectHome={openHome}
           onSelectSettingsSection={(section) => {
             setAppConfigScrollTarget(undefined);
             setSettingsSection(section);
@@ -1514,9 +991,11 @@ function App() {
             key={
               currentView === "settings"
                 ? "settings"
-                : isAppPage(currentView)
-                  ? "app"
-                  : currentView
+                : currentView === "home"
+                  ? "home"
+                  : isAppPage(currentView)
+                    ? "app"
+                    : currentView
             }
             className="flex min-h-0 flex-1 flex-col"
           >
@@ -1524,64 +1003,6 @@ function App() {
           </div>
         </main>
       </div>
-
-      <AddProviderDialog
-        open={isAddOpen}
-        onOpenChange={setIsAddOpen}
-        appId={activeApp}
-        onSubmit={addProvider}
-        modeView={formModeView}
-      />
-
-      <EditProviderDialog
-        open={Boolean(editingProvider)}
-        provider={effectiveEditingProvider}
-        onOpenChange={(open) => {
-          if (!open) {
-            setEditingProvider(null);
-          }
-        }}
-        onSubmit={handleEditProvider}
-        appId={activeApp}
-        isProxyTakeover={isCurrentAppTakeoverActive}
-        isCurrent={effectiveEditingProvider?.id === currentProviderId}
-        modeView={formModeView}
-      />
-
-      {effectiveUsageProvider && (
-        <UsageScriptModal
-          key={effectiveUsageProvider.id}
-          provider={effectiveUsageProvider}
-          appId={activeApp}
-          isOpen={Boolean(usageProvider)}
-          onClose={() => setUsageProvider(null)}
-          onSave={(script) => {
-            if (usageProvider) {
-              void saveUsageScript(usageProvider, script);
-            }
-          }}
-        />
-      )}
-
-      <OpenTerminalDialog
-        provider={terminalProvider}
-        appId={activeApp}
-        onClose={() => setTerminalProvider(null)}
-      />
-
-      <ConfirmDialog
-        isOpen={Boolean(confirmAction)}
-        title={
-          confirmAction?.action === "remove"
-            ? t("confirm.removeProvider")
-            : t("confirm.deleteProvider")
-        }
-        message={confirmActionMessage}
-        // 「移除」只是从应用配置里拿掉、AIFusion 里还留着，可以再加回去，不用红色
-        variant={confirmAction?.action === "remove" ? "info" : "destructive"}
-        onConfirm={() => void handleConfirmAction()}
-        onCancel={() => setConfirmAction(null)}
-      />
 
       <ConfirmDialog
         isOpen={pendingLeave !== null}

@@ -6,7 +6,9 @@ import type {
   SessionMeta,
   Settings,
 } from "@/types";
-import { deepClone } from "@/utils/deepClone";
+
+// 测试状态需要深拷贝，避免用例之间互相改写同一份对象
+const deepClone = <T>(value: T): T => structuredClone(value);
 
 type ProvidersByApp = Record<AppId, Record<string, Provider>>;
 type CurrentProviderState = Record<AppId, string>;

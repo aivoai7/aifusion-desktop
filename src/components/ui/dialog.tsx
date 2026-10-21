@@ -2,6 +2,21 @@ import * as React from "react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { cn } from "@/lib/utils";
 
+/**
+ * 对话框（Ink & Grid）：14px 圆角、发丝描边、af-pop 阴影，遮罩用 --overlay。
+ * zIndex 分四档，浮层叠放顺序和抽屉、菜单一致：
+ * base 40 < nested 50 < alert 60（确认框）< top 110（覆盖一切的提示）。
+ * 点遮罩默认不关闭（表单草稿容易被误点丢掉），需要的话调用处自己接 onInteractOutside。
+ */
+const ZINDEX = {
+  base: "z-40",
+  nested: "z-50",
+  alert: "z-[60]",
+  top: "z-[110]",
+} as const;
+
+type DialogLayer = keyof typeof ZINDEX;
+
 const Dialog = DialogPrimitive.Root;
 
 const DialogTrigger = DialogPrimitive.Trigger;
@@ -13,34 +28,27 @@ const DialogClose = DialogPrimitive.Close;
 const DialogOverlay = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Overlay>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Overlay> & {
-    zIndex?: "base" | "nested" | "alert" | "top";
+    zIndex?: DialogLayer;
   }
->(({ className, zIndex = "base", ...props }, ref) => {
-  const zIndexMap = {
-    base: "z-40",
-    nested: "z-50",
-    alert: "z-[60]",
-    top: "z-[110]",
-  };
-
-  return (
-    <DialogPrimitive.Overlay
-      ref={ref}
-      className={cn(
-        "fixed inset-0 bg-overlay data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
-        zIndexMap[zIndex],
-        className,
-      )}
-      {...props}
-    />
-  );
-});
+>(({ className, zIndex = "base", ...props }, ref) => (
+  <DialogPrimitive.Overlay
+    ref={ref}
+    className={cn(
+      "fixed inset-0 bg-overlay duration-200",
+      "data-[state=open]:animate-in data-[state=open]:fade-in-0",
+      "data-[state=closed]:animate-out data-[state=closed]:fade-out-0",
+      ZINDEX[zIndex],
+      className,
+    )}
+    {...props}
+  />
+));
 DialogOverlay.displayName = DialogPrimitive.Overlay.displayName;
 
 const DialogContent = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> & {
-    zIndex?: "base" | "nested" | "alert" | "top";
+    zIndex?: DialogLayer;
     variant?: "default" | "fullscreen";
     overlayClassName?: string;
   }
@@ -56,29 +64,22 @@ const DialogContent = React.forwardRef<
     },
     ref,
   ) => {
-    const zIndexMap = {
-      base: "z-40",
-      nested: "z-50",
-      alert: "z-[60]",
-      top: "z-[110]",
-    };
-
-    const variantClass = {
-      default:
-        "fixed left-1/2 top-1/2 flex flex-col w-full max-w-lg max-h-[90vh] translate-x-[-50%] translate-y-[-50%] border border-border bg-surface text-fg-1 shadow-v7-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] rounded-dialog",
-      fullscreen:
-        "fixed inset-0 flex flex-col w-screen h-screen translate-x-0 translate-y-0 bg-surface text-fg-1 p-0 sm:rounded-none shadow-none",
-    }[variant];
+    const shell =
+      variant === "fullscreen"
+        ? "fixed inset-0 flex h-screen w-screen flex-col bg-app text-fg-1"
+        : "fixed left-1/2 top-1/2 flex max-h-[90vh] w-full max-w-lg translate-x-[-50%] translate-y-[-50%] flex-col " +
+          "rounded-dialog border border-hairline bg-surface text-fg-1 shadow-af-pop " +
+          "duration-150 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 " +
+          "data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95";
 
     return (
       <DialogPortal>
         <DialogOverlay zIndex={zIndex} className={overlayClassName} />
         <DialogPrimitive.Content
           ref={ref}
-          className={cn(variantClass, zIndexMap[zIndex], className)}
-          onInteractOutside={(e) => {
-            // 防止点击遮罩层关闭对话框
-            e.preventDefault();
+          className={cn(shell, ZINDEX[zIndex], className)}
+          onInteractOutside={(event) => {
+            if (variant === "default") event.preventDefault();
           }}
           {...props}
         >
@@ -96,7 +97,7 @@ const DialogHeader = ({
 }: React.HTMLAttributes<HTMLDivElement>) => (
   <div
     className={cn(
-      "flex flex-shrink-0 flex-col gap-1 px-6 pb-3 pt-5 text-start",
+      "hairline-b flex shrink-0 flex-col gap-1 px-6 pb-4 pt-5 text-start",
       className,
     )}
     {...props}
@@ -110,7 +111,7 @@ const DialogFooter = ({
 }: React.HTMLAttributes<HTMLDivElement>) => (
   <div
     className={cn(
-      "flex flex-shrink-0 flex-row items-center justify-end gap-2 px-6 pb-5 pt-3",
+      "hairline-t flex shrink-0 flex-row items-center justify-end gap-2 px-6 py-4",
       className,
     )}
     {...props}
@@ -124,7 +125,7 @@ const DialogTitle = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <DialogPrimitive.Title
     ref={ref}
-    className={cn("text-title font-semibold text-fg-1", className)}
+    className={cn("text-title text-fg-1", className)}
     {...props}
   />
 ));
@@ -136,7 +137,7 @@ const DialogDescription = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <DialogPrimitive.Description
     ref={ref}
-    className={cn("text-sm text-fg-2", className)}
+    className={cn("text-caption leading-relaxed text-fg-2", className)}
     {...props}
   />
 ));

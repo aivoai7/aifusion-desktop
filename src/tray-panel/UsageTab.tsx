@@ -139,7 +139,7 @@ function Segmented<T extends string>({
     <div
       role="tablist"
       aria-label={label}
-      className="flex rounded-lg bg-black/[0.06] p-0.5 dark:bg-white/[0.08]"
+      className="flex rounded-control border border-hairline bg-subtle p-[3px]"
     >
       {options.map((option) => (
         <button
@@ -149,11 +149,13 @@ function Segmented<T extends string>({
           aria-selected={option.value === value}
           onClick={() => onChange(option.value)}
           className={cn(
-            "flex-1 whitespace-nowrap rounded-md font-medium transition-colors",
-            size === "sm" ? "px-2 py-0.5 text-[11px]" : "px-2 py-1 text-xs",
+            "flex-1 whitespace-nowrap rounded-[4px] transition-colors duration-100",
+            size === "sm"
+              ? "px-2 py-0.5 text-badge"
+              : "px-2 py-1 text-caption",
             option.value === value
-              ? "bg-white text-foreground shadow-sm dark:bg-white/[0.16]"
-              : "text-muted-foreground hover:text-foreground",
+              ? "bg-surface font-medium text-fg-1 shadow-sm"
+              : "text-fg-3 hover:text-fg-1",
           )}
         >
           {option.label}
@@ -174,15 +176,13 @@ function Stat({
   detail?: string;
 }) {
   return (
-    <div className="min-w-0 rounded-lg bg-black/[0.04] px-2.5 py-1.5 dark:bg-white/[0.06]">
-      <div className="truncate text-[11px] text-muted-foreground">{label}</div>
-      <div className="truncate text-[17px] font-semibold leading-6 tabular-nums">
+    <div className="min-w-0 rounded-control border border-hairline bg-subtle px-2.5 py-1.5">
+      <div className="truncate text-badge text-fg-3">{label}</div>
+      <div className="af-num truncate text-[17px] font-semibold leading-6 text-fg-1">
         {value}
       </div>
       {detail && (
-        <div className="truncate text-[10.5px] tabular-nums text-muted-foreground">
-          {detail}
-        </div>
+        <div className="af-num truncate text-badge text-fg-3">{detail}</div>
       )}
     </div>
   );
@@ -268,11 +268,11 @@ export function UsageTab({
       />
 
       {!summary && isLoading ? (
-        <div className="flex h-40 items-center justify-center text-muted-foreground">
+        <div className="flex h-40 items-center justify-center text-fg-3">
           <Loader2 className="h-4 w-4 animate-spin" />
         </div>
       ) : !summary || summary.totalRequests === 0 ? (
-        <div className="flex h-24 items-center justify-center text-xs text-muted-foreground">
+        <div className="flex h-24 items-center justify-center text-caption text-fg-3">
           {t("usage.noData")}
         </div>
       ) : (
@@ -299,9 +299,9 @@ export function UsageTab({
             />
           </div>
           {/* 下半：按时间的明细 */}
-          <div className="rounded-lg bg-black/[0.04] px-2 pb-1 pt-2 dark:bg-white/[0.06]">
+          <div className="rounded-panel border border-hairline bg-subtle px-2 pb-1 pt-2">
             <div className="mb-1 flex items-center gap-2 px-1">
-              <span className="truncate text-[11px] font-medium text-muted-foreground">
+              <span className="truncate text-badge text-fg-3">
                 {t("usage.trend.title", { range: rangeLabel })}
               </span>
               <div className="ms-auto">
@@ -352,29 +352,25 @@ export function UsageTab({
                     }
                   />
                   <Tooltip
-                    cursor={{ fill: "rgba(127,127,127,0.12)" }}
+                    cursor={{ fill: "var(--heat-1)" }}
                     content={({ active, payload }) => {
                       const point = payload?.[0]?.payload as
                         | UsageTrendChartPoint
                         | undefined;
                       if (!active || !point) return null;
                       return (
-                        <div className="rounded-md bg-popover px-2 py-1 text-[11px] text-popover-foreground shadow-md">
-                          <div className="font-medium">
-                            {point.tooltipLabel ?? point.label}
-                          </div>
-                          <div className="tabular-nums">
-                            {formatValue(point)}
-                          </div>
+                        <div className="rounded-control border border-hairline bg-popover px-2 py-1 text-badge text-popover-foreground shadow-af-pop">
+                          <div className="font-medium">{point.tooltipLabel ?? point.label}</div>
+                          <div className="af-num">{formatValue(point)}</div>
                         </div>
                       );
                     }}
                   />
                   <Bar
                     dataKey={dataKey}
-                    fill="#38bdf8"
-                    radius={[3, 3, 0, 0]}
-                    maxBarSize={18}
+                    fill="var(--chart-1)"
+                    radius={[2, 2, 0, 0]}
+                    maxBarSize={14}
                     isAnimationActive={false}
                   />
                 </BarChart>

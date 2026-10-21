@@ -7,10 +7,16 @@ import { extractErrorMessage } from "@/utils/errorUtils";
 import { cn } from "@/lib/utils";
 import { HoverTip } from "@/components/ui/hover-tip";
 
+/** 窗口按钮：32 见方、图标 15px、悬停只有弱底，关闭键悬停转红。 */
 const BUTTON =
-  "flex h-7 w-7 items-center justify-center rounded-control text-fg-2 transition-colors hover:bg-subtle hover:text-fg-1";
+  "flex h-8 w-8 items-center justify-center rounded-control text-fg-3 " +
+  "transition-colors duration-100 hover:bg-subtle hover:text-fg-1 " +
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/45";
 
-/** 接在页头最右端的最小化 / 最大化 / 关闭：Windows 一律用它，Linux 打开「使用应用内窗口按钮」后用它。 */
+/**
+ * 接在页头最右端的最小化 / 最大化 / 关闭：
+ * Windows 一律用它，Linux 打开「使用应用内窗口按钮」后用它。
+ */
 export function WindowControls() {
   const { t } = useTranslation();
   const [maximized, setMaximized] = useState(false);
@@ -65,7 +71,7 @@ export function WindowControls() {
           aria-label={t("header.windowMinimize")}
           onClick={() => void run(() => getCurrentWindow().minimize())}
         >
-          <Minus className="h-4 w-4" />
+          <Minus className="h-[15px] w-[15px]" strokeWidth={1.75} />
         </button>
       </HoverTip>
       <HoverTip content={maximizeLabel}>
@@ -82,20 +88,23 @@ export function WindowControls() {
           }
         >
           {maximized ? (
-            <Minimize2 className="h-4 w-4" />
+            <Minimize2 className="h-[15px] w-[15px]" strokeWidth={1.75} />
           ) : (
-            <Maximize2 className="h-4 w-4" />
+            <Maximize2 className="h-[15px] w-[15px]" strokeWidth={1.75} />
           )}
         </button>
       </HoverTip>
       <HoverTip content={t("header.windowClose")}>
         <button
           type="button"
-          className={cn(BUTTON, "hover:bg-danger-soft hover:text-danger-text")}
+          className={cn(
+            BUTTON,
+            "hover:bg-danger-soft hover:text-danger-text data-[active=true]:bg-danger data-[active=true]:text-white",
+          )}
           aria-label={t("header.windowClose")}
           onClick={() => void run(() => getCurrentWindow().close())}
         >
-          <X className="h-4 w-4" />
+          <X className="h-[15px] w-[15px]" strokeWidth={1.75} />
         </button>
       </HoverTip>
     </>

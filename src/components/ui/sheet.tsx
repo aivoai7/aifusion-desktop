@@ -8,7 +8,8 @@ import { useUnsavedChangesTracker } from "@/lib/unsavedChanges";
 import { cn } from "@/lib/utils";
 
 /**
- * 右侧抽屉（v7：圆角 14、大阴影，宽度按内容 420 / 560）。基于 Radix Dialog：
+ * 抽屉（Ink & Grid）：从右侧推入，靠发丝线和大阴影和主界面分层，不做玻璃模糊。
+ * 宽 420（表单）/ 560（详情），整页版铺满内容区。基于 Radix Dialog：
  * Escape 关闭、打开时背景不可操作、关闭后焦点回到触发按钮。
  */
 const Sheet = DialogPrimitive.Root;
@@ -45,12 +46,15 @@ const SheetContent = React.forwardRef<
     ref,
   ) => (
     <DialogPrimitive.Portal>
-      <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-overlay data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
+      <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-overlay duration-200 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=closed]:animate-out data-[state=closed]:fade-out-0" />
       <DialogPrimitive.Content
         ref={ref}
         style={{ width, ...style }}
         className={cn(
-          "fixed inset-y-0 end-0 z-50 flex max-w-[100vw] flex-col overflow-hidden rounded-s-dialog border-s border-border bg-surface text-fg-1 shadow-v7-lg outline-none duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:slide-out-to-right-4 data-[state=open]:slide-in-from-right-4",
+          "fixed inset-y-0 end-0 z-50 flex max-w-[100vw] flex-col overflow-hidden",
+          "rounded-s-dialog border-s border-hairline bg-surface text-fg-1 shadow-af-pop outline-none duration-200",
+          "data-[state=open]:animate-in data-[state=open]:slide-in-from-right-4 data-[state=open]:fade-in-0",
+          "data-[state=closed]:animate-out data-[state=closed]:slide-out-to-right-4 data-[state=closed]:fade-out-0",
           className,
         )}
         onInteractOutside={(event) => {
@@ -82,7 +86,7 @@ function UnsavedChangesScope({ children }: { children: React.ReactNode }) {
 }
 
 /**
- * 整页版的 SheetContent：盖住内容区，页头带返回按钮（同 FullScreenPanel），内容随窗口铺满。
+ * 整页版抽屉：盖住内容区，页头带返回按钮（同 FullScreenPanel），内容随窗口铺满。
  * 配合 `<Sheet modal={false}>` 使用：侧栏和窗口拖动区照常可用；点外面不关。
  */
 const SheetPageContent = React.forwardRef<
@@ -137,7 +141,10 @@ const SheetHeader = ({
   ...props
 }: React.HTMLAttributes<HTMLDivElement>) => (
   <div
-    className={cn("shrink-0 space-y-1 pe-12 ps-5 pt-4", className)}
+    className={cn(
+      "hairline-b shrink-0 space-y-1 pe-12 ps-5 pt-4 pb-3",
+      className,
+    )}
     {...props}
   />
 );
@@ -161,7 +168,7 @@ const SheetFooter = ({
 }: React.HTMLAttributes<HTMLDivElement>) => (
   <div
     className={cn(
-      "flex shrink-0 items-center justify-end gap-2 border-t border-border px-5 py-3",
+      "hairline-t flex shrink-0 items-center justify-end gap-2 px-5 py-3",
       className,
     )}
     {...props}
@@ -174,7 +181,7 @@ const SheetTitle = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <DialogPrimitive.Title
     ref={ref}
-    className={cn("text-section", className)}
+    className={cn("text-section text-fg-1", className)}
     {...props}
   />
 ));

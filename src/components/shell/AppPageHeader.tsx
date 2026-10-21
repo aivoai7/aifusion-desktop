@@ -12,11 +12,11 @@ interface AppPageHeaderProps {
   leading?: ReactNode;
   icon?: ReactNode;
   title: ReactNode;
-  /** 应用页用 16px 的名字 + 13px 的页面名；全局页和设置用 18px 的页面标题 */
+  /** 应用页用 15px 的名字 + 13px 的页面名；全局页和设置用 19px 的页面标题 */
   variant?: "app" | "page";
   /** 应用页的页面名（如「供应商」），灰字跟在应用名后面 */
   subtitle?: ReactNode;
-  /** 标题后面的「?」、Beta 徽标、计数等 */
+  /** 标题后面的「?」、徽标、计数等 */
   titleExtra?: ReactNode;
   /** 右侧操作区：主按钮放最后一个、⋯ 放它后面 */
   actions?: ReactNode;
@@ -26,7 +26,8 @@ interface AppPageHeaderProps {
 }
 
 /**
- * 内容区页头：高 52，整条可拖动窗口，左边是图标 + 标题，右边是操作。
+ * 内容区页头（Ink & Grid）：高 48，整条可拖动窗口，底部一条发丝线和内容区分层。
+ * 标题靠字号与负字距分层，不加分隔线、不加底色。
  */
 export function AppPageHeader({
   leading,
@@ -40,10 +41,11 @@ export function AppPageHeader({
   className,
 }: AppPageHeaderProps) {
   const windowControls = useContext(WindowControlsContext);
+
   return (
     <header
       className={cn(
-        "flex h-[52px] shrink-0 items-center gap-5 border-b border-border pe-4 ps-6",
+        "hairline-b flex h-12 shrink-0 items-center gap-4 pe-4 ps-5",
         className,
       )}
       {...DRAG_REGION_ATTR}
@@ -58,7 +60,7 @@ export function AppPageHeader({
         )}
       >
         {leading && (
-          <span className="-ms-2 flex shrink-0 items-center" style={NO_DRAG}>
+          <span className="-ms-1.5 flex shrink-0 items-center" style={NO_DRAG}>
             {leading}
           </span>
         )}
@@ -74,14 +76,14 @@ export function AppPageHeader({
           {...DRAG_REGION_ATTR}
           className={cn(
             "m-0 whitespace-nowrap",
-            variant === "app" ? "text-title" : "text-page",
+            variant === "app" ? "text-title text-fg-1" : "text-page text-fg-1",
             truncateTitle && "min-w-0 truncate",
           )}
         >
           {title}
         </h1>
         {(subtitle || titleExtra) && (
-          <div className="flex items-center gap-1" style={NO_DRAG}>
+          <div className="flex items-center gap-1.5" style={NO_DRAG}>
             {subtitle && (
               <span className="whitespace-nowrap text-body text-fg-3">
                 {subtitle}
@@ -101,7 +103,7 @@ export function AppPageHeader({
         </div>
       )}
       {windowControls && (
-        <div className="flex shrink-0 items-center gap-1" style={NO_DRAG}>
+        <div className="flex shrink-0 items-center gap-0.5" style={NO_DRAG}>
           {windowControls}
         </div>
       )}

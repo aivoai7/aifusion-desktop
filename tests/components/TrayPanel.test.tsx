@@ -54,8 +54,8 @@ const state: TrayPanelState = {
       header: null,
       attention: null,
       quota: null,
-      addId: null,
-      addText: "Add provider",
+      emptyId: null,
+      emptyText: "Not set up yet",
       rows: [
         {
           kind: "item",

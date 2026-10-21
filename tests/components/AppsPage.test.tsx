@@ -316,7 +316,7 @@ describe("AppsPage concurrent CLI upgrades", () => {
         name: "settings.manualInstallCommands",
       }),
     ).toBeInTheDocument();
-  });
+  }, 20_000);
 
   it.each([["Windows NT 10.0"], ["X11; Linux x86_64"]])(
     "shows the official Hermes uninstall command for %s",

@@ -282,6 +282,11 @@ export const handlers = [
     }),
   ),
 
+  // 侧栏余额实时读平台美元钱包；测试环境固定一个数值，避免未拦截的告警
+  http.post(`${TAURI_ENDPOINT}/get_platform_wallet_balance`, () =>
+    success(null),
+  ),
+
   http.post(`${TAURI_ENDPOINT}/check_env_conflicts`, () => success([])),
 
   http.post(`${TAURI_ENDPOINT}/save_settings`, async ({ request }) => {

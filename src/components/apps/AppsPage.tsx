@@ -297,7 +297,7 @@ export function AppsPage() {
                   {t("appsPage.manualCommands")}
                 </DropdownMenuItem>
                 <DropdownMenuItem
-                  className="text-red-500 focus:text-red-500 dark:text-red-400 dark:focus:text-red-400"
+                  danger
                   onSelect={() => setShowUninstallCommands(true)}
                 >
                   {t("settings.manualUninstallCommands")}

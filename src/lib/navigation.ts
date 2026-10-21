@@ -1,10 +1,11 @@
 import type { AppId } from "@/lib/api";
 
 /**
- * 主窗口的导航模型（v7）：侧栏选一个应用或一个全局页；设置单独占一屏。
+ * 主窗口的导航模型（v8）：首页总览打头，往下是单客户端详情；设置单独占一屏。
  *
- * - 应用页：点侧栏应用行进入供应商页；OpenClaw、Hermes 在页头下用分段控件切到自己的专属页。
- * - 全局页：用量统计、MCP、Skills、提示词、会话，每样只出现一次。
+ * - 首页：平台卡 + 客户端网格 + 更多功能入口，是启动后的落地页。
+ * - 应用页：点首页卡片或侧栏应用行进入详情；OpenClaw、Hermes 在页头下用分段控件切到自己的专属页。
+ * - 全局页：用量统计、MCP、Skills、提示词、会话，每样只出现一次，都由首页/详情进入。
  * - 设置：侧栏换成设置目录，6 个分组。
  */
 
@@ -23,7 +24,7 @@ export type GlobalPage =
   | "sessions"
   | "apps";
 
-export type View = AppPage | GlobalPage | "settings";
+export type View = "home" | AppPage | GlobalPage | "settings";
 
 export type SettingsSection =
   | "general"
@@ -81,6 +82,7 @@ export function parseView(value: string | null | undefined): View | null {
   if (!value) return null;
   if (value in LEGACY_VIEWS) return LEGACY_VIEWS[value];
   if (value === "settings") return "settings";
+  if (value === "home") return "home";
   if ((APP_PAGES as string[]).includes(value)) return value as AppPage;
   if ((GLOBAL_PAGES as string[]).includes(value)) return value as GlobalPage;
   return null;
@@ -102,12 +104,12 @@ export function appPageBelongsTo(page: AppPage, app: AppId): boolean {
 export function readStoredView(): View {
   try {
     const stored = parseView(localStorage.getItem(VIEW_STORAGE_KEY));
-    // 侧栏只保留应用；「应用」「设置」和 MCP / Skills / 提示词 / 会话 / 用量统计
-    // 都从平台连接进入，重启后回到当前应用的供应商页。
-    if (!stored || !isAppPage(stored)) return "providers";
-    return stored;
+    // 首页是新的落地页；上次停在应用页或全局页就回到那一页，
+    // 只有「设置」不当落地页（它由侧栏 / ⌘, 进入）。
+    if (stored && stored !== "settings") return stored;
+    return "home";
   } catch {
-    return "providers";
+    return "home";
   }
 }
 
@@ -115,7 +117,7 @@ export function storeView(view: View) {
   try {
     localStorage.setItem(VIEW_STORAGE_KEY, view);
   } catch {
-    // 存不了就算了：下次启动回到供应商页
+    // 存不了就算了：下次启动回到首页总览
   }
 }
 
