@@ -7,7 +7,7 @@
 登录一次，密钥自动下发；模型、路由、用量与客户端更新，都在一个窗口里完成。
 
 [![Version](https://img.shields.io/badge/version-0.2.1-black)](https://github.com/aivoai7/aifusion-desktop/releases)
-[![Platform](https://img.shields.io/badge/platform-Windows%2010%2F11%20x64-2f6feb)](https://github.com/aivoai7/aifusion-desktop/releases/latest)
+[![Platform](https://img.shields.io/badge/platform-Windows%20%C2%B7%20Linux-2f6feb)](https://github.com/aivoai7/aifusion-desktop/releases/latest)
 [![Built with Tauri](https://img.shields.io/badge/built%20with-Tauri%202-orange)](https://tauri.app/)
 
 **[下载](https://github.com/aivoai7/aifusion-desktop/releases/latest) · [首次使用](#首次使用) · [功能](#功能) · [开发](#开发与构建)**
@@ -18,12 +18,12 @@
 
 ## 这是什么
 
-AIFusion 是 AIFusion 平台的 Windows 桌面客户端。它只对接自有平台，不预置任何第三方配置，只做一件事：把平台账号、API Key 与模型配置，可靠地写进你正在使用的 AI 编程工具。
+AIFusion 是 AIFusion 平台的桌面客户端，支持 Windows 与 Linux。它只对接自有平台，不预置任何第三方配置，只做一件事：把平台账号、API Key 与模型配置，可靠地写进你正在使用的 AI 编程工具。
 
 - 平台地址：<https://op.aifusion.sbs>
 - 安装包不包含任何 API Key；首次使用时通过网页登录取回你自己的 Key
 - 不需要手改 JSON / TOML / YAML，客户端配置由应用写入
-- 当前版本 **0.2.1**，只发布 Windows x64 安装包
+- 当前版本 **0.2.1**，发布 Windows x64 与 Linux x86_64 安装包
 
 支持的客户端：
 
@@ -64,18 +64,26 @@ Claude Code、Claude Desktop、Codex、Gemini CLI、Grok Build 可以按客户�
 
 ## 下载与安装
 
-系统要求：**Windows 10 / 11 x64**，需要 Microsoft Edge WebView2 Runtime（Windows 11 自带）。
+系统要求：
+
+- **Windows**：Windows 10 / 11 x64，需要 Microsoft Edge WebView2 Runtime（Windows 11 自带）
+- **Linux**：x86_64，GNOME/KDE 桌面 + GTK3 / WebKit2GTK 4.1（桌面发行版通常自带）
 
 从 [Releases](https://github.com/aivoai7/aifusion-desktop/releases/latest) 下载：
 
 | 文件 | 用途 |
 | --- | --- |
-| `AIFusion_0.2.1_x64-setup.exe` | NSIS 安装包，推荐绝大多数用户使用 |
+| `AIFusion_0.2.1_x64-setup.exe` | NSIS 安装包，Windows 推荐绝大多数用户使用 |
 | `AIFusion_0.2.1_x64_en-US.msi` | MSI 安装包，适合企业批量分发 |
+| `AIFusion-v0.2.1-Linux-x86_64.AppImage` | Linux 通用包，chmod +x 后直接运行，跨发行版首选 |
+| `AIFusion-v0.2.1-Linux-x86_64.deb` | Debian / Ubuntu |
+| `AIFusion-v0.2.1-Linux-x86_64.rpm` | Fedora / openSUSE / RHEL 系 |
 
 > 如果你安装过 4.0.15 或更早的版本，请先卸载旧版再安装 0.2.1。版本号回退时，Windows 安装器可能拒绝覆盖升级。
 
-当前 Release 只提供 Windows x64 安装包；macOS 与 Linux 未提供预编译包，需自行从源码构建。
+deb/rpm 的依赖名按 Ubuntu 22.04 一代的包写死。本机在 Ubuntu 26.04（WSL2）实测：`libgtk-3-0` 已完成 t64 迁移改名 `libgtk-3-0t64`，`apt install ./xxx.deb` 会报依赖不满足；装法是先手动装齐 GTK3、WebKit2GTK 4.1、AppIndicator3、libnotify、xdg-utils，再用 `sudo dpkg -i --force-depends xxx.deb`，或直接改用 AppImage。
+
+macOS 仍未提供预编译包，需自行从源码构建。
 
 ## 首次使用
 
@@ -94,7 +102,7 @@ Claude Code、Claude Desktop、Codex、Gemini CLI、Grok Build 可以按客户�
 - 平台登录在系统浏览器完成，官网账号与 Cookie 不写入应用
 - 安装包与源码中不包含任何平台密钥
 
-在 Windows 上，`~` 指当前用户目录，例如 `C:\Users\<用户名>`。
+在 Windows 上，`~` 指当前用户目录，例如 `C:\Users\<用户名>`；在 Linux 上指 `$HOME`，例如 `~/.aifusion`。
 
 ## 开发与构建
 
@@ -119,6 +127,15 @@ pnpm format:check     # Prettier 检查
 
 pnpm build:renderer   # 只构建前端到 dist/
 pnpm tauri build --bundles nsis,msi   # 打包 Windows 安装包
+pnpm tauri build --bundles appimage,deb,rpm   # 打包 Linux 安装包
+```
+
+Linux 上构建前需要这些开发库（Release 工作流里装的就是这一组）：
+
+```bash
+sudo apt-get install -y build-essential pkg-config file patchelf rpm xdg-utils \
+  libssl-dev libgtk-3-dev librsvg2-dev libayatana-appindicator3-dev \
+  libwebkit2gtk-4.1-dev libsoup-3.0-dev
 ```
 
 安装包输出位置：
@@ -126,6 +143,9 @@ pnpm tauri build --bundles nsis,msi   # 打包 Windows 安装包
 ```text
 src-tauri/target/release/bundle/nsis/AIFusion_<version>_x64-setup.exe
 src-tauri/target/release/bundle/msi/AIFusion_<version>_x64_en-US.msi
+src-tauri/target/release/bundle/appimage/AIFusion_<version>_amd64.AppImage
+src-tauri/target/release/bundle/deb/AIFusion_<version>_amd64.deb
+src-tauri/target/release/bundle/rpm/AIFusion-<version>-1.x86_64.rpm
 ```
 
 目录结构：
