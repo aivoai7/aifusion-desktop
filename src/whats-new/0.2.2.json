@@ -1,0 +1,26 @@
+{
+  "version": "0.2.2",
+  "items": [
+    {
+      "type": "improve",
+      "zh": "界面换成与平台端同一套深色主题，不再提供浅色",
+      "zh-TW": "介面換成與平台端同一套深色主題，不再提供淺色",
+      "en": "The whole app now uses the same dark theme as the platform console; light mode is gone",
+      "ja": "アプリ全体をプラットフォーム側と同じダークテーマに統一し、ライトテーマを廃止しました"
+    },
+    {
+      "type": "improve",
+      "zh": "托盘面板与窗口标题栏一起转深色，不再出现亮色窗框",
+      "zh-TW": "托盤面板與視窗標題欄一起轉深色，不再出現亮色窗框",
+      "en": "The tray panel and the window title bar go dark together, so no light frame is left behind",
+      "ja": "トレイパネルとタイトルバーも同時にダークになり、明るい枠は表示されません"
+    },
+    {
+      "type": "improve",
+      "zh": "总览的用量卡改为墨底，图表统一用荧光绿",
+      "zh-TW": "總覽的用量卡改為墨底，圖表統一用螢光綠",
+      "en": "The usage card on the overview became a dark card, with charts drawn in the same lime accent",
+      "ja": "概要の使用量カードを濃い背景に変更し、グラフはライム色で統一しました"
+    }
+  ]
+}

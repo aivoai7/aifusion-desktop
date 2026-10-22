@@ -14,7 +14,7 @@ on:
       tag:
         description: 要挂到的 Release 标签（需已存在）
         required: true
-        default: v0.2.1
+        default: v0.2.2
       artifact_pattern:
         description: 制品名匹配（release-assets-*）
         required: true
