@@ -1,0 +1,57 @@
+name: Attach build artifacts to a release
+
+# 把某一次 Release 运行（release job 的 release-assets-* 制品）里的安装包挂到已有的 GitHub Release 上。
+# 用途：正式发布由 publish-release 自动完成，但 macOS 缺证书被跳过时它会整个不跑，
+# 或者只想补挂某个平台的包（例如只补 Linux）时，不必重编一遍，选 run id 直接挂。
+# 全程在 GitHub 侧传输，不依赖本机到制品库的网络。
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: 构建所在的 Release 运行 ID
+        required: true
+      tag:
+        description: 要挂到的 Release 标签（需已存在）
+        required: true
+        default: v0.2.1
+      artifact_pattern:
+        description: 制品名匹配（release-assets-*）
+        required: true
+        default: "release-assets-*"
+
+permissions:
+  contents: write
+
+jobs:
+  attach:
+    name: Attach ${{ inputs.artifact_pattern }} to ${{ inputs.tag }}
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Download artifacts from the build run
+        uses: actions/download-artifact@v5
+        with:
+          pattern: ${{ inputs.artifact_pattern }}
+          path: assets
+          merge-multiple: true
+          run-id: ${{ inputs.run_id }}
+          github-token: ${{ github.token }}
+
+      - name: List downloaded files
+        run: find assets -maxdepth 1 -type f -printf '%f\t%s\n' | sort
+
+      - name: Upload to the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          gh release view "${{ inputs.tag }}" >/dev/null
+          shopt -s nullglob
+          files=(assets/*)
+          if [ ${#files[@]} -eq 0 ]; then
+            echo "❌ 没有下载到任何文件" >&2
+            exit 1
+          fi
+          gh release upload "${{ inputs.tag }}" "${files[@]}" --clobber
+          gh release view "${{ inputs.tag }}" --json assets -q '.assets[].name'
