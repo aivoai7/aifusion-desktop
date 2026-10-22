@@ -73,8 +73,9 @@ Claude Code、Claude Desktop、Codex、Gemini CLI、Grok Build 可以按客户�
 
 | 文件 | 用途 |
 | --- | --- |
-| `AIFusion_0.2.2_x64-setup.exe` | NSIS 安装包，Windows x64 推荐绝大多数用户使用 |
-| `AIFusion_0.2.2_x64_en-US.msi` | MSI 安装包，适合企业批量分发 |
+| `AIFusion-v0.2.2-Windows-setup.exe` | NSIS 安装包，Windows x64 推荐绝大多数用户使用 |
+| `AIFusion-v0.2.2-Windows.msi` | MSI 安装包，适合企业批量分发 |
+| `AIFusion-v0.2.2-Windows-Portable.zip` | Windows x64 免安装版，解压即用 |
 | `AIFusion-v0.2.2-Windows-arm64.msi` | Windows ARM64 MSI |
 | `AIFusion-v0.2.2-Windows-arm64-Portable.zip` | Windows ARM64 免安装版，解压即用 |
 | `AIFusion-v0.2.2-Linux-x86_64.AppImage` | Linux x86_64 通用包，chmod +x 后直接运行，跨发行版首选 |
