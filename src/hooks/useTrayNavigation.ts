@@ -3,12 +3,10 @@ import { invoke } from "@tauri-apps/api/core";
 import { listen, type UnlistenFn } from "@tauri-apps/api/event";
 import type { AppId } from "@/lib/api/types";
 import { APP_IDS } from "@/config/appConfig";
-import { SETTINGS_SECTIONS, type SettingsSection } from "@/lib/navigation";
 
 /** 托盘让主界面去的地方（后端 `tray::TrayNavigation`）。 */
 export interface TrayNavigation {
   app?: AppId;
-  section?: SettingsSection;
   /** `needsRoute`：这家需要路由，主界面把用户带到那个应用的详情页 */
   intent?: "needsRoute";
   providerId?: string;
@@ -16,7 +14,6 @@ export interface TrayNavigation {
 
 interface RawTrayNavigation {
   app?: string;
-  section?: string;
   intent?: string;
   providerId?: string;
 }
@@ -25,8 +22,6 @@ export function parseTrayNavigation(
   raw: RawTrayNavigation | null | undefined,
 ): TrayNavigation | null {
   if (!raw) return null;
-  const section = SETTINGS_SECTIONS.find((s) => s === raw.section);
-  if (section) return { section };
   const app = APP_IDS.find((id) => id === raw.app);
   if (!app) return null;
   const intent = raw.intent === "needsRoute" ? raw.intent : undefined;

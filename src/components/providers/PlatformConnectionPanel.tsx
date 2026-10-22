@@ -25,7 +25,7 @@ import {
   isModeAppId,
   isProxyAppId,
 } from "@/config/appConfig";
-import { ToolUpgradeConfirmDialog } from "@/components/settings/ToolUpgradeConfirmDialog";
+import { ToolUpgradeConfirmDialog } from "@/components/apps/ToolUpgradeConfirmDialog";
 import { PlatformModelDialog } from "@/components/providers/PlatformModelDialog";
 import { ModeSwitch } from "@/components/providers/ModeSwitch";
 import {
@@ -43,8 +43,7 @@ interface PlatformConnectionPanelProps {
   currentProviderId: string;
   /** 首页可见的客户端，用来生成「切换到其他客户端」。 */
   visibleApps: VisibleApps;
-  onOpenKeySettings: () => void;
-  /** 打开 MCP / Skills / 提示词 / 会话 / 用量统计等全局页。 */
+  /** 打开用量统计等全局页。 */
   onOpenPage: (page: GlobalPage) => void;
   /** 切到另一个客户端的详情页。 */
   onOpenApp: (app: AppId) => void;
@@ -73,7 +72,6 @@ export function PlatformConnectionPanel({
   providers,
   currentProviderId,
   visibleApps,
-  onOpenKeySettings,
   onOpenPage,
   onOpenApp,
 }: PlatformConnectionPanelProps) {
@@ -95,13 +93,6 @@ export function PlatformConnectionPanel({
     enabled: configured,
     staleTime: 15_000,
   });
-  const { data: platformModels } = useQuery({
-    queryKey: ["platformModels"],
-    queryFn: () => platformKeyApi.models(),
-    enabled: configured,
-    staleTime: 60_000,
-  });
-
   // 近 7 天用量：和首页「最近用量」同一份缓存（按客户端汇总的那一条）
   const usageRange = useMemo(() => ({ preset: "7d" as const }), []);
   const { data: usageByApp, isLoading: usageLoading } =
@@ -115,13 +106,6 @@ export function PlatformConnectionPanel({
     () => APP_IDS.filter((item) => item !== app && visibleApps[item]),
     [app, visibleApps],
   );
-
-  // 模型 id → 厂商；平台列表没回来时留空，不猜
-  const vendorByName = useMemo(() => {
-    const map = new Map<string, string>();
-    for (const model of platformModels ?? []) map.set(model.id, model.provider);
-    return map;
-  }, [platformModels]);
 
   const availableModels = useMemo(() => {
     if (!modelConfig) return [];
@@ -262,11 +246,19 @@ export function PlatformConnectionPanel({
               {modeLabel}
             </Chip>
             {configured ? (
-              <Button size="compact" onClick={onOpenKeySettings}>
-                {t("platformConnection.manageKey", {
-                  defaultValue: "管理连接",
-                })}
-                <ArrowUpRight className="h-3.5 w-3.5" strokeWidth={1.6} />
+              <Button variant="neutral" size="compact" onClick={toggleLogin}>
+                {webLogin.busy ? (
+                  <X className="h-3.5 w-3.5" />
+                ) : (
+                  <LogIn className="h-3.5 w-3.5" />
+                )}
+                {webLogin.busy
+                  ? t("platformKey.cancelWaiting", {
+                      defaultValue: "取消等待",
+                    })
+                  : t("platformConnection.reSignIn", {
+                      defaultValue: "重新登录",
+                    })}
               </Button>
             ) : (
               <Button size="compact" onClick={toggleLogin}>
@@ -285,11 +277,11 @@ export function PlatformConnectionPanel({
               </Button>
             )}
           </div>
-          {webLogin.busy || (!configured && webLogin.error) ? (
+          {webLogin.busy || webLogin.error ? (
             <p
               className={cn(
                 "w-full text-caption",
-                !configured && webLogin.error ? "text-danger" : "text-fg-3",
+                webLogin.error ? "text-danger" : "text-fg-3",
               )}
             >
               {webLogin.busy
@@ -337,11 +329,9 @@ export function PlatformConnectionPanel({
                           }))}
                   </span>
                   <span className="mt-0.5 truncate text-badge text-fg-3">
-                    {mainModel && vendorByName.get(mainModel)
-                      ? vendorByName.get(mainModel)
-                      : t("platformConnection.modelSource", {
-                          defaultValue: "由平台下发",
-                        })}
+                    {t("platformConnection.modelSource", {
+                      defaultValue: "由平台下发",
+                    })}
                   </span>
                 </span>
                 <Button
@@ -538,9 +528,6 @@ export function PlatformConnectionPanel({
                           title={id}
                         >
                           {id}
-                        </span>
-                        <span className="shrink-0 text-badge text-fg-3">
-                          {vendorByName.get(id) ?? ""}
                         </span>
                       </li>
                     ))}

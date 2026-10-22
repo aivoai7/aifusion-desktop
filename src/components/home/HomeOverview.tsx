@@ -39,15 +39,14 @@ import {
   toolDisplayName,
   useToolManagement,
 } from "@/components/apps/useToolManagement";
-import { ToolUpgradeConfirmDialog } from "@/components/settings/ToolUpgradeConfirmDialog";
+import { ToolUpgradeConfirmDialog } from "@/components/apps/ToolUpgradeConfirmDialog";
 
 interface HomeOverviewProps {
   visibleApps: VisibleApps;
   /** 当前应用：用于让对应行标出「正在看」。 */
   activeApp: AppId;
   onOpenApp: (app: AppId) => void;
-  onOpenPage: (page: GlobalPage | "settings") => void;
-  onOpenKeySettings: () => void;
+  onOpenPage: (page: GlobalPage) => void;
 }
 
 function modeChip(app: AppId, mode: "direct" | "route" | "stack") {
@@ -82,7 +81,6 @@ export function HomeOverview({
   activeApp,
   onOpenApp,
   onOpenPage,
-  onOpenKeySettings,
 }: HomeOverviewProps) {
   const { t, i18n } = useTranslation();
   const { data: keyStatus } = usePlatformKeyStatusQuery();
@@ -165,10 +163,6 @@ export function HomeOverview({
   });
 
   const connectedCount = rows.filter((row) => row.config?.connected).length;
-  const vendorCount = useMemo(() => {
-    if (!platformModels) return 0;
-    return new Set(platformModels.map((model) => model.provider)).size;
-  }, [platformModels]);
 
   // 最常用模型：拿每个客户端的主模型（列表型取第一个）统计次数
   const topModel = useMemo(() => {
@@ -256,31 +250,20 @@ export function HomeOverview({
                     })}
               </Chip>
               {configured ? (
-                <>
-                  <Button
-                    variant="neutral"
-                    size="compact"
-                    onClick={toggleLogin}
-                  >
-                    {webLogin.busy ? (
-                      <X className="h-3.5 w-3.5" />
-                    ) : (
-                      <LogIn className="h-3.5 w-3.5" />
-                    )}
-                    {webLogin.busy
-                      ? t("platformKey.cancelWaiting", {
-                          defaultValue: "取消等待",
-                        })
-                      : t("platformConnection.reSignIn", {
-                          defaultValue: "重新登录",
-                        })}
-                  </Button>
-                  <Button size="compact" onClick={onOpenKeySettings}>
-                    {t("platformConnection.manageKey", {
-                      defaultValue: "管理连接",
-                    })}
-                  </Button>
-                </>
+                <Button variant="neutral" size="compact" onClick={toggleLogin}>
+                  {webLogin.busy ? (
+                    <X className="h-3.5 w-3.5" />
+                  ) : (
+                    <LogIn className="h-3.5 w-3.5" />
+                  )}
+                  {webLogin.busy
+                    ? t("platformKey.cancelWaiting", {
+                        defaultValue: "取消等待",
+                      })
+                    : t("platformConnection.reSignIn", {
+                        defaultValue: "重新登录",
+                      })}
+                </Button>
               ) : (
                 <Button size="compact" onClick={toggleLogin}>
                   {webLogin.busy ? (
@@ -350,11 +333,8 @@ export function HomeOverview({
               value={platformModels ? String(platformModels.length) : "—"}
               unit={t("home.modelsUnit", { defaultValue: "个" })}
               hint={
-                vendorCount > 0
-                  ? t("home.vendors", {
-                      count: vendorCount,
-                      defaultValue: "{{count}} 家厂商",
-                    })
+                platformModels
+                  ? t("home.modelsHint", { defaultValue: "实时取自平台" })
                   : "—"
               }
             />
@@ -667,55 +647,6 @@ export function HomeOverview({
                 </div>
               </section>
 
-              <section className="rounded-panel border border-hairline bg-surface">
-                <div className="border-b border-hairline px-4 py-2.5">
-                  <span className="af-kicker">
-                    {t("home.platformSection", { defaultValue: "平台" })}
-                  </span>
-                </div>
-                <div className="divide-y divide-hairline">
-                  {[
-                    {
-                      label: t("home.manageClients", {
-                        defaultValue: "管理客户端",
-                      }),
-                      hint: t("home.manageClientsHint", {
-                        defaultValue: "安装、升级、在总览显示哪些",
-                      }),
-                      onClick: () => onOpenPage("apps"),
-                    },
-                    {
-                      label: t("platformConnection.manageKey", {
-                        defaultValue: "管理连接",
-                      }),
-                      hint: t("home.manageKeyHint", {
-                        defaultValue: "登录平台、查看下发状态",
-                      }),
-                      onClick: onOpenKeySettings,
-                    },
-                  ].map((item) => (
-                    <button
-                      key={item.label}
-                      type="button"
-                      onClick={item.onClick}
-                      className="group flex w-full items-center gap-3 px-4 py-3 text-start transition-colors hover:bg-subtle"
-                    >
-                      <span className="min-w-0 flex-1">
-                        <span className="block text-caption text-fg-1">
-                          {item.label}
-                        </span>
-                        <span className="mt-0.5 block truncate text-badge text-fg-3">
-                          {item.hint}
-                        </span>
-                      </span>
-                      <ArrowUpRight
-                        className="h-3.5 w-3.5 shrink-0 text-fg-3 transition-colors group-hover:text-action-text"
-                        strokeWidth={1.6}
-                      />
-                    </button>
-                  ))}
-                </div>
-              </section>
             </aside>
           </div>
         </div>

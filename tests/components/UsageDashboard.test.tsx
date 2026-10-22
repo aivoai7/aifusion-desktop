@@ -9,7 +9,6 @@ import {
 } from "@/components/usage/UsageDashboard";
 import type { UsageRangeSelection } from "@/types/usage";
 
-const useProviderStatsMock = vi.hoisted(() => vi.fn());
 const useModelStatsMock = vi.hoisted(() => vi.fn());
 const useSummaryByAppMock = vi.hoisted(() => vi.fn());
 const usageHeroMock = vi.hoisted(() => vi.fn());
@@ -58,7 +57,6 @@ vi.mock("@/lib/query/usage", async () => {
     );
   return {
     ...actual,
-    useProviderStats: (...args: unknown[]) => useProviderStatsMock(...args),
     useModelStats: (...args: unknown[]) => useModelStatsMock(...args),
     useUsageSummaryByApp: (...args: unknown[]) => useSummaryByAppMock(...args),
   };
@@ -97,10 +95,6 @@ vi.mock("@/components/usage/RequestDetailPanel", () => ({
       <div data-testid="request-detail">{props.requestId}</div>
     ) : null;
   },
-}));
-
-vi.mock("@/components/usage/ProviderStatsTable", () => ({
-  ProviderStatsTable: () => <div data-testid="provider-stats-table" />,
 }));
 
 vi.mock("@/components/usage/ModelStatsTable", () => ({
@@ -163,26 +157,11 @@ const renderDashboard = (props: ComponentProps<typeof UsageDashboard> = {}) => {
 describe("UsageDashboard", () => {
   beforeEach(() => {
     resetUsageSyncClockForTests();
-    useProviderStatsMock.mockReset();
     useModelStatsMock.mockReset();
     useSummaryByAppMock.mockReset();
     usageHeroMock.mockReset();
     requestLogTableMock.mockReset();
     detailPanelMock.mockReset();
-    useProviderStatsMock.mockReturnValue({
-      data: [
-        {
-          providerId: "p1",
-          appType: "claude",
-          providerName: "DeepSeek",
-          requestCount: 12,
-          totalTokens: 100,
-          totalCost: "1",
-          successRate: 100,
-          avgLatencyMs: 0,
-        },
-      ],
-    });
     useModelStatsMock.mockReturnValue({ data: [] });
     useSummaryByAppMock.mockReturnValue({ data: [] });
     usageApiMock.getUsageSummary.mockResolvedValue({ totalRequests: 5 });
@@ -243,8 +222,8 @@ describe("UsageDashboard", () => {
   });
 
   it("ignores a remembered tab or range it does not recognise", () => {
-    localStorage.setItem("cc-switch.usage.tab", "pricing");
-    localStorage.setItem("cc-switch.usage.rangePreset", "custom");
+    localStorage.setItem("aifusion.usage.tab", "providers");
+    localStorage.setItem("aifusion.usage.rangePreset", "custom");
     renderDashboard();
 
     expect(
@@ -293,16 +272,11 @@ describe("UsageDashboard", () => {
     await user.click(screen.getByRole("button", { name: "Pi" }));
 
     await waitFor(() =>
-      expect(useProviderStatsMock).toHaveBeenLastCalledWith(
+      expect(useModelStatsMock).toHaveBeenLastCalledWith(
         expect.anything(),
         { appType: "pi" },
         expect.anything(),
       ),
-    );
-    expect(useModelStatsMock).toHaveBeenLastCalledWith(
-      expect.anything(),
-      { appType: "pi", providerName: undefined },
-      expect.anything(),
     );
     expect(usageHeroMock).toHaveBeenLastCalledWith(
       expect.objectContaining({ appType: "pi" }),
@@ -324,22 +298,16 @@ describe("UsageDashboard", () => {
     );
   });
 
-  it("filters by provider and lists request counts", async () => {
-    const user = userEvent.setup();
+  it("has no provider filter and no provider tab", () => {
     renderDashboard();
 
-    await user.click(
-      screen.getByRole("button", { name: "usage.providerFilter.label" }),
-    );
-    const item = await screen.findByRole("menuitem", { name: /DeepSeek/ });
-    expect(item).toHaveTextContent("12");
-    await user.click(item);
-
-    await waitFor(() =>
-      expect(usageHeroMock).toHaveBeenLastCalledWith(
-        expect.objectContaining({ providerName: "DeepSeek" }),
-      ),
-    );
+    expect(
+      screen.queryByRole("button", { name: "usage.providerFilter.label" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("tab", { name: "usage.tabs.providers" }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByTestId("provider-stats-table")).not.toBeInTheDocument();
   });
 
   it("persists refresh interval changes", async () => {
@@ -573,14 +541,12 @@ describe("UsageDashboard", () => {
 
     logsTab.focus();
     await user.keyboard("{ArrowRight}");
-    const providersTab = screen.getByRole("tab", {
-      name: "usage.tabs.providers",
-    });
-    expect(providersTab).toHaveAttribute("aria-selected", "true");
-    expect(providersTab).toHaveFocus();
+    const modelsTab = screen.getByRole("tab", { name: "usage.tabs.models" });
+    expect(modelsTab).toHaveAttribute("aria-selected", "true");
+    expect(modelsTab).toHaveFocus();
     expect(screen.getByRole("tabpanel")).toHaveAttribute(
       "aria-labelledby",
-      "usage-tab-providers",
+      "usage-tab-models",
     );
 
     await user.keyboard("{End}");
@@ -597,22 +563,16 @@ describe("UsageDashboard", () => {
     expect(logsTab).toHaveFocus();
   });
 
-  it("toggles session scanning and links to routing settings from the data sources drawer", async () => {
+  it("toggles session scanning from the data sources drawer", async () => {
     const user = userEvent.setup();
     const onSessionAutoSyncEnabledChange = vi.fn();
-    const onOpenRoutingSettings = vi.fn();
-    renderDashboard({ onSessionAutoSyncEnabledChange, onOpenRoutingSettings });
+    renderDashboard({ onSessionAutoSyncEnabledChange });
 
     await user.click(screen.getByRole("button", { name: "usage.dataSources" }));
     await user.click(
       await screen.findByRole("switch", { name: "usage.sources.scanTitle" }),
     );
     expect(onSessionAutoSyncEnabledChange).toHaveBeenCalledWith(false);
-
-    await user.click(
-      screen.getByRole("button", { name: /usage.sources.editLogging/ }),
-    );
-    expect(onOpenRoutingSettings).toHaveBeenCalledTimes(1);
   });
 
   it("shows the empty state when there is no usage at all", async () => {

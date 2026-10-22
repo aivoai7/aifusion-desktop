@@ -128,14 +128,11 @@ interface SessionManagerPageProps {
   appId: string;
   /** 侧栏上当前的应用（从 Claude Desktop 进来时要提示一句） */
   fromApp?: AppId;
-  /** 打开设置里的「首选终端」 */
-  onOpenTerminalSettings?: () => void;
 }
 
 export function SessionManagerPage({
   appId,
   fromApp,
-  onOpenTerminalSettings,
 }: SessionManagerPageProps) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
@@ -370,16 +367,6 @@ export function SessionManagerPage({
             extractErrorMessage(error) ||
             t("common.unknown", { defaultValue: "未知" }),
         }),
-        onOpenTerminalSettings
-          ? {
-              action: {
-                label: t("sessionManager.changeTerminalAction", {
-                  defaultValue: "更换终端",
-                }),
-                onClick: onOpenTerminalSettings,
-              },
-            }
-          : undefined,
       );
     }
   };
@@ -990,16 +977,6 @@ export function SessionManagerPage({
                     defaultValue: "选择多个…",
                   })}
                 </DropdownMenuItem>
-                {onOpenTerminalSettings && (
-                  <DropdownMenuItem
-                    className={sessionMenuItemClass}
-                    onSelect={onOpenTerminalSettings}
-                  >
-                    {t("sessionManager.preferredTerminal", {
-                      defaultValue: "首选终端…",
-                    })}
-                  </DropdownMenuItem>
-                )}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   className={sessionMenuItemClass}
@@ -1040,7 +1017,6 @@ export function SessionManagerPage({
             onBack={backToList}
             onLaunch={() => void handleLaunch(readerSession)}
             onCopy={handleCopy}
-            onOpenTerminalSettings={onOpenTerminalSettings ?? (() => undefined)}
             onReload={() => void reloadMessages()}
             onDelete={() => openDelete([readerSession], "reader")}
           />

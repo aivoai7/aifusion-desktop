@@ -13,7 +13,6 @@ import {
   Play,
   Search,
   SlidersHorizontal,
-  SquareTerminal,
   X,
   PanelRight,
   Download,
@@ -80,7 +79,6 @@ export interface SessionReaderHeaderProps {
   onCopy: (text: string, message: string) => void;
   onCopyMarkdown: () => void;
   onExportMarkdown: () => void;
-  onOpenTerminalSettings: () => void;
   onReload: () => void;
   onDelete: () => void;
 }
@@ -102,7 +100,6 @@ export const SessionReaderHeader = memo(function SessionReaderHeader({
   onCopy,
   onCopyMarkdown,
   onExportMarkdown,
-  onOpenTerminalSettings,
   onReload,
   onDelete,
 }: SessionReaderHeaderProps) {
@@ -207,24 +204,11 @@ export const SessionReaderHeader = memo(function SessionReaderHeader({
                 })}
               </DropdownMenuItem>
             )}
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              className={sessionMenuItemClass}
-              onSelect={onOpenTerminalSettings}
-            >
-              <SquareTerminal
-                className="h-3.5 w-3.5 text-fg-2"
-                strokeWidth={1.5}
-              />
-              {t("sessionManager.changeTerminal", {
-                defaultValue: "更换首选终端…",
-              })}
-            </DropdownMenuItem>
             {isCodex && (
               <p className="-mx-1 -mb-1 mt-1 border-t border-border px-3.5 pb-2.5 pt-2 text-caption text-fg-2">
                 {t("sessionManager.codexResumeNote", {
                   defaultValue:
-                    "切换过供应商后，旧会话可能无法继续：Codex 按供应商分开保存历史。",
+                    "换过连接配置后，旧会话可能无法继续：Codex 的历史按配置分开保存。",
                 })}
               </p>
             )}

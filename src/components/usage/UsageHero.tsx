@@ -24,7 +24,6 @@ import { useMoneyFormat } from "@/hooks/useMoneyFormat";
 interface UsageHeroProps {
   range: UsageRangeSelection;
   appType?: string;
-  providerName?: string;
   model?: string;
   refreshIntervalMs: number;
   /** 窄容器下指标卡排成两列 */
@@ -153,7 +152,6 @@ function MiniMetric({
 export function UsageHero({
   range,
   appType,
-  providerName,
   model,
   refreshIntervalMs,
   compact = false,
@@ -165,7 +163,7 @@ export function UsageHero({
 
   const { data, isLoading } = useUsageSummaryByApp(
     range,
-    { providerName, model },
+    { model },
     {
       refetchInterval: refreshIntervalMs > 0 ? refreshIntervalMs : false,
     },

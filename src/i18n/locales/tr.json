@@ -54,8 +54,8 @@
   },
   "firstRunNotice": {
     "title": "AIFusion’e hoş geldiniz",
-    "bodyDefault": "AIFusion, AIFusion platformunun masaüstü istemcisidir. Her istemci sekmesinde tek bir yerleşik “AIFusion platform” sağlayıcısı bulunur ve platformunuza yönlendirilmiştir; kutudan çıktığı gibi kullanıma hazırdır.",
-    "bodyOfficial": "AIFusion yalnızca kendi platformuyla konuşur: üçüncü taraf sağlayıcı ve “özel” giriş yoktur. Sekme başına Doğrudan / Yönlendirme modları arasında geçiş yapabilirsiniz.",
+    "bodyDefault": "AIFusion, AIFusion platformunun masaüstü istemcisidir. Her istemcide platform bağlantısı yerleşiktir; giriş yaptıktan sonra platformunuza yönlendirir ve kutudan çıktığı gibi kullanıma hazırdır.",
+    "bodyOfficial": "AIFusion yalnızca kendi platformuyla çalışır: anahtarları platform verir ve “özel yapılandırma” seçeneği yoktur. İstemci ayrıntılarında Doğrudan / Yerel Yönlendirme arasında geçiş yapabilirsiniz.",
     "keyTitle": "AIFusion platformuna bağlan",
     "keyBody": "Platform yöneticinizin size atadığı API anahtarını girin. Anahtar yalnızca bu cihazda saklanır ve tüm istemci sekmelerine dağıtılır.",
     "keySave": "Doğrula ve kaydet",
@@ -83,7 +83,7 @@
     "clearMessage": "Temizledikten sonra tüm istemciler platforma erişemez. Devam edilsin mi?",
     "saved": "Platform anahtarı kaydedildi ve dağıtıldı",
     "cleared": "Platform anahtarı temizlendi",
-    "syncWarning": "Anahtar kaydedildi ancak şu uygulamalar hemen güncellenmedi: {{apps}}. Sağlayıcıyı değiştirin veya uygulamayı yeniden başlatıp tekrar deneyin.",
+    "syncWarning": "Anahtar kaydedildi ancak şu uygulamalar hemen güncellenmedi: {{apps}}. Yeniden giriş yapın veya uygulamayı yeniden başlatıp tekrar deneyin.",
     "hint": "Anahtar bu cihazda kalır; her kullanıcı kendi anahtarını kullanır."
   },
   "jsonEditor": {
@@ -332,7 +332,7 @@
     "codexAuthCleanupFailed": "Başarılı bir şekilde geçiş yapıldı ancak auth.json kaldırılamadı; resmi oturum açma kimlik bilgileri hâlâ diskte; bunları kaldırmak için auth.json'u Codex yapılandırma dizininden silin",
     "windowControlFailed": "Pencere kontrolü başarısız oldu: {{error}}",
     "officialBlockedByProxy": "Yerel yönlendirme etkinken resmi sağlayıcıya geçilemez. Yönlendirmenin resmi API'lerle kullanılması hesabın yasaklanmasına neden olabilir.",
-    "proxyOfficialWarning": "Mevcut sağlayıcı {{name}} resmidir. Yerel yönlendirmeyi kullanmadan önce üçüncü taraf bir sağlayıcıya geçmeyi düşünün."
+    "proxyOfficialWarning": "{{name}} platformuyla doğrudan konuşuyor; yerel yönlendirme devralamaz, istekler yine doğrudan gönderilir"
   },
   "confirm": {
     "deleteProvider": "Sağlayıcıyı Sil",
@@ -1145,7 +1145,7 @@
       "effectiveBaseUrlRequired": "{{id}} modelinin doğrudan veya sağlayıcıdan bir temel URL'ye ihtiyacı var",
       "duplicateModel": "Model Kimliği {{id}} kopyalandı",
       "modelRequired": "En az bir model ekleyin",
-      "providerKeyDuplicate": "Bu sağlayıcı anahtarı zaten mevcut"
+      "providerKeyDuplicate": "Bu yapılandırma kimliği zaten mevcut"
     },
     "current": {
       "readFailed": "Pi'nin sağlayıcı yapılandırması okunamadı",
@@ -1330,7 +1330,7 @@
     "cdResumeCopied": "“cd ve devam ettir” komutu kopyalandı",
     "changeTerminal": "Tercih edilen terminali değiştir",
     "changeTerminalAction": "Terminali değiştir",
-    "codexResumeNote": "Sağlayıcı değiştirildikten sonra eski oturumlar sürdürülemeyebilir: Codex, geçmişi sağlayıcı başına ayrı olarak tutar.",
+    "codexResumeNote": "Bağlantı yapılandırması değiştiğinde eski oturumlar sürdürülemeyebilir: Codex, geçmişi yapılandırma başına ayrı tutar.",
     "noResumeOpenclaw": "OpenClaw oturumları ağ geçidi tarafından yönetilir ve bir terminalde sürdürülemez",
     "noResumeHermes": "Hermes oturumlarının komut satırından sürdürülmesi henüz desteklenmiyor",
     "launchedIn": "{{terminal}}'de devam komutunu çalıştırdı",
@@ -1913,10 +1913,8 @@
     "freshInput": "Önbelleksiz girdi",
     "cacheHitRate": "Önbellek İsabet Oranı",
     "requestLogs": "İstek günlüğü",
-    "providerStats": "Sağlayıcı İstatistikleri",
     "modelStats": "Model İstatistikleri",
     "time": "Zaman",
-    "provider": "Sağlayıcı",
     "billingModel": "Faturalandırma Modeli",
     "inputTokens": "Girdi",
     "outputTokens": "Çıktı",
@@ -1928,12 +1926,6 @@
     "requestModel": "Talep Modeli",
     "responseModel": "Tepki Modeli",
     "noData": "Veri yok",
-    "unknownProvider": "Bilinmeyen Sağlayıcı",
-    "sessionProvider": {
-      "short": "Oturum günlükleri",
-      "label": "{{app}} · Oturum günlükleri",
-      "hint": "Yönlendirme kapalıyken istemcinin oturum günlüklerini okuyun, böylece sağlayıcı birbirinden ayırt edilemez"
-    },
     "stream": "Akış",
     "nonStream": "Yayın dışı",
     "source": "Kaynak",
@@ -2058,8 +2050,7 @@
     "modelsDevHint": "Manuel girişi atlayın; models.dev'den model fiyatlandırmasını seçin",
     "modelsDevPickerTitle": "Models.dev'den İçe Aktarma Fiyatlandırması",
     "modelsDevPickerDesc": "İçe aktarılacak bir model seçin (milyon token başına ABD doları cinsinden fiyatlar). Her içe aktarmada bir model.",
-    "modelsDevSearchPlaceholder": "Modelleri veya sağlayıcıları arayın (tam arama)...",
-    "modelsDevAllProviders": "Tüm sağlayıcılar",
+    "modelsDevSearchPlaceholder": "Modelleri arayın (tam arama)...",
     "modelsDevLoadError": "models.dev verileri yüklenemedi",
     "modelsDevRetry": "Yeniden dene",
     "modelsDevImportButton": "İçe aktar",
@@ -2078,7 +2069,7 @@
       "enableConfirmAction": "Otomatik eşitlemeu etkinleştir",
       "configure": "Modelleri seçin",
       "configureTitle": "Otomatik fiyatlandırma eşitlemeu için modelleri seçin",
-      "configureDescription": "Otomatik olarak güncellenecek modelleri arayın ve filtreleyin. Seçimleriniz yerel olarak depolanır.",
+      "configureDescription": "Otomatik olarak güncellenecek modelleri arayın. Seçimleriniz yerel olarak depolanır.",
       "commonModels": "Yaygın modelleri otomatik olarak dahil et",
       "commonModelsDescription": "{{count}} en yeni Claude, GPT, Gemini, Grok, DeepSeek, Qwen, MiMo, LongCat, Kimi, MiniMax ve GLM modellerini seçer.",
       "selectFiltered": "Filtrelenmiş olanı seçin ({{count}})",
@@ -2117,14 +2108,9 @@
       "seconds": "{{seconds}}'ler"
     },
     "dataSources": "Veri kaynakları",
-    "providerFilter": {
-      "label": "Sağlayıcı",
-      "all": "Tüm sağlayıcılar",
-      "title": "Sağlayıcıya göre filtrele"
-    },
     "modelFilter": {
       "label": "Model",
-      "title": "Modele göre filtrele (sağlayıcı filtresini takip eder)"
+      "title": "Modele göre filtrele"
     },
     "metrics": {
       "label": "Metrikler",
@@ -2153,7 +2139,6 @@
     },
     "tabs": {
       "label": "Ayrıntılar",
-      "providers": "Sağlayıcılar",
       "models": "Modeller",
       "pricing": "Fiyatlandırma",
       "settings": "Ayarlar"
@@ -2170,7 +2155,7 @@
     "timingTip": "Süre {{duration}} · ilk token {{ttft}}",
     "estimatedTimingTip": "{{duration}}'ler hakkında (ilk tokenun beklenmesi de dahil olmak üzere oturum günlüğü zaman damgalarından tahmin edilir)",
     "cacheTip": "Önbellek {{read}}'ye ulaşıyor · önbellek {{write}} yazıyor",
-    "openRequestDetail": "İstek ayrıntılarını görüntüle: {{time}} {{provider}}",
+    "openRequestDetail": "İstek ayrıntılarını görüntüle: {{time}} {{app}}",
     "prevPage": "Önceki sayfa",
     "nextPage": "Sonraki sayfa",
     "statusFilter": {
@@ -2191,7 +2176,6 @@
       "speedEstimateTooFew": "Çıkış tokenu 200'ün altında olduğundan tahmin yok",
       "noTimingSession": "Oturum günlüklerinde zamanlama verisi yok",
       "noFirstToken": "İlk token zamanlaması yok, dolayısıyla hız yok",
-      "providerId": "Sağlayıcı kimliği",
       "firstTokenEstimated": "İlk token (tahmini)"
     },
     "sources": {
@@ -3049,7 +3033,7 @@
     "updatesIncomplete": "Güncelleme bulunamadı ancak {{count}} depoları okunamadı"
   },
   "deeplink": {
-    "confirmImport": "İçe Aktarma Sağlayıcısını Onayla",
+    "confirmImport": "İçe Aktarmayı Onayla",
     "confirmImportDescription": "Aşağıdaki yapılandırma derin bağlantıdan AIFusion uygulamasını aktarılacak",
     "importPrompt": "İçe Aktarma İstemi",
     "importPromptDescription": "Lütfen bu sistem isteminin içe aktarılıp aktarılmayacağını onaylayın",
@@ -3066,7 +3050,7 @@
     "skillImportSuccess": "Beceri deposu başarıyla eklendi",
     "skillImportSuccessDescription": "Depo eklendi: {{repo}}",
     "app": "Uygulama Türü",
-    "providerName": "Sağlayıcı Adı",
+    "providerName": "Yapılandırma Adı",
     "homepage": "Ana sayfa",
     "endpoint": "API Uç Nokta",
     "apiKey": "API Anahtarı",
@@ -3079,10 +3063,10 @@
     "notes": "Notlar",
     "import": "İçe aktar",
     "importing": "İçe aktarılıyor...",
-    "warning": "Lütfen içe aktarmadan önce yukarıdaki bilgilerin doğru olduğunu onaylayın. Daha sonra sağlayıcı listesinde düzenleyebilir veya silebilirsiniz.",
+    "warning": "Lütfen içe aktarmadan önce yukarıdaki bilgilerin doğru olduğunu onaylayın. İçe aktarılan yapılandırmalar yalnızca yerel dosyalara yazılır; uygulamada bunlar için bir düzenleyici yoktur.",
     "parseError": "Derin bağlantı ayrıştırılamadı",
     "importSuccess": "İçe aktarma başarılı",
-    "importSuccessDescription": "Sağlayıcı \"{{name}}\" başarıyla içe aktarıldı",
+    "importSuccessDescription": "\"{{name}}\" yapılandırması başarıyla içe aktarıldı",
     "importError": "İçe aktarma başarısız oldu",
     "configSource": "Yapılandırma Kaynağı",
     "configEmbedded": "Gömülü Yapılandırma",
@@ -3136,12 +3120,12 @@
       "privateEndpoint": "Bu adres localhost'a veya özel bir ağa işaret eder. Kendi yerel hizmetiniz olmadığı sürece ithalat yapmayın.",
       "shellCommand": "Bu yapılandırma, bir kabuk aracılığıyla tam bir komut satırı çalıştırır; gerçekte yürütülen şey argümanlardadır. Her satırı inceleyin."
     },
-    "providerEnabledWarning": "İçe aktarıldıktan sonra AIFusion hemen bu sağlayıcıya geçer; istemci istekleri yukarıdaki uç noktaya gönderilir",
+    "providerEnabledWarning": "İçe aktarıldıktan sonra AIFusion bu yapılandırmayı hemen kullanır; istemci istekleri yukarıdaki uç noktaya gönderilir",
     "apiFormat": "API biçimi",
-    "switchAfterImport": "İçe aktardıktan sonra bu sağlayıcıya geç",
+    "switchAfterImport": "İçe aktardıktan sonra bu yapılandırmayı kullan",
     "addToAppAfterImport": "İçe aktardıktan sonra {{app}} yapılandırmasına ekle",
     "enableInPiAfterImport": "İçe aktardıktan sonra Pi içinde etkinleştir",
-    "codexConfigScopeHint": "Yalnızca bu sağlayıcıya ait ayarlar (uç nokta, kimlik doğrulama, model, akıl yürütme düzeyi vb.) içe aktarılır; [features], MCP ve izinler gibi genel ayarlar atlanır.",
+    "codexConfigScopeHint": "Yalnızca bu yapılandırmaya ait ayarlar (uç nokta, kimlik doğrulama, model, akıl yürütme düzeyi vb.) içe aktarılır; [features], MCP ve izinler gibi genel ayarlar atlanır.",
     "grokConfigScopeHint": "Yalnızca [models] default tarafından belirtilen model tablosu (görünen ad, açıklama, API arka ucu, bağlam penceresi vb.) içe aktarılır; uç nokta ve anahtar bağlantı parametrelerinden alınır, diğer model tabloları atlanır."
   },
   "migration": {

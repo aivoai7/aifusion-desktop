@@ -1,19 +1,18 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { act, cleanup, render, screen, within } from "@testing-library/react";
+import { act, cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { UsageDashboard } from "@/components/usage/UsageDashboard";
 import { emitTauriEvent } from "../msw/tauriMocks";
 
 /**
- * 不 mock 子组件，把整页（指标、趋势图、四个页签）真渲染一遍，接口用假数据。
+ * 不 mock 子组件，把整页（指标、趋势图、三个页签）真渲染一遍，接口用假数据。
  */
 
 const usageApiMock = vi.hoisted(() => ({
   getUsageSummary: vi.fn(),
   getUsageSummaryByApp: vi.fn(),
   getUsageTrends: vi.fn(),
-  getProviderStats: vi.fn(),
   getModelStats: vi.fn(),
   getRequestLogs: vi.fn(),
   getRequestDetail: vi.fn(),
@@ -80,20 +79,6 @@ describe("UsageDashboard (smoke)", () => {
         totalOutputTokens: 50_000,
         totalCacheCreationTokens: 10_000,
         totalCacheReadTokens: 1_640_000,
-      },
-    ]);
-    usageApiMock.getProviderStats.mockResolvedValue([
-      {
-        providerId: "p1",
-        appType: "claude",
-        providerName: "DeepSeek",
-        requestCount: 720,
-        totalTokens: 4_300_000,
-        totalCost: "6.1",
-        successRate: 99.4,
-        avgLatencyMs: 9000,
-        speedOutputTokens: 92_000,
-        speedGenerationMs: 1_000_000,
       },
     ]);
     usageApiMock.getModelStats.mockResolvedValue([
@@ -186,7 +171,6 @@ describe("UsageDashboard (smoke)", () => {
       usageApiMock.getUsageSummary,
       usageApiMock.getUsageSummaryByApp,
       usageApiMock.getUsageTrends,
-      usageApiMock.getProviderStats,
       usageApiMock.getModelStats,
       usageApiMock.getRequestLogs,
     ];
@@ -251,10 +235,10 @@ describe("UsageDashboard (smoke)", () => {
     ).toHaveAttribute("aria-expanded", "true");
     expect(screen.getByText("usage.cacheWrite")).toBeInTheDocument();
 
-    // 供应商：汇总速度 92000 / 1000 s = 92 tok/s
-    await user.click(screen.getByRole("tab", { name: "usage.tabs.providers" }));
-    const providerRow = (await screen.findByText("DeepSeek")).closest("tr")!;
-    expect(within(providerRow).getByText("92")).toBeInTheDocument();
+    // 供应商页签已去掉：只剩请求日志 / 模型 / 设置三个页签
+    expect(
+      screen.queryByRole("tab", { name: "usage.tabs.providers" }),
+    ).not.toBeInTheDocument();
 
     await user.click(screen.getByRole("tab", { name: "usage.tabs.models" }));
     expect(await screen.findByText("kimi-k2.6")).toBeInTheDocument();

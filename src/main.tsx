@@ -2,7 +2,6 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App";
 import { DatabaseUpgrade } from "./components/DatabaseUpgrade";
-import { UpdateProvider } from "./contexts/UpdateContext";
 import "./index.css";
 // 导入国际化配置
 import i18n, { syncLanguageFromSettings } from "./i18n";
@@ -127,7 +126,7 @@ async function bootstrap() {
   initializeInputModality();
 
   // 首屏语言来自 localStorage 缓存；拿到后端保存的语言后再校正一次。
-  // 与 useSettingsQuery 共用 ["settings"] 缓存，进设置页不会重复拉取。
+  // 与 useSettingsQuery 共用 ["settings"] 缓存，后续页面不会重复拉取。
   void queryClient
     .fetchQuery({ queryKey: ["settings"], queryFn: () => settingsApi.get() })
     .then((settings) => syncLanguageFromSettings(settings.language))
@@ -138,16 +137,14 @@ async function bootstrap() {
       <FrontendErrorBoundary>
         <QueryClientProvider client={queryClient}>
           <ThemeProvider defaultTheme="system" storageKey="aifusion-theme">
-            <UpdateProvider>
-              {/* 系统开了「减少动态效果」时，framer-motion 的位移动画一律跳过 */}
-              <MotionConfig reducedMotion="user">
-                {/* 全局悬停提示：移上去立即出现（HoverTip） */}
-                <TooltipProvider delayDuration={0} skipDelayDuration={0}>
-                  <App />
-                </TooltipProvider>
-              </MotionConfig>
-              <Toaster />
-            </UpdateProvider>
+            {/* 系统开了「减少动态效果」时，framer-motion 的位移动画一律跳过 */}
+            <MotionConfig reducedMotion="user">
+              {/* 全局悬停提示：移上去立即出现（HoverTip） */}
+              <TooltipProvider delayDuration={0} skipDelayDuration={0}>
+                <App />
+              </TooltipProvider>
+            </MotionConfig>
+            <Toaster />
           </ThemeProvider>
         </QueryClientProvider>
       </FrontendErrorBoundary>

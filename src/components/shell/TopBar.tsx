@@ -1,10 +1,9 @@
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
-import { Settings, Wallet } from "lucide-react";
+import { Wallet } from "lucide-react";
 import afLogo from "@/assets/icons/logo.png";
 import { platformKeyApi } from "@/lib/api/platformKey";
-import { Button } from "@/components/ui/button";
 import { HoverTip } from "@/components/ui/hover-tip";
 import { DRAG_REGION_ATTR, DRAG_REGION_STYLE, isMac } from "@/lib/platform";
 import { cn } from "@/lib/utils";
@@ -27,9 +26,6 @@ interface TopBarProps {
   overviewActive: boolean;
   onHome: () => void;
   onOpenPage: (page: GlobalPage) => void;
-  onOpenSettings: () => void;
-  settingsActive: boolean;
-  hasUpdate?: boolean;
   windowControls?: ReactNode;
   /** 全局页有未保存的操作时锁住导航 */
   navLocked?: boolean;
@@ -38,7 +34,7 @@ interface TopBarProps {
 /**
  * 常驻顶栏（Paper & Signal 的唯一全局外壳）。
  *
- * 左边是平台字标与两个一级入口（总览、用量），右边是实时钱包、设置与窗口按钮；
+ * 左边是平台字标与两个一级入口（总览、用量），右边是实时钱包与窗口按钮；
  * 当前页的信号是一条 2px 电光蓝短线，不做整格底色。页面自己的标题、
  * 页签和操作仍在内容区，顶栏只负责「我在哪、还能去哪、余额多少」。
  */
@@ -47,9 +43,6 @@ export function TopBar({
   overviewActive,
   onHome,
   onOpenPage,
-  onOpenSettings,
-  settingsActive,
-  hasUpdate = false,
   windowControls,
   navLocked = false,
 }: TopBarProps) {
@@ -168,38 +161,6 @@ export function TopBar({
               {amount}
             </span>
           </div>
-        </HoverTip>
-
-        <HoverTip
-          content={
-            hasUpdate
-              ? t("nav.settingsHasUpdate", {
-                  defaultValue: "设置 · AIFusion 有新版本",
-                })
-              : t("nav.settings", { defaultValue: "设置" })
-          }
-          side="bottom"
-          disableHoverableContent
-        >
-          <Button
-            variant="quiet"
-            size="icon-compact"
-            onClick={onOpenSettings}
-            aria-label={t("nav.settings", { defaultValue: "设置" })}
-            aria-current={settingsActive ? "page" : undefined}
-            className={cn(
-              "relative h-8 w-8",
-              settingsActive && "bg-selected text-fg-1 hover:bg-selected",
-            )}
-          >
-            <Settings className="h-4 w-4" strokeWidth={1.5} />
-            {hasUpdate && (
-              <span
-                aria-hidden="true"
-                className="absolute end-1 top-1 h-1.5 w-1.5 rounded-full bg-action-text"
-              />
-            )}
-          </Button>
         </HoverTip>
 
         {windowControls && (

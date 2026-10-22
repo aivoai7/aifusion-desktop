@@ -35,7 +35,6 @@ const state: TrayPanelState = {
     noMatch: "No match",
     openMain: "Open main window",
     quit: "Quit",
-    settings: "Settings",
     lightweightMode: "Lightweight mode",
     openPanel: "Open panel",
     configTab: "Configuration",

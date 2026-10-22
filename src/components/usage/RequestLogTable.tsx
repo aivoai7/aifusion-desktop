@@ -25,7 +25,6 @@ import {
   parseFiniteNumber,
 } from "./format";
 import { usageTable } from "./usageTable";
-import { getUsageProviderLabel, usageProviderTitle } from "./providerLabel";
 import { useMoneyFormat } from "@/hooks/useMoneyFormat";
 import {
   REQUEST_LOG_COLUMN_LABEL_KEYS,
@@ -38,7 +37,6 @@ interface RequestLogTableProps {
   /** 旧接口保留；时间范围由页面顶部的筛选统一控制 */
   rangeLabel?: string;
   appType?: string;
-  providerName?: string;
   model?: string;
   /** 状态码筛选（页签行右侧的下拉） */
   statusCode?: number;
@@ -89,7 +87,7 @@ export function appDisplayName(appType: string): string {
 
 /**
  * 请求日志「应用」列用的短名：图标已经区分了品牌（Claude Code / Desktop 靠角标），
- * 列里只留最短能认出的名字，把宽度让给供应商列。全名在悬停提示里。
+ * 列里只留最短能认出的名字，把宽度让给后面的数值列。全名在悬停提示里。
  */
 const APP_SHORT_NAME: Record<AppId, string> = {
   claude: "Claude",
@@ -157,7 +155,6 @@ function StatusBadge({
 export function RequestLogTable({
   range,
   appType: dashboardAppType,
-  providerName,
   model,
   statusCode,
   refreshIntervalMs,
@@ -174,7 +171,6 @@ export function RequestLogTable({
       dashboardAppType && dashboardAppType !== "all"
         ? dashboardAppType
         : undefined,
-    providerName,
     model,
     statusCode,
   };
@@ -197,7 +193,6 @@ export function RequestLogTable({
     setPage(0);
   }, [
     dashboardAppType,
-    providerName,
     model,
     statusCode,
     range.customEndDate,
@@ -250,8 +245,6 @@ export function RequestLogTable({
     const isCacheInclusive = log.inputTokens !== freshInput;
     const time = formatLogTime(log.createdAt, now);
     const fullTime = formatLogFullTime(log.createdAt);
-    const providerLabel = getUsageProviderLabel(log.providerName, t);
-    const provider = providerLabel.shortLabel;
     const exactTps = formatOutputTokensPerSecond(log);
     // 会话日志导入的请求没有首字计时，速度是按日志时间戳估的，前面带 ≈
     const estimatedTps =
@@ -302,7 +295,7 @@ export function RequestLogTable({
             title={fullTime}
             aria-label={t("usage.openRequestDetail", {
               time: fullTime,
-              provider,
+              app: appDisplayName(log.appType),
             })}
             onClick={(event) => {
               event.stopPropagation();
@@ -340,21 +333,9 @@ export function RequestLogTable({
           </span>
         </td>
       ),
-      // 供应商、模型两列按比例取宽（max-w-0 让百分比宽度生效、内容截断）；
-      // 比例合计 32%：40% 时常见窗口下数值列就只剩内容宽度，左松右挤。模型名通常比供应商名长，
-      // 放不下的截断、悬停看全名
-      provider: (
-        <td className={cn(usageTable.td, "w-[14%] max-w-0")}>
-          <span
-            className="block truncate"
-            title={usageProviderTitle(providerLabel)}
-          >
-            {provider}
-          </span>
-        </td>
-      ),
+      // 模型列按比例取宽（max-w-0 让百分比宽度生效、内容截断）；放不下的截断、悬停看全名
       model: (
-        <td className={cn(usageTable.td, usageTable.mono, "w-[18%] max-w-0")}>
+        <td className={cn(usageTable.td, usageTable.mono, "w-[24%] max-w-0")}>
           <span className="block truncate" title={modelTitle}>
             {log.model}
           </span>
@@ -508,7 +489,7 @@ export function RequestLogTable({
     );
   };
 
-  // 默认 10 列时 620px：最小窗口（900）展开侧栏表格区只有 644px，再宽最右的速度列就被挤进横向滚动；
+  // 每列约 64px：默认 9 列时 556px，最小窗口（900）展开侧栏表格区只有 644px，再宽最右的速度列就被挤进横向滚动；
   // 多开一列加一份宽度，列再多就横向滚动，不把每列挤到看不清
   const minWidth = 620 + Math.max(0, columns.length - 10) * 64;
 

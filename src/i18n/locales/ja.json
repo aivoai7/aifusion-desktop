@@ -54,8 +54,8 @@
   },
   "firstRunNotice": {
     "title": "AIFusion へようこそ",
-    "bodyDefault": "AIFusion は AIFusion 自社プラットフォームのデスクトップクライアントです。各クライアントタブには「AIFusion プラットフォーム」プロバイダーが最初から組み込まれ、お使いのプラットフォームを向いています。",
-    "bodyOfficial": "AIFusion は自社プラットフォームのみに接続します。サードパーティのプロバイダーや「カスタム」項目はありません。タブごとに「ダイレクト / ルート」モードを切り替えられます。",
+    "bodyDefault": "AIFusion は AIFusion 自社プラットフォームのデスクトップクライアントです。各クライアントにプラットフォーム接続が最初から組み込まれ、ログインするとお使いのプラットフォームを向きます。",
+    "bodyOfficial": "AIFusion は自社プラットフォームのみに接続します。キーはプラットフォームが発行し、「カスタム設定」の項目はありません。クライアント詳細で「直結 / ローカルルーティング」を切り替えられます。",
     "keyTitle": "AIFusion プラットフォームに接続",
     "keyBody": "プラットフォーム管理者から割り当てられた API Key を入力してください。キーはこの端末にのみ保存され、すべてのクライアントタブに配布されます。",
     "keySave": "検証して保存",
@@ -83,7 +83,7 @@
     "clearMessage": "クリアするとすべてのクライアントがプラットフォームにアクセスできなくなります。続行しますか？",
     "saved": "プラットフォームキーを保存して配布しました",
     "cleared": "プラットフォームキーをクリアしました",
-    "syncWarning": "キーは保存されましたが、次のアプリにはすぐ反映されませんでした: {{apps}}。プロバイダーを切り替えるかアプリを再起動して再試行してください。",
+    "syncWarning": "キーは保存されましたが、次のアプリにはすぐ反映されませんでした: {{apps}}。再ログインまたはアプリの再起動で再試行してください。",
     "hint": "キーはこの端末にのみ保存されます。ユーザーごとに自分のキーを使用します。"
   },
   "jsonEditor": {
@@ -344,7 +344,7 @@
     "codexAuthCleanupFailed": "切り替えは成功しましたが、auth.json を削除できませんでした。公式ログイン資格情報がディスクに残っています。完全に削除するには Codex 設定ディレクトリの auth.json を手動で削除してください",
     "windowControlFailed": "ウィンドウ操作に失敗しました: {{error}}",
     "officialBlockedByProxy": "ローカルルーティングモード中は公式プロバイダーに切り替えできません。ルーティング経由で公式 API にアクセスするとアカウントが停止される可能性があります。",
-    "proxyOfficialWarning": "現在のプロバイダー {{name}} は公式です。ローカルルーティングを使用する前にサードパーティプロバイダーに切り替えてください。"
+    "proxyOfficialWarning": "{{name}} はプラットフォームへ直結しているため、ローカルルーティングは引き継げません。リクエストはそのまま直結で送信されます"
   },
   "confirm": {
     "deleteProvider": "プロバイダーを削除",
@@ -1158,7 +1158,7 @@
       "effectiveBaseUrlRequired": "モデル {{id}} には、直接またはプロバイダーから継承したベース URL が必要です",
       "duplicateModel": "モデル ID {{id}} が重複しています",
       "modelRequired": "モデルを 1 つ以上追加してください",
-      "providerKeyDuplicate": "このプロバイダーキーは既に存在します"
+      "providerKeyDuplicate": "その設定IDは既に存在します"
     },
     "current": {
       "readFailed": "Pi のプロバイダー設定を読み込めません",
@@ -1343,7 +1343,7 @@
     "cdResumeCopied": "「ディレクトリに移動して再開」コマンドをコピーしました",
     "changeTerminal": "優先ターミナルを変更",
     "changeTerminalAction": "ターミナルを変更",
-    "codexResumeNote": "プロバイダーを切り替えた後は、古いセッションを再開できない場合があります。Codex は履歴をプロバイダーごとに保存します。",
+    "codexResumeNote": "接続設定を切り替えた後、古いセッションを再開できない場合があります。Codex は履歴は設定ごとに保存します。",
     "noResumeOpenclaw": "OpenClaw のセッションはゲートウェイが管理しているため、ターミナルで再開できません",
     "noResumeHermes": "Hermes のセッションはまだコマンドラインから再開できません",
     "launchedIn": "{{terminal}} で再開コマンドを実行しました",
@@ -1934,10 +1934,8 @@
     "freshInput": "新規入力",
     "cacheHitRate": "キャッシュヒット率",
     "requestLogs": "リクエストログ",
-    "providerStats": "プロバイダー統計",
     "modelStats": "モデル統計",
     "time": "時間",
-    "provider": "プロバイダー",
     "billingModel": "課金モデル",
     "inputTokens": "入力",
     "outputTokens": "出力",
@@ -1949,12 +1947,6 @@
     "requestModel": "リクエストモデル",
     "responseModel": "レスポンスモデル",
     "noData": "データなし",
-    "unknownProvider": "不明なプロバイダー",
-    "sessionProvider": {
-      "short": "セッションログ",
-      "label": "{{app}} · セッションログ",
-      "hint": "ルーティングがオフの間はクライアントのセッションログから読み取るため、どのプロバイダーかは区別できません"
-    },
     "stream": "ストリーム",
     "nonStream": "非ストリーム",
     "source": "ソース",
@@ -2079,8 +2071,7 @@
     "modelsDevHint": "手動入力の代わりに、models.dev からモデル価格を選択できます",
     "modelsDevPickerTitle": "models.dev から価格をインポート",
     "modelsDevPickerDesc": "インポートするモデルを選択してください（価格単位：USD / 100万トークン）。1回につき1モデルです。",
-    "modelsDevSearchPlaceholder": "モデルまたはプロバイダーを検索（全件検索）...",
-    "modelsDevAllProviders": "すべてのプロバイダー",
+    "modelsDevSearchPlaceholder": "モデルを検索（全件検索）...",
     "modelsDevLoadError": "models.dev データの読み込みに失敗しました",
     "modelsDevRetry": "再試行",
     "modelsDevImportButton": "インポート",
@@ -2099,7 +2090,7 @@
       "enableConfirmAction": "自動同期を有効にする",
       "configure": "モデルを選択",
       "configureTitle": "料金を自動同期するモデルを選択",
-      "configureDescription": "検索とプロバイダーの絞り込みで自動更新するモデルを選択します。選択内容はローカルに保存されます。",
+      "configureDescription": "検索で自動更新するモデルを選択します。選択内容はローカルに保存されます。",
       "commonModels": "よく使うモデルを自動的に含める",
       "commonModelsDescription": "最近の Claude、GPT、Gemini、Grok、DeepSeek、Qwen、MiMo、LongCat、Kimi、MiniMax、GLM から {{count}} モデルを選択します。",
       "selectFiltered": "絞り込み結果を選択（{{count}}）",
@@ -2162,14 +2153,9 @@
         "area": "面グラフ"
       }
     },
-    "providerFilter": {
-      "label": "プロバイダー",
-      "all": "すべてのプロバイダー",
-      "title": "プロバイダーで絞り込み"
-    },
     "modelFilter": {
       "label": "モデル",
-      "title": "モデルで絞り込み（プロバイダーに連動）"
+      "title": "モデルで絞り込み"
     },
     "metrics": {
       "label": "指標",
@@ -2198,7 +2184,6 @@
     },
     "tabs": {
       "label": "明細",
-      "providers": "プロバイダー",
       "models": "モデル",
       "pricing": "料金",
       "settings": "設定"
@@ -2228,7 +2213,7 @@
       "hitRateTip": "キャッシュヒット {{read}} / キャッシュ対象の入力 {{total}}",
       "duration": "合計時間"
     },
-    "openRequestDetail": "リクエストの詳細を表示：{{time}} {{provider}}",
+    "openRequestDetail": "リクエストの詳細を表示：{{time}} {{app}}",
     "prevPage": "前のページ",
     "nextPage": "次のページ",
     "statusFilter": {
@@ -2249,8 +2234,7 @@
       "speedTooFew": "出力が 100 トークン未満のため速度は出しません",
       "speedEstimateTooFew": "出力が 200 トークン未満のため速度は推定しません",
       "noTimingSession": "セッションログには計測データがありません",
-      "noFirstToken": "最初のトークンの計測がないため速度は出しません",
-      "providerId": "プロバイダー ID"
+      "noFirstToken": "最初のトークンの計測がないため速度は出しません"
     },
     "sources": {
       "scanTitle": "セッションログを自動スキャン",
@@ -3102,7 +3086,7 @@
     "updatesIncomplete": "更新は見つかりませんでしたが、{{count}} 個のリポジトリを読み込めませんでした"
   },
   "deeplink": {
-    "confirmImport": "プロバイダーのインポートを確認",
+    "confirmImport": "インポートを確認",
     "confirmImportDescription": "次の設定をディープリンクから AIFusion へインポートします",
     "importPrompt": "プロンプトをインポート",
     "importPromptDescription": "このシステムプロンプトをインポートするか確認してください",
@@ -3119,7 +3103,7 @@
     "skillImportSuccess": "スキルリポジトリを追加しました",
     "skillImportSuccessDescription": "追加したリポジトリ: {{repo}}",
     "app": "アプリ種別",
-    "providerName": "プロバイダー名",
+    "providerName": "設定名",
     "homepage": "ホームページ",
     "endpoint": "API エンドポイント",
     "apiKey": "API Key",
@@ -3132,18 +3116,18 @@
     "notes": "メモ",
     "import": "インポート",
     "importing": "インポート中...",
-    "warning": "インポート前に内容を確認してください。後から一覧で編集・削除できます。",
-    "providerEnabledWarning": "インポート後すぐにこのプロバイダーへ切り替わり、クライアントのリクエストは上記のエンドポイントに送られます",
+    "warning": "インポート前に内容を確認してください。インポートした設定はローカルファイルに書き込まれるだけで、このアプリに編集画面はありません。",
+    "providerEnabledWarning": "インポート後すぐにこの設定が有効になり、クライアントのリクエストは上記のエンドポイントに送られます",
     "apiFormat": "API 形式",
-    "switchAfterImport": "インポート後にこのプロバイダーへ切り替える",
+    "switchAfterImport": "インポート後にこの設定を有効にする",
     "addToAppAfterImport": "インポート後に {{app}} の設定へ追加する",
     "enableInPiAfterImport": "インポート後に Pi で有効にする",
     "parseError": "ディープリンクの解析に失敗しました",
     "importSuccess": "インポート成功",
-    "importSuccessDescription": "プロバイダー「{{name}}」をインポートしました",
+    "importSuccessDescription": "設定「{{name}}」をインポートしました",
     "importError": "インポートに失敗しました",
     "configSource": "設定ソース",
-    "codexConfigScopeHint": "このプロバイダーに属する設定（エンドポイント、認証、モデル、推論レベルなど）のみをインポートします。[features]、MCP、権限などのグローバル設定はインポートされません。",
+    "codexConfigScopeHint": "この設定に属する項目（エンドポイント、認証、モデル、推論レベルなど）のみをインポートします。[features]、MCP、権限などのグローバル設定はインポートされません。",
     "grokConfigScopeHint": "[models] default が指すモデルテーブル（表示名、説明、API バックエンド、コンテキストウィンドウなど）のみをインポートします。エンドポイントとキーはリンクのパラメーターを使用し、他のモデルテーブルはインポートされません。",
     "configEmbedded": "埋め込み設定",
     "configRemote": "リモート設定",

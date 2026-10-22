@@ -83,7 +83,6 @@ const renderReader = (
         onBack={vi.fn()}
         onLaunch={vi.fn()}
         onCopy={onCopy}
-        onOpenTerminalSettings={vi.fn()}
         onReload={vi.fn()}
         onDelete={vi.fn()}
       />
@@ -608,7 +607,6 @@ describe("SessionReader", () => {
           onBack={vi.fn()}
           onLaunch={vi.fn()}
           onCopy={onCopy}
-          onOpenTerminalSettings={vi.fn()}
           onReload={vi.fn()}
           onDelete={vi.fn()}
         />

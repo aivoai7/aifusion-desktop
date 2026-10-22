@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { ChevronRight, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import {
   Sheet,
   SheetBody,
@@ -27,8 +27,6 @@ interface UsageDataSourcesSheetProps {
   syncedLabel?: string;
   syncing: boolean;
   onSyncNow: () => void;
-  /** 打开设置 → 本地路由（「记录请求用量」开关在那里） */
-  onOpenRoutingSettings?: () => void;
   rebuildingCodex: boolean;
   /** 只负责打开确认框；确认框里写清后果 */
   onRebuildCodex: () => void;
@@ -89,7 +87,6 @@ export function UsageDataSourcesSheet({
   syncedLabel,
   syncing,
   onSyncNow,
-  onOpenRoutingSettings,
   rebuildingCodex,
   onRebuildCodex,
 }: UsageDataSourcesSheetProps) {
@@ -159,19 +156,9 @@ export function UsageDataSourcesSheet({
             }}
             trailing={open ? <LoggingStatus /> : null}
           >
-            {onOpenRoutingSettings && (
-              <button
-                type="button"
-                className="inline-flex w-fit items-center gap-0.5 rounded-[4px] text-body font-medium text-fg-1 underline decoration-border-strong underline-offset-4 hover:decoration-fg-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                onClick={() => {
-                  onOpenChange(false);
-                  onOpenRoutingSettings();
-                }}
-              >
-                {t("usage.sources.editLogging")}
-                <ChevronRight className="h-3.5 w-3.5" />
-              </button>
-            )}
+            <p className="m-0 text-caption text-fg-2">
+              {t("usage.sources.loggingHelp")}
+            </p>
           </SourceCard>
 
           <SourceCard

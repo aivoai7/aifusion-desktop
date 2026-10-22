@@ -57,15 +57,6 @@ vi.mock("@/components/ConfirmDialog", () => ({
     ) : null,
 }));
 
-vi.mock("@/contexts/UpdateContext", () => ({
-  useUpdate: () => ({ hasUpdate: false, updateInfo: null }),
-}));
-
-// 设置页要 ThemeProvider，这里只看导航进去时发生了什么
-vi.mock("@/components/settings/SettingsPage", () => ({
-  SettingsPage: () => <div data-testid="settings-page" />,
-}));
-
 vi.mock("@/components/skills/UnifiedSkillsPanel", () => ({
   // v7：Skills 的页头（添加 / 检查更新 / 存储与同步）在面板自己里面
   default: ({ initialView }: { initialView?: string }) => {
@@ -250,15 +241,6 @@ describe("App integration with MSW", () => {
     fireEvent.click(homeButton());
     expect(screen.queryByTestId("confirm-dialog")).not.toBeInTheDocument();
   }, 10_000);
-
-  it("leaves the detail page for settings on ⌘,", async () => {
-    const { default: App } = await import("@/App");
-    renderApp(App);
-    await expectPanelApp("claude");
-
-    fireEvent.keyDown(window, { key: ",", metaKey: true });
-    expect(await screen.findByTestId("settings-page")).toBeInTheDocument();
-  });
 
   it("shows toast when auto sync fails in background", async () => {
     const { default: App } = await import("@/App");

@@ -9,7 +9,6 @@ export interface PanelTexts {
   noMatch: string;
   openMain: string;
   quit: string;
-  settings: string;
   lightweightMode: string;
   openPanel: string;
   configTab: string;

@@ -26,7 +26,6 @@ type HeatMetric = (typeof HEAT_METRICS)[number];
 
 interface UsageHeatmapProps {
   appType?: string;
-  providerName?: string;
   model?: string;
   refreshIntervalMs: number;
 }
@@ -150,7 +149,7 @@ function cellStyle(level: number) {
  * 起点按周取整，同一周内查询键不变。
  */
 function useAllSpansDailyTrends(
-  filters: { appType?: string; providerName?: string; model?: string },
+  filters: { appType?: string; model?: string },
   refreshIntervalMs: number,
 ) {
   const refetchInterval = refreshIntervalMs > 0 ? refreshIntervalMs : false;
@@ -228,7 +227,6 @@ function buildSpan(
 
 export function UsageHeatmap({
   appType,
-  providerName,
   model,
   refreshIntervalMs,
 }: UsageHeatmapProps) {
@@ -259,7 +257,7 @@ export function UsageHeatmap({
   const locale = getLocaleFromLanguage(language);
 
   const { spanCount, trends, isLoading } = useAllSpansDailyTrends(
-    { appType, providerName, model },
+    { appType, model },
     refreshIntervalMs,
   );
 

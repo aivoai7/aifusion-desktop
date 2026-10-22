@@ -2,7 +2,7 @@
 //!
 //! 结构：问题区（出问题才有）→ 反馈行（托盘里刚做完要重启才生效的操作）→ 打开 AIFusion →
 //! 切换式应用的子菜单（Claude Code、Claude Desktop、Codex、Gemini CLI、Grok Build；在「应用」页
-//! 隐藏的不列）→ 轻量模式 → 打开官方网站 / 退出 AIFusion。累加式应用（OpenCode / OpenClaw /
+//! 隐藏的不列）→ 轻量模式 → 打开 AIFusion 平台 / 退出 AIFusion。累加式应用（OpenCode / OpenClaw /
 //! Hermes / Pi / MiniMax Code）不进托盘；托盘里不切模式、不启停路由服务。
 //!
 //! 分三层：`collect_*` 从数据库和设备状态读出快照，`build_menu_model` 把快照变成纯数据的菜单
@@ -195,7 +195,7 @@ impl TrayTexts {
                 header_direct: "Direct",
                 header_route: "Routing",
                 header_failover: "Routing · Failover on",
-                header_stack: "Aggregation · Default provider",
+                header_stack: "Aggregation · Default configuration",
                 header_stack_default: "Aggregation · Default: {name}",
                 failover_note: "Picked from the queue automatically; change it on the app page",
                 mode_route: "Routing",
@@ -214,7 +214,7 @@ impl TrayTexts {
                 tooltip_problem: "AIFusion · Needs attention: {problem}",
                 feedback_switched: "{app} switched to {name}. Restart {app} to apply",
                 feedback_stack_default:
-                    "{app}'s default provider is now {name}. Restart {app} to apply",
+                    "{app}'s default configuration is now {name}. Restart {app} to apply",
                 feedback_profile: "Applied project \u{201c}{name}\u{201d} to {app}",
                 tier_five_hour: "5-hour",
                 tier_weekly: "Weekly",
@@ -254,8 +254,8 @@ impl TrayTexts {
                 texts.no_project_label = "Proje yok";
                 texts.header_direct = "Doğrudan";
                 texts.header_route = "Yönlendirme";
-                texts.header_failover = "Yönlendirme · Yedek sağlayıcıya geçiş açık";
-                texts.header_stack = "Birleştirme · Varsayılan sağlayıcı";
+                texts.header_failover = "Yönlendirme · Yedeğe geçiş açık";
+                texts.header_stack = "Birleştirme · Varsayılan yapılandırma";
                 texts.header_stack_default = "Birleştirme · Varsayılan: {name}";
                 texts.failover_note = "Kuyruktan otomatik seçilir; uygulama sayfasından değiştirebilirsiniz";
                 texts.mode_route = "Yönlendirme";
@@ -271,8 +271,8 @@ impl TrayTexts {
                 texts.problem_switch_failed = "{app} geçiş yapamadı: {reason}";
                 texts.problem_more = "{count} sorun daha var — görmek için AIFusion'i açın";
                 texts.tooltip_problem = "AIFusion · İlgilenilmesi gerekiyor: {problem}";
-                texts.feedback_switched = "{app}, {name} sağlayıcısına geçti. Uygulamak için {app} uygulamasını yeniden başlatın";
-                texts.feedback_stack_default = "{app} için varsayılan sağlayıcı artık {name}. Uygulamak için {app} uygulamasını yeniden başlatın";
+                texts.feedback_switched = "{app}, {name} yapılandırmasına geçti. Uygulamak için {app} uygulamasını yeniden başlatın";
+                texts.feedback_stack_default = "{app} için varsayılan yapılandırma artık {name}. Uygulamak için {app} uygulamasını yeniden başlatın";
                 texts.feedback_profile = "{name} projesi {app} uygulamasına uygulandı";
                 texts.tier_five_hour = "5 saatlik";
                 texts.tier_weekly = "Haftalık";
@@ -310,7 +310,7 @@ impl TrayTexts {
                 header_direct: "直接接続",
                 header_route: "ルーティング",
                 header_failover: "ルーティング · フェイルオーバー有効",
-                header_stack: "集約 · デフォルトのプロバイダー",
+                header_stack: "集約 · デフォルトの設定",
                 header_stack_default: "集約 · デフォルト：{name}",
                 failover_note: "キューの順に自動で選ばれます（変更はアプリのページで）",
                 mode_route: "ルーティング",
@@ -329,7 +329,7 @@ impl TrayTexts {
                 tooltip_problem: "AIFusion · 対応が必要：{problem}",
                 feedback_switched:
                     "{app} を {name} に切り替えました。反映するには {app} を再起動してください",
-                feedback_stack_default: "{app} のデフォルトのプロバイダーを {name} に変更しました。反映するには {app} を再起動してください",
+                feedback_stack_default: "{app} のデフォルト設定を {name} に変更しました。反映するには {app} を再起動してください",
                 feedback_profile: "プロジェクト「{name}」を {app} に適用しました",
                 tier_five_hour: "5時間",
                 tier_weekly: "週間",
@@ -367,7 +367,7 @@ impl TrayTexts {
                 header_direct: "直連",
                 header_route: "路由",
                 header_failover: "路由 · 故障轉移開啟中",
-                header_stack: "聚合 · 預設供應商",
+                header_stack: "聚合 · 預設配置",
                 header_stack_default: "聚合 · 預設 {name}",
                 failover_note: "依佇列自動選擇，要調整請到應用頁",
                 mode_route: "路由",
@@ -384,7 +384,7 @@ impl TrayTexts {
                 problem_more: "還有 {count} 個問題，開啟 AIFusion 查看",
                 tooltip_problem: "AIFusion · 需要處理：{problem}",
                 feedback_switched: "{app} 已切換到 {name}，重新啟動 {app} 後生效",
-                feedback_stack_default: "{app} 的預設供應商改為 {name}，重新啟動 {app} 後生效",
+                feedback_stack_default: "{app} 的預設配置改為 {name}，重新啟動 {app} 後生效",
                 feedback_profile: "已把專案「{name}」套用到 {app}",
                 tier_five_hour: "5 小時",
                 tier_weekly: "每週",
@@ -422,7 +422,7 @@ impl TrayTexts {
                 header_direct: "直连",
                 header_route: "路由",
                 header_failover: "路由 · 故障转移开启中",
-                header_stack: "聚合 · 默认供应商",
+                header_stack: "聚合 · 默认配置",
                 header_stack_default: "聚合 · 默认 {name}",
                 failover_note: "按队列自动选择，要调整请到应用页",
                 mode_route: "路由",
@@ -439,7 +439,7 @@ impl TrayTexts {
                 problem_more: "还有 {count} 个问题，打开 AIFusion 查看",
                 tooltip_problem: "AIFusion · 需要处理：{problem}",
                 feedback_switched: "{app} 已切换到 {name}，重启 {app} 后生效",
-                feedback_stack_default: "{app} 的默认供应商改为 {name}，重启 {app} 后生效",
+                feedback_stack_default: "{app} 的默认配置改为 {name}，重启 {app} 后生效",
                 feedback_profile: "已把项目「{name}」用到 {app}",
                 tier_five_hour: "5 小时",
                 tier_weekly: "每周",
@@ -1640,7 +1640,7 @@ fn problem_text(texts: &TrayTexts, problem: &TrayProblem) -> String {
 
 fn problem_id(problem: &TrayProblem) -> String {
     match problem {
-        TrayProblem::ServiceDown { .. } => "nav:settings:routing".to_string(),
+        TrayProblem::ServiceDown { .. } => "nav:main".to_string(),
         TrayProblem::AttachFailed { app, .. } => format!("nav:app:{}:attach", app.as_str()),
         TrayProblem::SwitchFailed { app, .. } => format!("nav:app:{}:failed", app.as_str()),
     }
@@ -2636,9 +2636,6 @@ fn refresh_tray_if_status_changed(app: &tauri::AppHandle) {
 pub struct TrayNavigation {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub app: Option<String>,
-    /// 设置分组（`routing`）
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub section: Option<String>,
     /// `needsRoute`：这家要路由，主界面按应用页的提示处理
     #[serde(skip_serializing_if = "Option::is_none")]
     pub intent: Option<String>,
@@ -2648,14 +2645,14 @@ pub struct TrayNavigation {
 
 impl TrayNavigation {
     fn is_empty(&self) -> bool {
-        self.app.is_none() && self.section.is_none()
+        self.app.is_none()
     }
 }
 
 /// 等主界面来取的导航：轻量模式下窗口是新建的，事件发出去时前端可能还没开始监听。
 static PENDING_NAVIGATION: Lazy<Mutex<Option<TrayNavigation>>> = Lazy::new(|| Mutex::new(None));
 
-/// 解析 `nav:…` 菜单 id：`nav:main`、`nav:settings:<分组>`、`nav:app:<应用>[:…]`、
+/// 解析 `nav:…` 菜单 id：`nav:main`、`nav:app:<应用>[:…]`、
 /// `nav:needs:<应用>:<供应商 id>`。
 fn parse_nav_id(id: &str) -> Option<TrayNavigation> {
     let rest = id.strip_prefix("nav:")?;
@@ -2671,10 +2668,6 @@ fn parse_nav_id(id: &str) -> Option<TrayNavigation> {
     };
     Some(match kind {
         "main" => TrayNavigation::default(),
-        "settings" => TrayNavigation {
-            section: Some(target?.to_string()),
-            ..Default::default()
-        },
         "app" => TrayNavigation {
             app: Some(app(target?)?),
             ..Default::default()
@@ -4086,7 +4079,7 @@ mod tests {
                 "---",
                 "轻量模式",
                 "---",
-                "打开官方网站",
+                "打开 AIFusion 平台",
                 "退出 AIFusion",
             ]
         );
@@ -4270,7 +4263,7 @@ mod tests {
         let menu = model(&problems, &apps);
         assert_eq!(text_of(&menu[0]), "路由服务没在运行（端口 15721）");
         assert!(
-            matches!(&menu[0], TrayEntry::Item { id, enabled: true, .. } if id == "nav:settings:routing")
+            matches!(&menu[0], TrayEntry::Item { id, enabled: true, .. } if id == "nav:main")
         );
         assert_eq!(text_of(&menu[1]), "---");
         assert_eq!(text_of(&menu[2]), "打开 AIFusion");
@@ -4426,7 +4419,7 @@ mod tests {
         app.current_id = None;
         app.stack_members = vec!["deepseek".to_string()];
         let children = children_of(&model(&[], &[app.clone()]), &AppType::Claude);
-        assert_eq!(text_of(&children[0]), "聚合 · 默认供应商");
+        assert_eq!(text_of(&children[0]), "聚合 · 默认配置");
         app.current_id = Some("deepseek".to_string());
         let menu = build_menu_model(&en(), &MenuStatus::default(), &[app], false, now());
         let children = children_of(&menu, &AppType::Claude);
@@ -4593,7 +4586,7 @@ mod tests {
         assert_eq!(
             texts_of(&menu[..3]),
             [
-                "Codex 的默认供应商改为 Kimi For Coding，重启 Codex 后生效",
+                "Codex 的默认配置改为 Kimi For Coding，重启 Codex 后生效",
                 "---",
                 "打开 AIFusion",
             ]
@@ -4672,13 +4665,7 @@ mod tests {
                 ..Default::default()
             })
         );
-        assert_eq!(
-            parse_nav_id("nav:settings:routing"),
-            Some(TrayNavigation {
-                section: Some("routing".to_string()),
-                ..Default::default()
-            })
-        );
+        assert_eq!(parse_nav_id("nav:settings:routing"), None);
         assert_eq!(parse_nav_id("nav:main"), Some(TrayNavigation::default()));
         assert_eq!(parse_nav_id("nav:needs:claude"), None);
         assert_eq!(parse_nav_id("nav:app:nope"), None);

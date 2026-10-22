@@ -35,7 +35,6 @@ import {
 import {
   usageKeys,
   useModelStats,
-  useProviderStats,
   useSessionUsageLastSync,
 } from "@/lib/query/usage";
 import { useUsageEventBridge } from "@/hooks/useUsageEventBridge";
@@ -46,7 +45,6 @@ import { cn } from "@/lib/utils";
 import { UsageHero } from "./UsageHero";
 import { UsageTrendChart } from "./UsageTrendChart";
 import { RequestLogTable } from "./RequestLogTable";
-import { ProviderStatsTable } from "./ProviderStatsTable";
 import { ModelStatsTable } from "./ModelStatsTable";
 import { PricingConfigPanel } from "./PricingConfigPanel";
 import { RequestDetailPanel } from "./RequestDetailPanel";
@@ -63,7 +61,6 @@ import {
   writeRememberedChoice,
 } from "./rememberedChoice";
 import { fmtInt, formatRelativeTime, getLocaleFromLanguage } from "./format";
-import { getUsageProviderLabel, usageProviderTitle } from "./providerLabel";
 
 // 用量页打开时扫描会话日志的间隔；旧版存过的「关」(0) 等无效值回落到默认
 const DEFAULT_REFRESH_INTERVAL_MS = 60000;
@@ -81,8 +78,8 @@ const normalizeRefreshInterval = (value: number | undefined) =>
 const STATUS_CODE_OPTIONS = [200, 400, 401, 429, 500] as const;
 
 // 「设置」放显示币种和模型定价（原「定价」页签并进来）
-type UsageTab = "logs" | "providers" | "models" | "settings";
-const TABS: UsageTab[] = ["logs", "providers", "models", "settings"];
+type UsageTab = "logs" | "models" | "settings";
+const TABS: UsageTab[] = ["logs", "models", "settings"];
 /** 记住的时间范围只认预设：自定义的起止日期过几天就不是用户想看的了，选自定义时不改记下的预设 */
 const REMEMBERED_RANGE_PRESETS: UsageRangePreset[] = [
   "today",
@@ -163,8 +160,6 @@ interface UsageDashboardProps {
   ) => Promise<boolean> | boolean | void;
   /** 从应用页「查看此应用的用量」进入时带上的应用筛选 */
   initialAppType?: AppTypeFilter;
-  /** 「数据来源」里的「修改记录请求用量」：打开设置 → 本地路由 */
-  onOpenRoutingSettings?: () => void;
   /** 金额显示币种与汇率（设备级设置） */
   usageDisplay?: UsageDisplaySettings;
   onUsageDisplayChange?: (
@@ -173,7 +168,7 @@ interface UsageDashboardProps {
 }
 
 /**
- * 用量统计全局页（v7 S6）：页头 → 筛选行 → 指标 → 趋势图 → 子页签（请求日志 / 供应商 / 模型 / 定价）。
+ * 用量统计全局页（v7 S6）：页头 → 筛选行 → 指标 → 趋势图 → 子页签（请求日志 / 模型 / 设置）。
  */
 export function UsageDashboard({
   refreshIntervalMs: savedRefreshIntervalMs,
@@ -182,7 +177,6 @@ export function UsageDashboard({
   settingsReady = true,
   onSessionAutoSyncEnabledChange,
   initialAppType = "all",
-  onOpenRoutingSettings,
   usageDisplay,
   onUsageDisplayChange,
 }: UsageDashboardProps = {}) {
@@ -202,9 +196,6 @@ export function UsageDashboard({
     }
   };
   const [appType, setAppType] = useState<AppTypeFilter>(initialAppType);
-  const [providerName, setProviderName] = useState<string | undefined>(
-    undefined,
-  );
   const [model, setModel] = useState<string | undefined>(undefined);
   const [statusCode, setStatusCode] = useState<number | undefined>(undefined);
 
@@ -253,22 +244,13 @@ export function UsageDashboard({
 
   useEffect(() => {
     setAppType(initialAppType);
-    setProviderName(undefined);
     setModel(undefined);
   }, [initialAppType]);
 
-  // 切应用时清掉下游筛选，避免留下一个在新范围内查无数据的"幽灵"组合；
-  // 切供应商同理清掉模型（模型选项随供应商级联）。
+  // 切应用时清掉下游筛选，避免留下一个在新范围内查无数据的"幽灵"组合。
   const changeAppType = (next: AppTypeFilter) => {
     setAppType(next);
     if (next !== appType) {
-      setProviderName(undefined);
-      setModel(undefined);
-    }
-  };
-  const changeProviderName = (next: string | undefined) => {
-    setProviderName(next);
-    if (next !== providerName) {
       setModel(undefined);
     }
   };
@@ -361,20 +343,15 @@ export function UsageDashboard({
     return `${startStr} - ${endStr}`;
   }, [locale, range, resolvedRange.endDate, resolvedRange.startDate, t]);
 
-  // 筛选下拉的选项池：供应商列表只跟应用/时间范围走（不受自身选中值影响），
-  // 模型列表随所选供应商级联。所有查询（含子组件）都不轮询：会话用量由
-  // useUsageAutoRefresh 按间隔导入，导入或路由写入后由 useUsageEventBridge 刷新。
+  // 筛选下拉的选项池：模型列表来自当前应用与时间范围内的实际用量。
+  // 所有查询（含子组件）都不轮询：会话用量由 useUsageAutoRefresh 按间隔
+  // 导入，导入或路由写入后由 useUsageEventBridge 刷新。
   const refetch = {
     refetchInterval: false as const,
   };
-  const { data: providerOptionsData } = useProviderStats(
-    range,
-    { appType },
-    refetch,
-  );
   const { data: modelOptionsData } = useModelStats(
     range,
-    { appType, providerName },
+    { appType },
     refetch,
   );
   // 有没有任何用量（不分时间范围）：一条都没有时显示空状态
@@ -384,21 +361,6 @@ export function UsageDashboard({
     refetchInterval: refetch.refetchInterval,
   });
   const isEmpty = allTimeSummary != null && allTimeSummary.totalRequests === 0;
-
-  const providerOptions = useMemo(() => {
-    const counts = new Map<string, number>();
-    for (const stat of providerOptionsData ?? []) {
-      counts.set(
-        stat.providerName,
-        (counts.get(stat.providerName) ?? 0) + stat.requestCount,
-      );
-    }
-    // 数据刷新后选中项可能掉出列表（如改了时间范围）；补回去保证用户看得见、能清除
-    if (providerName && !counts.has(providerName)) counts.set(providerName, 0);
-    return Array.from(counts, ([name, count]) => ({ name, count })).sort(
-      (a, b) => b.count - a.count,
-    );
-  }, [providerOptionsData, providerName]);
 
   const modelOptions = useMemo(() => {
     const counts = new Map<string, number>();
@@ -411,7 +373,6 @@ export function UsageDashboard({
     );
   }, [modelOptionsData, model]);
 
-  const providerTotal = providerOptions.reduce((sum, p) => sum + p.count, 0);
   const modelTotal = modelOptions.reduce((sum, m) => sum + m.count, 0);
 
   // ── 页头 ─────────────────────────────────────────────────────────────
@@ -577,57 +538,6 @@ export function UsageDashboard({
             type="button"
             variant="neutral"
             size="regular"
-            className="min-w-[78px] max-w-[156px] shrink gap-1 pe-2 ps-3"
-            title={
-              providerName
-                ? usageProviderTitle(getUsageProviderLabel(providerName, t))
-                : t("usage.providerFilter.title")
-            }
-          >
-            <span className="min-w-0 truncate">
-              {providerName
-                ? getUsageProviderLabel(providerName, t).label
-                : t("usage.providerFilter.label")}
-            </span>
-            <ChevronDown className="h-3.5 w-3.5 shrink-0 text-fg-2" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent
-          align="end"
-          aria-label={t("usage.providerFilter.title")}
-          className={cn(menuContentClass, "max-h-[360px] overflow-y-auto")}
-        >
-          <DropdownMenuItem
-            className={menuItemClass}
-            onSelect={() => changeProviderName(undefined)}
-          >
-            <MenuCheck checked={providerName == null} />
-            {t("usage.providerFilter.all")}
-            <MenuMeta>{fmtInt(providerTotal, locale)}</MenuMeta>
-          </DropdownMenuItem>
-          {providerOptions.map((option) => {
-            const label = getUsageProviderLabel(option.name, t);
-            return (
-              <DropdownMenuItem
-                key={option.name}
-                className={menuItemClass}
-                title={usageProviderTitle(label)}
-                onSelect={() => changeProviderName(option.name)}
-              >
-                <MenuCheck checked={providerName === option.name} />
-                <span className="min-w-0 truncate">{label.label}</span>
-                <MenuMeta>{fmtInt(option.count, locale)}</MenuMeta>
-              </DropdownMenuItem>
-            );
-          })}
-        </DropdownMenuContent>
-      </DropdownMenu>
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            type="button"
-            variant="neutral"
-            size="regular"
             className="min-w-[66px] max-w-[156px] shrink gap-1 pe-2 ps-3"
             title={model ?? t("usage.modelFilter.title")}
           >
@@ -677,7 +587,6 @@ export function UsageDashboard({
   // ── 子页签 ───────────────────────────────────────────────────────────
   const tabLabel: Record<UsageTab, string> = {
     logs: t("usage.requestLogs"),
-    providers: t("usage.tabs.providers"),
     models: t("usage.tabs.models"),
     settings: t("usage.tabs.settings"),
   };
@@ -724,7 +633,7 @@ export function UsageDashboard({
           ))}
         </DropdownMenuContent>
       </DropdownMenu>
-    ) : tab === "providers" || tab === "models" ? (
+    ) : tab === "models" ? (
       <span className="text-caption text-fg-3">
         {t("usage.sortedByRequests")}
       </span>
@@ -753,7 +662,6 @@ export function UsageDashboard({
           <RequestLogTable
             range={range}
             appType={appType}
-            providerName={providerName}
             model={model}
             statusCode={statusCode}
             refreshIntervalMs={0}
@@ -761,20 +669,10 @@ export function UsageDashboard({
             columns={logColumns}
           />
         )}
-        {tab === "providers" && (
-          <ProviderStatsTable
-            range={range}
-            appType={appType}
-            providerName={providerName}
-            model={model}
-            refreshIntervalMs={0}
-          />
-        )}
         {tab === "models" && (
           <ModelStatsTable
             range={range}
             appType={appType}
-            providerName={providerName}
             model={model}
             refreshIntervalMs={0}
           />
@@ -860,7 +758,6 @@ export function UsageDashboard({
           <UsageHero
             range={range}
             appType={scopedAppType}
-            providerName={providerName}
             model={model}
             refreshIntervalMs={0}
             compact={compact}
@@ -870,7 +767,6 @@ export function UsageDashboard({
           {range.preset === "all" ? (
             <UsageHeatmap
               appType={appType}
-              providerName={providerName}
               model={model}
               refreshIntervalMs={0}
             />
@@ -879,7 +775,6 @@ export function UsageDashboard({
               range={range}
               rangeLabel={rangeLabel}
               appType={appType}
-              providerName={providerName}
               model={model}
               refreshIntervalMs={0}
             />
@@ -915,7 +810,6 @@ export function UsageDashboard({
         syncedLabel={drawerSyncedLabel}
         syncing={syncingSession}
         onSyncNow={() => void runManualSessionSync()}
-        onOpenRoutingSettings={onOpenRoutingSettings}
         rebuildingCodex={rebuildingCodex}
         onRebuildCodex={() => setShowRebuildConfirm(true)}
       />

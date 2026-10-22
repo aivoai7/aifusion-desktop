@@ -22,6 +22,7 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
+    i18n: { language: "zh-CN" },
     // 测试里没有加载语言包：有 defaultValue 就用它，并把 {{param}} 就地替换
     t: (
       key: string,
@@ -110,7 +111,7 @@ vi.mock("@/components/apps/useToolManagement", () => ({
   toolDisplayName: (name: string) => name,
 }));
 
-vi.mock("@/components/settings/ToolUpgradeConfirmDialog", () => ({
+vi.mock("@/components/apps/ToolUpgradeConfirmDialog", () => ({
   ToolUpgradeConfirmDialog: () => null,
 }));
 
@@ -154,11 +155,7 @@ function stubConfigs(
   });
 }
 
-function renderHome(
-  onOpenApp = vi.fn(),
-  onOpenPage = vi.fn(),
-  onOpenKeySettings = vi.fn(),
-) {
+function renderHome(onOpenApp = vi.fn(), onOpenPage = vi.fn()) {
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false } },
   });
@@ -180,7 +177,6 @@ function renderHome(
   return {
     onOpenApp,
     onOpenPage,
-    onOpenKeySettings,
     ...render(
       <QueryClientProvider client={client}>
         <HomeOverview
@@ -188,7 +184,6 @@ function renderHome(
           activeApp="codex"
           onOpenApp={onOpenApp}
           onOpenPage={onOpenPage}
-          onOpenKeySettings={onOpenKeySettings}
         />
       </QueryClientProvider>,
     ),
@@ -217,14 +212,15 @@ describe("HomeOverview", () => {
   it("shows the platform card with real balance, model count and connected apps", async () => {
     renderHome();
 
-    expect(await screen.findByText("AIFusion 平台")).toBeInTheDocument();
+    expect(await screen.findByText("总览")).toBeInTheDocument();
     expect(screen.getByText("已连接")).toBeInTheDocument();
     expect(await screen.findByText("$1,234.50")).toBeInTheDocument();
     await waitFor(() => expect(kpi("已接入客户端")).toHaveTextContent("9"));
     expect(kpi("已接入客户端")).toHaveTextContent("/ 10");
     await waitFor(() => expect(kpi("平台可选模型")).toHaveTextContent("3"));
     expect(kpi("平台可选模型")).toHaveTextContent("个");
-    expect(kpi("平台可选模型")).toHaveTextContent("3 家厂商");
+    expect(kpi("平台可选模型")).toHaveTextContent("实时取自平台");
+    expect(screen.queryByText(/家厂商/)).not.toBeInTheDocument();
     // 主模型里 claude-sonnet-5 出现次数最多
     expect(
       (await screen.findAllByText("claude-sonnet-5")).length,
@@ -236,7 +232,7 @@ describe("HomeOverview", () => {
     mocks.wallet = null;
     renderHome();
 
-    await screen.findByText("AIFusion 平台");
+    await screen.findByText("总览");
     expect(kpi("钱包余额")).toHaveTextContent("$—");
   });
 
@@ -301,15 +297,18 @@ describe("HomeOverview", () => {
     expect(button).toBeDisabled();
   });
 
-  it("routes the more-tools links to the global pages", async () => {
+  it("routes the usage link to the stats page and offers a re-login", async () => {
     const { onOpenPage } = renderHome();
-    await screen.findByText("AIFusion 平台");
+    await screen.findByText("总览");
 
-    fireEvent.click(screen.getByRole("button", { name: "MCP" }));
-    expect(onOpenPage).toHaveBeenCalledWith("mcp");
-    // 语言包没加载时 t() 直接回吐键名，和侧栏的取名方式一致
-    fireEvent.click(screen.getByRole("button", { name: "nav.usage" }));
+    // 语言包没加载时 mock 的 t() 回吐 defaultValue
+    fireEvent.click(screen.getByRole("button", { name: /查看统计/ }));
     expect(onOpenPage).toHaveBeenCalledWith("usage");
+    // 设置页已移除：登录入口就在报头
+    expect(
+      screen.getByRole("button", { name: "重新登录" }),
+    ).toBeInTheDocument();
+    expect(onOpenPage).not.toHaveBeenCalledWith("settings");
   });
 
   it("reports the usage section honestly when nothing was recorded", async () => {
@@ -332,7 +331,7 @@ describe("HomeOverview", () => {
 
     expect(await screen.findByText("12")).toBeInTheDocument();
     expect(screen.getByText("$0.42")).toBeInTheDocument();
-    expect(screen.getByText("5,000")).toBeInTheDocument();
+    expect(screen.getByText(/5,000 Token/)).toBeInTheDocument();
 
     const bars = container.querySelectorAll(
       '[aria-label="近 7 天每日请求数"] > div',
@@ -346,7 +345,7 @@ describe("HomeOverview", () => {
 
   it("keeps the white-label promise: no address, key or token in the markup", async () => {
     const { container } = renderHome();
-    await screen.findByText("AIFusion 平台");
+    await screen.findByText("总览");
 
     const text = container.textContent ?? "";
     expect(text).not.toMatch(/op\.aifusion|192\.168|https?:\/\//);

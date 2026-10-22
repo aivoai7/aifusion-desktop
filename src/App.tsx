@@ -16,7 +16,6 @@ import {
 } from "@/lib/query";
 import {
   providersApi,
-  settingsApi,
   type AppId,
   type ProviderSwitchEvent,
 } from "@/lib/api";
@@ -42,10 +41,8 @@ import {
   sharedFeatureAppOf,
   storeView,
   type GlobalPage,
-  type SettingsSection,
   type View,
 } from "@/lib/navigation";
-import { useUpdate } from "@/contexts/UpdateContext";
 import {
   AppPageHeader,
   WindowControlsContext,
@@ -59,7 +56,6 @@ import { PlatformConnectionPanel } from "@/components/providers/PlatformConnecti
 import { HomeOverview } from "@/components/home/HomeOverview";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { discardUnsavedChanges, hasUnsavedChanges } from "@/lib/unsavedChanges";
-import { SettingsPage } from "@/components/settings/SettingsPage";
 import { AppsPage } from "@/components/apps/AppsPage";
 import { checkToolUpdatesInBackground } from "@/components/apps/useToolManagement";
 import { UsagePage } from "@/components/usage/UsagePage";
@@ -78,7 +74,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { SessionManagerPage } from "@/components/sessions/SessionManagerPage";
@@ -112,16 +107,10 @@ const getInitialApp = (): AppId => {
 function App() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
-  const { hasUpdate } = useUpdate();
 
   const [activeApp, setActiveApp] = useState<AppId>(getInitialApp);
   const sharedFeatureApp = sharedFeatureAppOf(activeApp);
   const [currentView, setCurrentView] = useState<View>(readStoredView);
-  const [settingsSection, setSettingsSection] =
-    useState<SettingsSection>("general");
-  const [appConfigScrollTarget, setAppConfigScrollTarget] = useState<AppId>();
-  // 进设置前停留的页面：设置目录里的「← 返回」回到这里
-  const settingsReturnViewRef = useRef<View>("home");
   const [openclawConfigTab, setOpenclawConfigTab] =
     useState<OpenClawConfigTab>("env");
   const [promptsApp, setPromptsApp] = useState<AppId>(() =>
@@ -157,7 +146,7 @@ function App() {
     }
   }, [visibleApps, activeApp]);
 
-  // 启动后把其他可见应用的供应商列表预取进缓存：第一次切过去直接有数据，不先画骨架
+  // 启动后把其他可见应用的配置列表预取进缓存：第一次切过去直接有数据，不先画骨架
   const providersPrefetchedRef = useRef(false);
   useEffect(() => {
     if (!settingsData || providersPrefetchedRef.current) return;
@@ -179,7 +168,7 @@ function App() {
     void checkToolUpdatesInBackground();
   }, [checkToolUpdatesOnStartup]);
 
-  // 应用专属页（工作区、记忆…）只属于它的应用；换了应用就回到供应商页
+  // 应用专属页（工作区、记忆…）只属于它的应用；换了应用就回到该应用的详情页
   useEffect(() => {
     if (isAppPage(currentView) && !appPageBelongsTo(currentView, activeApp)) {
       setCurrentView("providers");
@@ -211,7 +200,7 @@ function App() {
   const { isRunning: isProxyRunning } = useProxyStatus();
   const currentAppUsesProxy = isModeAppId(activeApp);
 
-  const { data, refetch } = useProvidersQuery(activeApp, {
+  const { data } = useProvidersQuery(activeApp, {
     isProxyRunning: currentAppUsesProxy && isProxyRunning,
   });
   const providers = useMemo(() => data?.providers ?? {}, [data]);
@@ -317,7 +306,7 @@ function App() {
       toast.warning(
         t("notifications.proxyOfficialWarning", {
           name: payload.providerName,
-          defaultValue: `当前供应商 ${payload.providerName} 是官方供应商，建议切换到第三方供应商后再使用代理接管`,
+          defaultValue: `${payload.providerName} 走平台直连，本机路由接管不了，请求仍会按直连发出`,
         }),
         { duration: 8000 },
       );
@@ -462,30 +451,6 @@ function App() {
     return true;
   };
 
-  const openSettings = (
-    section: SettingsSection = "general",
-    appConfigTarget?: AppId,
-  ) => {
-    if (managementBusyRef.current) return;
-    if (confirmLeave(() => openSettings(section, appConfigTarget))) return;
-    if (currentViewRef.current !== "settings") {
-      settingsReturnViewRef.current = currentViewRef.current;
-    }
-    setSettingsSection(section);
-    setAppConfigScrollTarget(appConfigTarget);
-    setCurrentView("settings");
-  };
-
-  const exitSettings = () => {
-    setCurrentView(settingsReturnViewRef.current);
-  };
-
-  /** 设置页里的分组切换：原来由侧栏的设置目录承担，现在交给页头下面的页签 */
-  const selectSettingsSection = (section: SettingsSection) => {
-    setAppConfigScrollTarget(undefined);
-    setSettingsSection(section);
-  };
-
   const selectApp = (app: AppId) => {
     if (managementBusyRef.current) return;
     if (confirmLeave(() => selectApp(app))) return;
@@ -503,11 +468,7 @@ function App() {
     setCurrentView("home");
   };
 
-  const openPage = (page: GlobalPage | "settings") => {
-    if (page === "settings") {
-      openSettings("general");
-      return;
-    }
+  const openPage = (page: GlobalPage) => {
     if (managementBusyRef.current) return;
     // 再点当前页不会离开：不弹确认，也不能清掉编辑页的未保存登记
     if (currentViewRef.current === page) return;
@@ -524,10 +485,6 @@ function App() {
 
   useTrayNavigation((navigation) => {
     const navigate = () => {
-      if (navigation.section) {
-        openSettings(navigation.section);
-        return;
-      }
       if (!navigation.app) return;
       selectApp(navigation.app);
     };
@@ -535,29 +492,15 @@ function App() {
   });
 
   // 首页那一排入口、⌘K 进用量统计看全部应用；只有应用页 ⋯ 进来时带应用筛选
-  const openPageFromNav = (page: GlobalPage | "settings") => {
-    // 「设置」上的绿点说的是 AIFusion 有新版本，点进去直接到「关于」里的更新按钮
-    if (page === "settings" && hasUpdate) {
-      openSettings("about");
-      return;
-    }
+  const openPageFromNav = (page: GlobalPage) => {
     if (page === "usage") setUsageAppFilter("all");
     openPage(page);
   };
 
-  const openSettingsRef = useRef(openSettings);
-  openSettingsRef.current = openSettings;
   const [usageAppFilter, setUsageAppFilter] = useState<AppTypeFilter>("all");
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      const mod = event.metaKey || event.ctrlKey;
-      if (mod && event.key === ",") {
-        event.preventDefault();
-        openSettingsRef.current("general");
-        return;
-      }
-
       if (event.key !== "Escape" || event.defaultPrevented) return;
       if (document.body.style.overflow === "hidden") return;
       if (managementBusyRef.current) return;
@@ -567,9 +510,6 @@ function App() {
       if (view === "skillsDiscovery") {
         event.preventDefault();
         setCurrentView("skills");
-      } else if (view === "settings") {
-        event.preventDefault();
-        setCurrentView(settingsReturnViewRef.current);
       }
     };
 
@@ -583,45 +523,6 @@ function App() {
   const openHermesWebUI = useOpenHermesWebUI(() =>
     setLaunchDashboardOpen(true),
   );
-
-  const handleImportSuccess = async () => {
-    try {
-      await queryClient.invalidateQueries({
-        queryKey: ["providers"],
-        refetchType: "all",
-      });
-      await queryClient.refetchQueries({
-        queryKey: ["providers"],
-        type: "all",
-      });
-    } catch (error) {
-      console.error("[App] Failed to refresh providers after import", error);
-      await refetch();
-    }
-    try {
-      await providersApi.updateTrayMenu();
-    } catch (error) {
-      console.error("[App] Failed to refresh tray menu", error);
-    }
-  };
-
-  const handleHideActiveApp = async () => {
-    const visibleCount = Object.values(visibleApps).filter(Boolean).length;
-    if (visibleCount <= 1) return;
-    try {
-      const current = await settingsApi.get();
-      await settingsApi.save({
-        ...current,
-        visibleApps: { ...visibleApps, [activeApp]: false },
-      });
-      await queryClient.invalidateQueries({ queryKey: ["settings"] });
-    } catch (error) {
-      toast.error(
-        t("settings.saveFailedGeneric", { defaultValue: "保存失败，请重试" }),
-        { description: extractErrorMessage(error) || undefined },
-      );
-    }
-  };
 
   // ─── 应用页 ─────────────────────────────────────────────────────────────
 
@@ -664,18 +565,8 @@ function App() {
             {t("appPage.viewUsage")}
           </DropdownMenuItem>
         )}
-        <DropdownMenuItem onSelect={() => openSettings("appConfig", activeApp)}>
-          {t("appPage.configDirectory")}
-        </DropdownMenuItem>
         <DropdownMenuItem onSelect={() => openPage("apps")}>
           {t("appPage.installAndUpgrade")}
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem
-          disabled={Object.values(visibleApps).filter(Boolean).length <= 1}
-          onSelect={() => void handleHideActiveApp()}
-        >
-          {t("appPage.hideFromHome", { defaultValue: "在首页隐藏" })}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
@@ -785,7 +676,7 @@ function App() {
     return null;
   };
 
-  // 这个构建只对接 AIFusion 自有平台：应用页不展示供应商 / 渠道卡片，只显示平台连接状态
+  // 这个构建只对接 AIFusion 自有平台：应用页不展示渠道卡片，只显示平台连接状态
   const renderProviderList = () => (
     <div
       ref={providerScrollContainerRef}
@@ -797,7 +688,6 @@ function App() {
         providers={providers}
         currentProviderId={currentProviderId}
         visibleApps={visibleApps}
-        onOpenKeySettings={() => openSettings("general")}
         onOpenPage={openPageFromNav}
         onOpenApp={selectApp}
       />
@@ -875,12 +765,7 @@ function App() {
   const renderGlobalPage = () => {
     switch (currentView) {
       case "usage":
-        return (
-          <UsagePage
-            initialAppType={usageAppFilter}
-            onOpenRoutingSettings={() => openSettings("routing")}
-          />
-        );
+        return <UsagePage initialAppType={usageAppFilter} />;
       case "mcp":
         return (
           <UnifiedMcpPanel onInteractionBlockedChange={setMcpManagementBusy} />
@@ -919,7 +804,6 @@ function App() {
             key={sharedFeatureApp}
             appId={sharedFeatureApp}
             fromApp={activeApp}
-            onOpenTerminalSettings={() => openSettings("general")}
           />
         );
       case "apps":
@@ -930,18 +814,6 @@ function App() {
   };
 
   const renderContent = () => {
-    if (currentView === "settings") {
-      return (
-        <SettingsPage
-          section={settingsSection}
-          onSectionChange={selectSettingsSection}
-          appConfigScrollTarget={appConfigScrollTarget}
-          onImportSuccess={handleImportSuccess}
-          onOpenApps={() => setCurrentView("apps")}
-          onOpenApp={selectApp}
-        />
-      );
-    }
     if (currentView === "home") {
       return (
         <HomeOverview
@@ -949,7 +821,6 @@ function App() {
           activeApp={activeApp}
           onOpenApp={selectApp}
           onOpenPage={openPageFromNav}
-          onOpenKeySettings={() => openSettings("general")}
         />
       );
     }
@@ -966,13 +837,6 @@ function App() {
           overviewActive={currentView === "home" || isAppPage(currentView)}
           onHome={openHome}
           onOpenPage={(page) => openPageFromNav(page)}
-          onOpenSettings={() =>
-            currentView === "settings"
-              ? exitSettings()
-              : openPageFromNav("settings")
-          }
-          settingsActive={currentView === "settings"}
-          hasUpdate={hasUpdate}
           windowControls={useAppWindowControls ? <WindowControls /> : null}
           navLocked={managementBusy}
         />
@@ -1007,13 +871,11 @@ function App() {
           )}
           <div
             key={
-              currentView === "settings"
-                ? "settings"
-                : currentView === "home"
-                  ? "home"
-                  : isAppPage(currentView)
-                    ? "app"
-                    : currentView
+              currentView === "home"
+                ? "home"
+                : isAppPage(currentView)
+                  ? "app"
+                  : currentView
             }
             className="flex min-h-0 flex-1 flex-col"
           >

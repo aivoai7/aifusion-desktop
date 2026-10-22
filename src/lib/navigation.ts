@@ -1,12 +1,13 @@
 import type { AppId } from "@/lib/api";
 
 /**
- * 主窗口的导航模型（v9）：侧栏去掉了，首页总览是唯一入口，页头承担外壳。
+ * 主窗口的导航模型（v10）：侧栏与设置页都去掉了，
+ * 首页总览是唯一入口，页头承担外壳。
  *
- * - 首页：平台卡 + 客户端网格，是启动后的落地页，也是品牌块的回程目标。
- * - 应用页：点首页卡片进入详情；OpenClaw、Hermes 在页头下用分段控件切到自己的专属页。
+ * - 首页：平台读数 + 客户端账本，是启动后的落地页，也是品牌块的回程目标。
+ * - 应用页：点首页一行进入详情；OpenClaw、Hermes 在页头下用页签切到自己的专属页。
  * - 全局页：顶栏只露出用量统计；MCP、Skills、提示词、会话保留路由，但不再占一级入口。
- * - 设置：页头齿轮进入，页头下面的页签切 6 个分组。
+ *   「应用」页（客户端安装与升级）从应用页 ⋯ 菜单进入。
  */
 
 export type AppPage =
@@ -24,24 +25,7 @@ export type GlobalPage =
   | "sessions"
   | "apps";
 
-export type View = "home" | AppPage | GlobalPage | "settings";
-
-export type SettingsSection =
-  | "general"
-  | "appConfig"
-  | "routing"
-  | "network"
-  | "data"
-  | "about";
-
-export const SETTINGS_SECTIONS: SettingsSection[] = [
-  "general",
-  "appConfig",
-  "routing",
-  "network",
-  "data",
-  "about",
-];
+export type View = "home" | AppPage | GlobalPage;
 
 const APP_PAGES: AppPage[] = [
   "providers",
@@ -90,7 +74,6 @@ export function isGlobalPage(view: View): view is GlobalPage {
 export function parseView(value: string | null | undefined): View | null {
   if (!value) return null;
   if (value in LEGACY_VIEWS) return LEGACY_VIEWS[value];
-  if (value === "settings") return "settings";
   if (value === "home") return "home";
   if ((APP_PAGES as string[]).includes(value)) return value as AppPage;
   if ((GLOBAL_PAGES as string[]).includes(value)) return value as GlobalPage;
@@ -114,12 +97,8 @@ export function readStoredView(): View {
   try {
     const stored = parseView(localStorage.getItem(VIEW_STORAGE_KEY));
     // 首页是新的落地页；上次停在应用页或用量页就回到那一页。
-    // 设置不当落地页（它由页头齿轮 / ⌘, 进入）；已从顶栏移除的页面也回总览。
-    if (
-      stored &&
-      stored !== "settings" &&
-      !HIDDEN_GLOBAL_PAGES.includes(stored)
-    ) {
+    // 已从顶栏移除的页面回总览。
+    if (stored && !HIDDEN_GLOBAL_PAGES.includes(stored)) {
       return stored;
     }
     return "home";
@@ -133,29 +112,6 @@ export function storeView(view: View) {
     localStorage.setItem(VIEW_STORAGE_KEY, view);
   } catch {
     // 存不了就算了：下次启动回到首页总览
-  }
-}
-
-/**
- * 旧的设置页签名 → 新的设置分组。用量统计、认证已经搬成全局页，由调用方改走全局页。
- */
-export function normalizeSettingsSection(
-  tab: string | null | undefined,
-): SettingsSection {
-  switch (tab) {
-    case "proxy":
-    case "routing":
-      return "routing";
-    case "advanced":
-    case "data":
-      return "data";
-    case "appConfig":
-    case "network":
-    case "about":
-    case "general":
-      return tab;
-    default:
-      return "general";
   }
 }
 

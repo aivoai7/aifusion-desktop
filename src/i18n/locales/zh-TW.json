@@ -54,8 +54,8 @@
   },
   "firstRunNotice": {
     "title": "歡迎使用 AIFusion",
-    "bodyDefault": "AIFusion 是 AIFusion 自有平台的桌面用戶端：每個用戶端頁籤下都已內建「AIFusion 平台」供應商，並已指向你的平台，開箱即用。",
-    "bodyOfficial": "AIFusion 只對接自有平台，不預設任何第三方供應商，也沒有「自訂設定」入口。可在頁籤內按需切換「直連 / 路由」模式。",
+    "bodyDefault": "AIFusion 是 AIFusion 自有平台的桌面用戶端：每個用戶端都內建平台連線，登入後自動指向你的平台，開箱即用。",
+    "bodyOfficial": "AIFusion 只對接自有平台，金鑰由平台統一發送，沒有「自訂設定」入口。可在用戶端詳情裡按需切換「直連 / 本機路由」。",
     "keyTitle": "連線 AIFusion 平台",
     "keyBody": "請輸入平台管理員分配給你的 API Key。金鑰只保存在本機，並會自動下發到所有用戶端頁籤。",
     "keySave": "驗證並儲存",
@@ -83,7 +83,7 @@
     "clearMessage": "清除後所有用戶端將無法存取平台，確定繼續？",
     "saved": "平台金鑰已儲存並下發",
     "cleared": "平台金鑰已清除",
-    "syncWarning": "金鑰已儲存，但以下應用程式未能立即生效：{{apps}}。切換一次供應商或重新啟動應用程式即可重試。",
+    "syncWarning": "金鑰已儲存，但以下應用程式未能立即生效：{{apps}}。重新登入或重新啟動應用程式即可重試。",
     "hint": "金鑰只保存在本機；每個使用者使用自己的 Key。"
   },
   "jsonEditor": {
@@ -344,7 +344,7 @@
     "codexAuthCleanupFailed": "切換成功，但未能刪除 auth.json，官方登入憑證仍留在磁碟上；如需徹底移除請手動刪除 Codex 設定目錄中的 auth.json",
     "windowControlFailed": "視窗控制失敗：{{error}}",
     "officialBlockedByProxy": "本地路由模式下不能切換至官方供應商，使用路由存取官方 API 可能導致帳號被封鎖",
-    "proxyOfficialWarning": "目前供應商 {{name}} 是官方供應商，建議切換至第三方供應商後再使用本地路由"
+    "proxyOfficialWarning": "{{name}} 走平台直連，本機路由接管不了，請求仍會按直連發出"
   },
   "confirm": {
     "deleteProvider": "刪除供應商",
@@ -1159,7 +1159,7 @@
       "effectiveBaseUrlRequired": "模型 {{id}} 必須直接設定或從供應商繼承基礎 URL",
       "duplicateModel": "模型 ID {{id}} 重複",
       "modelRequired": "請至少新增一個模型",
-      "providerKeyDuplicate": "該供應商識別碼已存在"
+      "providerKeyDuplicate": "該設定識別碼已存在"
     },
     "current": {
       "readFailed": "無法讀取 Pi 供應商設定",
@@ -1344,7 +1344,7 @@
     "cdResumeCopied": "已複製「進入目錄並繼續」指令",
     "changeTerminal": "更換偏好終端機",
     "changeTerminalAction": "更換終端機",
-    "codexResumeNote": "切換過供應商後，舊工作階段可能無法繼續：Codex 按供應商分開保存歷史。",
+    "codexResumeNote": "換過連線設定後，舊工作階段可能無法繼續：Codex 的歷史依設定分開儲存。",
     "noResumeOpenclaw": "OpenClaw 工作階段由閘道管理，不能在終端機繼續",
     "noResumeHermes": "暫不支援從命令列繼續 Hermes 工作階段",
     "launchedIn": "已在 {{terminal}} 中執行繼續指令",
@@ -1935,10 +1935,8 @@
     "freshInput": "新增輸入",
     "cacheHitRate": "快取命中率",
     "requestLogs": "請求日誌",
-    "providerStats": "Provider 統計",
     "modelStats": "模型統計",
     "time": "時間",
-    "provider": "供應商",
     "billingModel": "計費模型",
     "inputTokens": "輸入",
     "outputTokens": "輸出",
@@ -1950,12 +1948,6 @@
     "requestModel": "請求模型",
     "responseModel": "回傳模型",
     "noData": "暫無資料",
-    "unknownProvider": "未知供應商",
-    "sessionProvider": {
-      "short": "工作階段日誌",
-      "label": "{{app}} · 工作階段日誌",
-      "hint": "未開啟路由時從用戶端的工作階段日誌讀取，無法區分是哪家供應商"
-    },
     "stream": "串流",
     "nonStream": "非串流",
     "source": "來源",
@@ -2080,8 +2072,7 @@
     "modelsDevHint": "無需手動填寫，可從 models.dev 選擇模型定價",
     "modelsDevPickerTitle": "從 models.dev 匯入定價",
     "modelsDevPickerDesc": "選擇要匯入的模型（價格單位：USD / 百萬 tokens），每次匯入一個",
-    "modelsDevSearchPlaceholder": "搜尋模型或供應商（全量搜尋）...",
-    "modelsDevAllProviders": "全部供應商",
+    "modelsDevSearchPlaceholder": "搜尋模型（全量搜尋）...",
     "modelsDevLoadError": "載入 models.dev 資料失敗",
     "modelsDevRetry": "重試",
     "modelsDevImportButton": "匯入",
@@ -2100,7 +2091,7 @@
       "enableConfirmAction": "開啟自動同步",
       "configure": "選擇模型",
       "configureTitle": "選擇自動同步定價的模型",
-      "configureDescription": "透過搜尋和供應商篩選選擇需要自動更新的模型，選擇結果儲存在本機。",
+      "configureDescription": "搜尋選出需要自動更新的模型，選擇結果儲存在本機。",
       "commonModels": "自動包含常用模型",
       "commonModelsDescription": "自動選擇 {{count}} 個近期 Claude、GPT、Gemini、Grok、DeepSeek、Qwen、MiMo、LongCat、Kimi、MiniMax 和 GLM 模型。",
       "selectFiltered": "全選篩選結果（{{count}}）",
@@ -2163,14 +2154,9 @@
         "area": "曲線面積圖"
       }
     },
-    "providerFilter": {
-      "label": "供應商",
-      "all": "全部供應商",
-      "title": "依供應商篩選"
-    },
     "modelFilter": {
       "label": "模型",
-      "title": "依模型篩選（隨供應商連動）"
+      "title": "依模型篩選"
     },
     "metrics": {
       "label": "指標",
@@ -2199,7 +2185,6 @@
     },
     "tabs": {
       "label": "明細",
-      "providers": "供應商",
       "models": "模型",
       "pricing": "定價",
       "settings": "設定"
@@ -2229,7 +2214,7 @@
       "hitRateTip": "快取命中 {{read}} / 可快取輸入 {{total}}",
       "duration": "總耗時"
     },
-    "openRequestDetail": "查看請求詳情：{{time}} {{provider}}",
+    "openRequestDetail": "查看請求詳情：{{time}} {{app}}",
     "prevPage": "上一頁",
     "nextPage": "下一頁",
     "statusFilter": {
@@ -2250,8 +2235,7 @@
       "speedTooFew": "輸出不到 100 token，不算速度",
       "speedEstimateTooFew": "輸出不到 200 token，不估速度",
       "noTimingSession": "工作階段日誌沒有計時資料",
-      "noFirstToken": "沒有首字計時，不算速度",
-      "providerId": "供應商 ID"
+      "noFirstToken": "沒有首字計時，不算速度"
     },
     "sources": {
       "scanTitle": "自動掃描工作階段日誌",
@@ -3103,7 +3087,7 @@
     "updatesIncomplete": "沒有發現更新，但有 {{count}} 個倉庫沒有讀到"
   },
   "deeplink": {
-    "confirmImport": "確認匯入供應商設定",
+    "confirmImport": "確認匯入這份設定",
     "confirmImportDescription": "以下設定將匯入至 AIFusion",
     "importPrompt": "匯入提示詞",
     "importPromptDescription": "請確認是否匯入此系統提示詞",
@@ -3120,7 +3104,7 @@
     "skillImportSuccess": "Skill 儲存庫新增成功",
     "skillImportSuccessDescription": "已新增儲存庫：{{repo}}",
     "app": "應用程式類型",
-    "providerName": "供應商名稱",
+    "providerName": "設定名稱",
     "homepage": "官網位址",
     "endpoint": "API 端點",
     "apiKey": "API 金鑰",
@@ -3133,18 +3117,18 @@
     "notes": "備註",
     "import": "匯入",
     "importing": "匯入中...",
-    "warning": "請確認以上資訊準確無誤後再匯入。匯入後可在供應商清單中編輯或刪除。",
-    "providerEnabledWarning": "匯入後將立即切換到此供應商，用戶端請求會改送到上面的位址",
+    "warning": "請確認以上資訊準確無誤後再匯入。匯入的設定只寫入本機檔案，介面裡沒有編輯入口。",
+    "providerEnabledWarning": "匯入後將立即啟用這份設定，用戶端請求會改送到上面的位址",
     "apiFormat": "介面格式",
-    "switchAfterImport": "匯入後立即切換到這個供應商",
+    "switchAfterImport": "匯入後立即啟用這份設定",
     "addToAppAfterImport": "匯入後立即新增到 {{app}} 設定",
     "enableInPiAfterImport": "匯入後立即在 Pi 中啟用",
     "parseError": "深層連結解析失敗",
     "importSuccess": "匯入成功",
-    "importSuccessDescription": "供應商 \"{{name}}\" 已成功匯入",
+    "importSuccessDescription": "設定 \"{{name}}\" 已成功匯入",
     "importError": "匯入失敗",
     "configSource": "設定來源",
-    "codexConfigScopeHint": "只匯入其中屬於這個供應商的設定（位址、驗證、模型、推理強度等）；[features]、MCP、權限這類全域設定不會匯入。",
+    "codexConfigScopeHint": "只匯入其中屬於這份設定的項目（位址、驗證、模型、推理強度等）；[features]、MCP、權限這類全域設定不會匯入。",
     "grokConfigScopeHint": "只匯入 [models] default 指向的那張模型表（顯示名稱、說明、介面類型、視窗等）；位址和 Key 使用連結參數，其他模型表不會匯入。",
     "configEmbedded": "內嵌設定",
     "configRemote": "遠端設定",

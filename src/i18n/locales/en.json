@@ -54,8 +54,8 @@
   },
   "firstRunNotice": {
     "title": "Welcome to AIFusion",
-    "bodyDefault": "AIFusion is the desktop client for the AIFusion platform. Every client tab already ships a single built-in “AIFusion platform” provider pointed at your platform — ready out of the box.",
-    "bodyOfficial": "AIFusion only talks to its own platform: no third-party providers and no “custom” entry. Switch between Direct and Route modes per tab at any time.",
+    "bodyDefault": "AIFusion is the desktop client for the AIFusion platform. Every client ships with the platform connection built in and points at your platform once you sign in — ready out of the box.",
+    "bodyOfficial": "AIFusion only talks to its own platform: keys are issued by the platform and there is no custom-configuration entry. Switch between Direct and Local routing in the client details.",
     "keyTitle": "Sign in to the AIFusion platform",
     "keyBody": "Use the button below to open the AIFusion website in your default browser. After you sign in, the client fetches the API key automatically and propagates it to every client tab - no manual key entry.",
     "loggingIn": "Signing in…",
@@ -81,7 +81,7 @@
     "clearTitle": "Disconnect from the platform",
     "clearMessage": "Disconnecting clears the platform access key on this device and every client will lose platform access. Continue?",
     "cleared": "Platform connection removed",
-    "syncWarning": "The key was fetched, but these apps did not pick it up immediately: {{apps}}. Switch a provider or restart the app to retry.",
+    "syncWarning": "The key was fetched, but these apps did not pick it up immediately: {{apps}}. Sign in again or restart the app to retry.",
     "webLogin": "Sign in on website",
     "webLoginHint": "Opens the AIFusion website in your default browser. After you sign in, the API key is fetched and propagated to every client automatically.",
     "webLoginWaiting": "Sign-in opened in your browser. Complete it there; AIFusion will continue automatically.",
@@ -93,8 +93,6 @@
     "heroHint": "Models and keys are managed by the platform; signing in provisions every client automatically.",
     "connectedApps": "Connected clients",
     "platformModels": "Models on platform",
-    "vendors_one": "{{count}} vendor",
-    "vendors_other": "{{count}} vendors",
     "topModel": "Most used model",
     "appsTitle": "Clients",
     "appsHint": "Open a card to change its model",
@@ -112,7 +110,8 @@
     "sameAsMain": "Same as main",
     "notAvailable": "No data",
     "localConvert": "Local proxy",
-    "openDetail": "Details →"
+    "openDetail": "Details →",
+    "modelsHint": "Live from the platform"
   },
   "platformConnection": {
     "title": "AIFusion Platform",
@@ -150,7 +149,13 @@
     "modelCount_other": "{{count}} models",
     "modelPair": "{{main}} (light: {{light}})",
     "modelPending": "Applies when this client switches back to the platform",
-    "modelSignedOut": "Sign in to pick a model"
+    "modelSignedOut": "Sign in to pick a model",
+    "modelSource": "Issued by the platform",
+    "modelsKicker": "Models",
+    "availableModels": "Available models",
+    "modelsCount_one": "{{count}}",
+    "modelsCount_other": "{{count}}",
+    "switchKicker": "Clients"
   },
   "platformModel": {
     "title": "Models for {{app}}",
@@ -431,7 +436,7 @@
     "codexAuthCleanupFailed": "Switched successfully, but auth.json could not be removed — the official login credentials are still on disk; delete auth.json from the Codex config directory to remove them",
     "windowControlFailed": "Window control failed: {{error}}",
     "officialBlockedByProxy": "Cannot switch to official provider while local routing is active. Using routing with official APIs may cause account bans.",
-    "proxyOfficialWarning": "Current provider {{name}} is official. Consider switching to a third-party provider before using local routing."
+    "proxyOfficialWarning": "{{name}} talks to the platform directly, so local routing cannot take over; requests still go straight to the platform"
   },
   "confirm": {
     "deleteProvider": "Delete Provider",
@@ -1245,7 +1250,7 @@
       "effectiveBaseUrlRequired": "Model {{id}} needs a base URL, either directly or from the provider",
       "duplicateModel": "Model ID {{id}} is duplicated",
       "modelRequired": "Add at least one model",
-      "providerKeyDuplicate": "This provider key already exists"
+      "providerKeyDuplicate": "That configuration ID already exists"
     },
     "current": {
       "readFailed": "Could not read Pi's provider configuration",
@@ -1430,7 +1435,7 @@
     "cdResumeCopied": "“cd and resume” command copied",
     "changeTerminal": "Change preferred terminal",
     "changeTerminalAction": "Change terminal",
-    "codexResumeNote": "Older sessions may not resume after switching providers: Codex keeps history separately per provider.",
+    "codexResumeNote": "Older sessions may not resume after the connection profile changes: Codex keeps history separately per profile.",
     "noResumeOpenclaw": "OpenClaw sessions are managed by its gateway and can’t be resumed in a terminal",
     "noResumeHermes": "Resuming Hermes sessions from the command line isn’t supported yet",
     "launchedIn": "Ran the resume command in {{terminal}}",
@@ -2021,10 +2026,8 @@
     "freshInput": "Fresh Input",
     "cacheHitRate": "Cache Hit Rate",
     "requestLogs": "Request Logs",
-    "providerStats": "Provider Stats",
     "modelStats": "Model Stats",
     "time": "Time",
-    "provider": "Provider",
     "billingModel": "Billing Model",
     "inputTokens": "Input",
     "outputTokens": "Output",
@@ -2036,12 +2039,6 @@
     "requestModel": "Request Model",
     "responseModel": "Response Model",
     "noData": "No data",
-    "unknownProvider": "Unknown Provider",
-    "sessionProvider": {
-      "short": "Session logs",
-      "label": "{{app}} · Session logs",
-      "hint": "Read from the client's session logs while routing is off, so the provider can't be told apart"
-    },
     "stream": "Stream",
     "nonStream": "Non-stream",
     "source": "Source",
@@ -2166,8 +2163,7 @@
     "modelsDevHint": "Skip manual entry — pick model pricing from models.dev",
     "modelsDevPickerTitle": "Import Pricing from models.dev",
     "modelsDevPickerDesc": "Select a model to import (prices in USD per million tokens). One model per import.",
-    "modelsDevSearchPlaceholder": "Search models or providers (full search)...",
-    "modelsDevAllProviders": "All providers",
+    "modelsDevSearchPlaceholder": "Search models (full search)...",
     "modelsDevLoadError": "Failed to load models.dev data",
     "modelsDevRetry": "Retry",
     "modelsDevImportButton": "Import",
@@ -2186,7 +2182,7 @@
       "enableConfirmAction": "Enable automatic sync",
       "configure": "Choose models",
       "configureTitle": "Choose models for automatic pricing sync",
-      "configureDescription": "Search and filter models to update automatically. Your choices are stored locally.",
+      "configureDescription": "Search for the models to update automatically. Your choices are stored locally.",
       "commonModels": "Automatically include common models",
       "commonModelsDescription": "Selects {{count}} recent Claude, GPT, Gemini, Grok, DeepSeek, Qwen, MiMo, LongCat, Kimi, MiniMax, and GLM models.",
       "selectFiltered": "Select filtered ({{count}})",
@@ -2249,14 +2245,9 @@
         "area": "Area"
       }
     },
-    "providerFilter": {
-      "label": "Provider",
-      "all": "All providers",
-      "title": "Filter by provider"
-    },
     "modelFilter": {
       "label": "Model",
-      "title": "Filter by model (follows the provider filter)"
+      "title": "Filter by model"
     },
     "metrics": {
       "label": "Metrics",
@@ -2285,7 +2276,6 @@
     },
     "tabs": {
       "label": "Details",
-      "providers": "Providers",
       "models": "Models",
       "pricing": "Pricing",
       "settings": "Settings"
@@ -2315,7 +2305,7 @@
       "hitRateTip": "Cache hits {{read}} of {{total}} cacheable input",
       "duration": "Total Time"
     },
-    "openRequestDetail": "View request details: {{time}} {{provider}}",
+    "openRequestDetail": "View request details: {{time}} {{app}}",
     "prevPage": "Previous page",
     "nextPage": "Next page",
     "statusFilter": {
@@ -2336,8 +2326,7 @@
       "speedTooFew": "Under 100 output tokens, so no speed",
       "speedEstimateTooFew": "Under 200 output tokens, so no estimate",
       "noTimingSession": "Session logs have no timing data",
-      "noFirstToken": "No first-token timing, so no speed",
-      "providerId": "Provider ID"
+      "noFirstToken": "No first-token timing, so no speed"
     },
     "sources": {
       "scanTitle": "Scan session logs automatically",
@@ -3189,7 +3178,7 @@
     "updatesIncomplete": "No updates found, but {{count}} repositories couldn't be read"
   },
   "deeplink": {
-    "confirmImport": "Confirm Import Provider",
+    "confirmImport": "Confirm Import",
     "confirmImportDescription": "The following configuration will be imported from deep link into AIFusion",
     "importPrompt": "Import Prompt",
     "importPromptDescription": "Please confirm whether to import this system prompt",
@@ -3206,7 +3195,7 @@
     "skillImportSuccess": "Skill repository added successfully",
     "skillImportSuccessDescription": "Added repository: {{repo}}",
     "app": "App Type",
-    "providerName": "Provider Name",
+    "providerName": "Configuration Name",
     "homepage": "Homepage",
     "endpoint": "API Endpoint",
     "apiKey": "API Key",
@@ -3219,18 +3208,18 @@
     "notes": "Notes",
     "import": "Import",
     "importing": "Importing...",
-    "warning": "Please confirm the information above is correct before importing. You can edit or delete it later in the provider list.",
-    "providerEnabledWarning": "After import, AIFusion will switch to this provider immediately, and client requests will go to the endpoint above",
+    "warning": "Please confirm the information above is correct before importing. Imported configurations only go into local files; there is no editor for them in this app.",
+    "providerEnabledWarning": "After import, AIFusion will use this configuration immediately, and client requests will go to the endpoint above",
     "apiFormat": "API format",
-    "switchAfterImport": "Switch to this provider after import",
+    "switchAfterImport": "Use this configuration after import",
     "addToAppAfterImport": "Add to the {{app}} config after import",
     "enableInPiAfterImport": "Enable in Pi after import",
     "parseError": "Failed to parse deep link",
     "importSuccess": "Import successful",
-    "importSuccessDescription": "Provider \"{{name}}\" has been successfully imported",
+    "importSuccessDescription": "Configuration \"{{name}}\" has been successfully imported",
     "importError": "Failed to import",
     "configSource": "Config Source",
-    "codexConfigScopeHint": "Only the settings that belong to this provider (endpoint, auth, model, reasoning effort, etc.) are imported; global settings such as [features], MCP and permissions are skipped.",
+    "codexConfigScopeHint": "Only the settings that belong to this configuration (endpoint, auth, model, reasoning effort, etc.) are imported; global settings such as [features], MCP and permissions are skipped.",
     "grokConfigScopeHint": "Only the model table named by [models] default is imported (display name, description, API backend, context window, etc.); the endpoint and key come from the link parameters, and other model tables are skipped.",
     "configEmbedded": "Embedded Config",
     "configRemote": "Remote Config",

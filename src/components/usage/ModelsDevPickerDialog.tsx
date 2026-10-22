@@ -14,13 +14,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Notice } from "@/components/ui/notice";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { useUpdateModelPricing } from "@/lib/query/usage";
 import { modelsDevQueryOptions } from "@/lib/modelsDev";
 import {
@@ -52,14 +45,12 @@ export function ModelsDevPickerDialog({
   const updatePricing = useUpdateModelPricing();
 
   const [search, setSearch] = useState("");
-  const [providerFilter, setProviderFilter] = useState("all");
   const [selected, setSelected] = useState<ModelsDevEntry | null>(null);
 
   // 每次打开时重置选择与过滤条件
   useEffect(() => {
     if (open) {
       setSearch("");
-      setProviderFilter("all");
       setSelected(null);
     }
   }, [open]);
@@ -72,32 +63,18 @@ export function ModelsDevPickerDialog({
 
   const entries = useMemo(() => (data ? flattenModels(data) : []), [data]);
 
-  const providers = useMemo(() => {
-    const map = new Map<string, string>();
-    for (const entry of entries) {
-      if (!map.has(entry.providerId)) {
-        map.set(entry.providerId, entry.providerName);
-      }
-    }
-    return Array.from(map, ([id, name]) => ({ id, name })).sort((a, b) =>
-      a.name.localeCompare(b.name),
-    );
-  }, [entries]);
-
-  const isFiltering = search.trim() !== "" || providerFilter !== "all";
+  const isFiltering = search.trim() !== "";
 
   const filtered = useMemo(() => {
     const query = search.trim().toLowerCase();
     return entries.filter(
       (entry) =>
-        (providerFilter === "all" || entry.providerId === providerFilter) &&
-        (!query ||
-          entry.modelId.toLowerCase().includes(query) ||
-          entry.normalizedId.includes(query) ||
-          entry.modelName.toLowerCase().includes(query) ||
-          entry.providerName.toLowerCase().includes(query)),
+        !query ||
+        entry.modelId.toLowerCase().includes(query) ||
+        entry.normalizedId.includes(query) ||
+        entry.modelName.toLowerCase().includes(query),
     );
-  }, [entries, search, providerFilter]);
+  }, [entries, search]);
 
   // 默认只展示最新发布的一批，搜索/筛选时展示全量匹配（设上限防卡顿）
   const visible = useMemo(
@@ -204,24 +181,6 @@ export function ModelsDevPickerDialog({
           ) : (
             <>
               <div className="flex items-center gap-2">
-                <Select
-                  value={providerFilter}
-                  onValueChange={setProviderFilter}
-                >
-                  <SelectTrigger className="w-44 shrink-0">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="z-[120] max-h-[min(24rem,var(--radix-select-content-available-height))]">
-                    <SelectItem value="all">
-                      {t("usage.modelsDevAllProviders", "全部供应商")}
-                    </SelectItem>
-                    {providers.map((provider) => (
-                      <SelectItem key={provider.id} value={provider.id}>
-                        {provider.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
                 <div className="relative flex-1">
                   <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-fg-2" />
                   <Input
@@ -229,7 +188,7 @@ export function ModelsDevPickerDialog({
                     onChange={(e) => setSearch(e.target.value)}
                     placeholder={t(
                       "usage.modelsDevSearchPlaceholder",
-                      "搜索模型或供应商（全量搜索）...",
+                      "搜索模型（全量搜索）...",
                     )}
                     className="pl-8"
                   />
@@ -266,9 +225,6 @@ export function ModelsDevPickerDialog({
                           <div className="flex items-center gap-2">
                             <span className="truncate text-body font-medium">
                               {entry.modelName}
-                            </span>
-                            <span className="shrink-0 text-caption text-fg-2">
-                              {entry.providerName}
                             </span>
                             {entry.releaseDate && (
                               <span className="shrink-0 text-badge text-fg-3">

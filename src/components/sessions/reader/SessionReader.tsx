@@ -143,7 +143,6 @@ export interface SessionReaderProps {
   onBack: () => void;
   onLaunch: () => void;
   onCopy: (text: string, message: string) => void;
-  onOpenTerminalSettings: () => void;
   onReload: () => void;
   onDelete: () => void;
 }
@@ -165,7 +164,6 @@ export function SessionReader({
   onBack,
   onLaunch,
   onCopy,
-  onOpenTerminalSettings,
   onReload,
   onDelete,
 }: SessionReaderProps) {
@@ -752,7 +750,6 @@ export function SessionReader({
           onCopy={onCopy}
           onCopyMarkdown={copyMarkdown}
           onExportMarkdown={exportMarkdownFile}
-          onOpenTerminalSettings={onOpenTerminalSettings}
           onReload={onReload}
           onDelete={onDelete}
         />

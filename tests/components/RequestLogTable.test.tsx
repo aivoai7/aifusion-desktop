@@ -267,7 +267,7 @@ describe("RequestLogTable", () => {
     expect(onOpenDetail).toHaveBeenCalledWith("short");
   });
 
-  it("shows full provider names on hover and short app names in the app column", () => {
+  it("shows short app names in the app column and never the configuration name", () => {
     useRequestLogsMock.mockReturnValue({
       data: {
         data: [
@@ -304,9 +304,10 @@ describe("RequestLogTable", () => {
       <RequestLogTable range={{ preset: "today" }} refreshIntervalMs={0} />,
     );
 
+    // 界面不再出现连线配置的名字：数据里有，表格里不渲染
     expect(
-      screen.getByTitle("Kimi For Coding Plan Provider"),
-    ).toHaveTextContent("Kimi For Coding Plan Provider");
+      screen.queryByText("Kimi For Coding Plan Provider"),
+    ).not.toBeInTheDocument();
     // 应用列：短名 + 全名在悬停提示和读屏文字里
     const appCell = screen.getByTitle("Claude Code");
     expect(appCell).toHaveTextContent("Claude");
@@ -361,9 +362,10 @@ describe("RequestLogTable optional columns", () => {
     const headers = screen
       .getAllByRole("columnheader")
       .map((th) => th.textContent);
-    expect(headers).toHaveLength(10);
+    expect(headers).toHaveLength(9);
     expect(headers).not.toContain("usage.logColumns.hitRate");
-    expect(screen.getByText("usage.noData")).toHaveAttribute("colspan", "10");
+    expect(headers).not.toContain("usage.provider");
+    expect(screen.getByText("usage.noData")).toHaveAttribute("colspan", "9");
   });
 
   it("renders cache write, hit rate, total time and status code", () => {

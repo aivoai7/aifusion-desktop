@@ -31,9 +31,9 @@ interface PlatformModelDialogProps {
 /**
  * 平台模型选择弹窗。
  *
- * 这个构建不展示供应商卡片，模型只能在这里改：列表来自平台实时接口，
+ * 这个构建不展示渠道，模型只能在这里改：列表来自平台实时接口，
  * 后端按每个客户端自己的配置形状落库（角色环境变量 / TOML / 模型表），
- * 界面只看得到模型名和厂商，不出现网关地址或密钥。
+ * 界面只看得到模型名，不出现网关地址或密钥。
  */
 export function PlatformModelDialog({
   app,
@@ -120,6 +120,18 @@ function PlatformModelDialogBody({
     },
   });
 
+  // 平台已下架、但本机配置里还留着的模型：单独标记出来
+  const retiredIds = useMemo(() => {
+    const onPlatform = new Set(models.map((model) => model.id));
+    return new Set(
+      [
+        config?.defaultModel,
+        config?.lightModel,
+        ...(config?.models ?? []),
+      ].filter((id): id is string => !!id && !onPlatform.has(id)),
+    );
+  }, [config, models]);
+
   const options = useMemo(() => {
     const seen = new Set<string>();
     const list: PlatformModelOption[] = [];
@@ -129,32 +141,17 @@ function PlatformModelDialogBody({
       list.push(model);
     }
     // 本机配置里可能还留着平台已经下架的模型：保留成选项，用户能看到并换掉。
-    for (const id of [config?.defaultModel, config?.lightModel, ...config?.models ?? []]) {
-      if (id && !seen.has(id)) {
-        seen.add(id);
-        list.push({ id, provider: t("platformModel.retired") });
-      }
+    for (const id of retiredIds) {
+      if (seen.has(id)) continue;
+      seen.add(id);
+      list.push({ id, provider: "" });
     }
-    return list;
-  }, [config?.defaultModel, config?.lightModel, config?.models, models, t]);
-
-  const grouped = useMemo(() => {
-    const map = new Map<string, PlatformModelOption[]>();
-    for (const model of options) {
-      const bucket = map.get(model.provider) ?? [];
-      bucket.push(model);
-      map.set(model.provider, bucket);
-    }
-    return [...map.entries()];
-  }, [options]);
+    return list.sort((a, b) => a.id.localeCompare(b.id));
+  }, [config?.defaultModel, config?.lightModel, config?.models, models, retiredIds]);
 
   const normalized = query.trim().toLowerCase();
   const visible = normalized
-    ? options.filter(
-        (model) =>
-          model.id.toLowerCase().includes(normalized) ||
-          model.provider.toLowerCase().includes(normalized),
-      )
+    ? options.filter((model) => model.id.toLowerCase().includes(normalized))
     : options;
   const visibleIds = visible.map((model) => model.id);
   const selectedSet = new Set(draftModels);
@@ -308,66 +305,55 @@ function PlatformModelDialogBody({
               </p>
             ) : (
               <ul className="m-0 list-none p-0">
-                {grouped
-                  .filter(([, bucket]) =>
-                    bucket.some((model) => visible.includes(model)),
-                  )
-                  .map(([provider, bucket]) => (
-                    <li key={provider}>
-                      <div className="sticky top-0 z-[1] border-b border-border bg-subtle px-3.5 py-1.5 text-caption font-medium text-fg-2">
-                        {provider}
-                      </div>
-                      <ul className="m-0 list-none p-0">
-                        {bucket
-                          .filter((model) => visible.includes(model))
-                          .map((model) => (
-                            <li
-                              key={model.id}
-                              className="border-t border-border first:border-t-0"
-                            >
-                              <label className="flex cursor-pointer items-center gap-2.5 py-2 pe-3 ps-3.5 hover:bg-subtle">
-                                {config?.supportsList ? (
-                                  <input
-                                    type="checkbox"
-                                    className={CHECKBOX_CLASS}
-                                    aria-label={model.id}
-                                    checked={selectedSet.has(model.id)}
-                                    onChange={(event) =>
-                                      setDraftModels((prev) =>
-                                        event.target.checked
-                                          ? [...prev, model.id]
-                                          : prev.filter((id) => id !== model.id),
-                                      )
-                                    }
-                                  />
-                                ) : (
-                                  <input
-                                    type="radio"
-                                    className={CHECKBOX_CLASS}
-                                    name="platform-model-main"
-                                    aria-label={model.id}
-                                    checked={draftDefault === model.id}
-                                    onChange={() => setDraftDefault(model.id)}
-                                  />
-                                )}
-                                <span
-                                  className="min-w-0 flex-1 truncate text-body"
-                                  title={model.id}
-                                >
-                                  {model.id}
-                                </span>
-                                {config?.supportsLight &&
-                                  draftLight === model.id && (
-                                    <span className="shrink-0 text-caption text-fg-3">
-                                      {t("platformModel.lightBadge")}
-                                    </span>
-                                  )}
-                              </label>
-                            </li>
-                          ))}
-                      </ul>
-                    </li>
-                  ))}
+                {visible.map((model) => (
+                  <li
+                    key={model.id}
+                    className="border-t border-border first:border-t-0"
+                  >
+                    <label className="flex cursor-pointer items-center gap-2.5 py-2 pe-3 ps-3.5 hover:bg-subtle">
+                      {config?.supportsList ? (
+                        <input
+                          type="checkbox"
+                          className={CHECKBOX_CLASS}
+                          aria-label={model.id}
+                          checked={selectedSet.has(model.id)}
+                          onChange={(event) =>
+                            setDraftModels((prev) =>
+                              event.target.checked
+                                ? [...prev, model.id]
+                                : prev.filter((id) => id !== model.id),
+                            )
+                          }
+                        />
+                      ) : (
+                        <input
+                          type="radio"
+                          className={CHECKBOX_CLASS}
+                          name="platform-model-main"
+                          aria-label={model.id}
+                          checked={draftDefault === model.id}
+                          onChange={() => setDraftDefault(model.id)}
+                        />
+                      )}
+                      <span
+                        className="min-w-0 flex-1 truncate text-body"
+                        title={model.id}
+                      >
+                        {model.id}
+                      </span>
+                      {retiredIds.has(model.id) && (
+                        <span className="shrink-0 text-caption text-fg-3">
+                          {t("platformModel.retired")}
+                        </span>
+                      )}
+                      {config?.supportsLight && draftLight === model.id && (
+                        <span className="shrink-0 text-caption text-fg-3">
+                          {t("platformModel.lightBadge")}
+                        </span>
+                      )}
+                    </label>
+                  </li>
+                ))}
               </ul>
             )}
           </div>

@@ -19,7 +19,6 @@ import {
   Plus,
   Power,
   Search,
-  Settings,
 } from "lucide-react";
 import { AppGlyph } from "@/components/shell/AppGlyph";
 import { ProviderIcon } from "@/components/ProviderIcon";
@@ -767,19 +766,6 @@ export function TrayPanel() {
       >
         <div className="flex shrink-0 items-center px-3.5 pb-2 pt-3">
           <span className="text-title">AIFusion</span>
-          <button
-            type="button"
-            title={texts.settings}
-            aria-label={texts.settings}
-            onClick={() => action("nav:settings:general")}
-            className={cn(
-              "ms-auto flex h-7 w-7 items-center justify-center rounded-control text-fg-3 transition-colors duration-100",
-              FOCUS_RING,
-              ROW_HOVER,
-            )}
-          >
-            <Settings className="h-4 w-4" strokeWidth={1.75} />
-          </button>
         </div>
 
         <div className="shrink-0 px-2.5 pb-2">

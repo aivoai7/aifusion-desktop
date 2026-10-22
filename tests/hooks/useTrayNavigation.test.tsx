@@ -27,7 +27,7 @@ function pendingNavigation(initial: unknown) {
 }
 
 describe("parseTrayNavigation", () => {
-  it("keeps known apps, sections and intents", () => {
+  it("keeps known apps and intents", () => {
     expect(
       parseTrayNavigation({
         app: "claude",
@@ -40,15 +40,11 @@ describe("parseTrayNavigation", () => {
       intent: undefined,
       providerId: undefined,
     });
-    expect(parseTrayNavigation({ section: "routing" })).toEqual({
-      section: "routing",
-    });
   });
 
   it("drops unknown targets and incomplete needs-route requests", () => {
     expect(parseTrayNavigation(null)).toBeNull();
     expect(parseTrayNavigation({ app: "nope" })).toBeNull();
-    expect(parseTrayNavigation({ section: "nope" })).toBeNull();
     expect(parseTrayNavigation({ app: "codex", intent: "needsRoute" })).toEqual(
       { app: "codex" },
     );

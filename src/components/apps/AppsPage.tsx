@@ -46,9 +46,9 @@ import {
 } from "@/components/ui/select";
 import { PageMasthead } from "@/components/shell/PageMasthead";
 import { APP_DISPLAY_NAME, AppGlyph } from "@/components/shell/AppGlyph";
-import { ToolUpgradeConfirmDialog } from "@/components/settings/ToolUpgradeConfirmDialog";
-import { ToolInstallRow } from "@/components/settings/ToolInstallRow";
-import { ToolErrorMessage } from "@/components/settings/ToolErrorMessage";
+import { ToolUpgradeConfirmDialog } from "@/components/apps/ToolUpgradeConfirmDialog";
+import { ToolInstallRow } from "@/components/apps/ToolInstallRow";
+import { ToolErrorMessage } from "@/components/apps/ToolErrorMessage";
 import { ToolUninstallConfirmDialog } from "./ToolUninstallConfirmDialog";
 import { ManualUninstallDialog } from "./ManualUninstallDialog";
 import {

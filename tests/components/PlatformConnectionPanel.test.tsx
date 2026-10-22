@@ -166,7 +166,6 @@ function renderPanel(
         providers={Object.fromEntries(providers.map((p) => [p.id, p]))}
         currentProviderId={currentProviderId}
         visibleApps={DEFAULT_VISIBLE_APPS}
-        onOpenKeySettings={() => {}}
         onOpenPage={onOpenPage as never}
         onOpenApp={onOpenApp as never}
       />
@@ -285,7 +284,7 @@ describe("PlatformConnectionPanel", () => {
     expect(screen.queryByText(/已接入平台/)).not.toBeInTheDocument();
   });
 
-  it("shows the model, its vendor and the recent usage", async () => {
+  it("shows the model and the recent usage without naming vendors", async () => {
     resetState();
     renderPanel("claude", [platformProvider], "claude-official");
 
@@ -293,8 +292,9 @@ describe("PlatformConnectionPanel", () => {
     expect(
       (await screen.findAllByText("claude-sonnet-5")).length,
     ).toBeGreaterThan(0);
-    // 厂商来自平台模型列表：主模型行与右栏清单都会出现
-    expect((await screen.findAllByText("anthropic")).length).toBeGreaterThan(0);
+    // 白标：厂商名不再出现在主模型行与右栏清单里
+    expect(screen.queryByText("anthropic")).not.toBeInTheDocument();
+    expect(screen.queryByText("z.ai")).not.toBeInTheDocument();
     expect(screen.getByText("最近用量")).toBeInTheDocument();
     expect(
       screen.getByText("12 次请求 · $0.42 · 5,000 Token"),

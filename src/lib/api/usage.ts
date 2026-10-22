@@ -3,7 +3,6 @@ import type {
   UsageSummary,
   UsageSummaryByApp,
   DailyStats,
-  ProviderStats,
   ModelStats,
   RequestLog,
   LogFilters,
@@ -110,22 +109,6 @@ export const usageApi = {
     model?: string,
   ): Promise<string | null> => {
     return invoke("get_usage_first_date", {
-      appType,
-      providerName,
-      model,
-    });
-  },
-
-  getProviderStats: async (
-    startDate?: number,
-    endDate?: number,
-    appType?: string,
-    providerName?: string,
-    model?: string,
-  ): Promise<ProviderStats[]> => {
-    return invoke("get_provider_stats", {
-      startDate,
-      endDate,
       appType,
       providerName,
       model,
