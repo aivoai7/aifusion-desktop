@@ -1,6 +1,6 @@
 [package]
 name = "aifusion"
-version = "0.2.0"
+version = "0.2.1"
 description = "AIFusion desktop client for Claude Code, Codex & Gemini CLI"
 authors = ["AIFusion"]
 license = "MIT"

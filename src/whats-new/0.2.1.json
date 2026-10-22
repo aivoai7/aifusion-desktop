@@ -1,0 +1,33 @@
+{
+  "version": "0.2.1",
+  "items": [
+    {
+      "type": "improve",
+      "zh": "界面不再出现「供应商」字样与模型厂商名，统一称配置",
+      "zh-TW": "介面不再出現「供應商」字樣與模型廠商名，統一稱設定",
+      "en": "The interface no longer mentions providers or vendor names; everything is now called a configuration",
+      "ja": "画面から「プロバイダー」やベンダー名を排除し、すべて「設定」と表記するように変更"
+    },
+    {
+      "type": "improve",
+      "zh": "移除设置页：顶栏只留总览与用量统计，端口与路由用内置默认",
+      "zh-TW": "移除設定頁：頂欄僅留總覽與用量統計，連接埠與路由用內建預設",
+      "en": "The settings page is gone: the top bar keeps only Overview and Usage, on built-in defaults",
+      "ja": "設定ページを廃止：トップバーは概要と使用量のみ、ポートとルーティングは既定値を使用"
+    },
+    {
+      "type": "improve",
+      "zh": "客户端详情精简为四行：主模型、连接方式、最近用量、应用更新",
+      "zh-TW": "客戶端詳情精簡為四列：主模型、連線方式、最近用量、應用程式更新",
+      "en": "Client details now show four rows only: main model, connection mode, recent usage and app updates",
+      "ja": "クライアント詳細は4行に簡素化：メインモデル、接続方式、最近の使用量、アプリ更新"
+    },
+    {
+      "type": "improve",
+      "zh": "登录与重新登录改为总览、详情页右上角的直接按钮",
+      "zh-TW": "登入與重新登入改為總覽、詳情頁右上角的直接按鈕",
+      "en": "Sign in and re-sign-in are now direct buttons in the corner of the overview and each client page",
+      "ja": "ログインと再ログインを、概要と各クライアント画面の右上にある直接ボタンに変更"
+    }
+  ]
+}
