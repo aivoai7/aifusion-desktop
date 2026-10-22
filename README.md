@@ -23,7 +23,7 @@ AIFusion 是 AIFusion 平台的桌面客户端，支持 Windows 与 Linux。它�
 - 平台地址：<https://op.aifusion.sbs>
 - 安装包不包含任何 API Key；首次使用时通过网页登录取回你自己的 Key
 - 不需要手改 JSON / TOML / YAML，客户端配置由应用写入
-- 当前版本 **0.2.1**，发布 Windows x64 与 Linux x86_64 安装包
+- 当前版本 **0.2.1**，Windows 与 Linux 各出 x64/x86_64 与 ARM64 安装包
 
 支持的客户端：
 
@@ -66,18 +66,21 @@ Claude Code、Claude Desktop、Codex、Gemini CLI、Grok Build 可以按客户�
 
 系统要求：
 
-- **Windows**：Windows 10 / 11 x64，需要 Microsoft Edge WebView2 Runtime（Windows 11 自带）
-- **Linux**：x86_64，GNOME/KDE 桌面 + GTK3 / WebKit2GTK 4.1（桌面发行版通常自带）
+- **Windows**：Windows 10 / 11，x64 与 ARM64 都有包，需要 Microsoft Edge WebView2 Runtime（Windows 11 自带）
+- **Linux**：x86_64 与 ARM64，GNOME/KDE 桌面 + GTK3 / WebKit2GTK 4.1（桌面发行版通常自带）
 
 从 [Releases](https://github.com/aivoai7/aifusion-desktop/releases/latest) 下载：
 
 | 文件 | 用途 |
 | --- | --- |
-| `AIFusion_0.2.1_x64-setup.exe` | NSIS 安装包，Windows 推荐绝大多数用户使用 |
+| `AIFusion_0.2.1_x64-setup.exe` | NSIS 安装包，Windows x64 推荐绝大多数用户使用 |
 | `AIFusion_0.2.1_x64_en-US.msi` | MSI 安装包，适合企业批量分发 |
-| `AIFusion-v0.2.1-Linux-x86_64.AppImage` | Linux 通用包，chmod +x 后直接运行，跨发行版首选 |
+| `AIFusion-v0.2.1-Windows-arm64.msi` | Windows ARM64 MSI |
+| `AIFusion-v0.2.1-Windows-arm64-Portable.zip` | Windows ARM64 免安装版，解压即用 |
+| `AIFusion-v0.2.1-Linux-x86_64.AppImage` | Linux x86_64 通用包，chmod +x 后直接运行，跨发行版首选 |
 | `AIFusion-v0.2.1-Linux-x86_64.deb` | Debian / Ubuntu |
 | `AIFusion-v0.2.1-Linux-x86_64.rpm` | Fedora / openSUSE / RHEL 系 |
+| `AIFusion-v0.2.1-Linux-arm64.{AppImage,deb,rpm}` | 以上三种的 ARM64 版本，命名同 x86_64 |
 
 > 如果你安装过 4.0.15 或更早的版本，请先卸载旧版再安装 0.2.1。版本号回退时，Windows 安装器可能拒绝覆盖升级。
 
