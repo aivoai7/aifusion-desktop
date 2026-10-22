@@ -1,6 +1,6 @@
 [package]
 name = "aifusion"
-version = "4.0.15"
+version = "0.2.0"
 description = "AIFusion desktop client for Claude Code, Codex & Gemini CLI"
 authors = ["AIFusion"]
 license = "MIT"
@@ -11,7 +11,9 @@ rust-version = "1.85.0"
 
 [lib]
 name = "aifusion_lib"
-crate-type = ["staticlib", "cdylib", "rlib"]
+# 桌面版只需要 rlib；不产出 cdylib，避免 Tauri 把 aifusion_lib.dll 当作
+# 附带二进制塞进 MSI（per-user WiX 模板会因此触发 ICE38 而链接失败）。
+crate-type = ["staticlib", "rlib"]
 doctest = false
 
 [features]

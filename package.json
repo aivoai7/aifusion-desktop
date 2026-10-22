@@ -1,6 +1,6 @@
 {
   "name": "aifusion",
-  "version": "4.0.15",
+  "version": "0.2.0",
   "description": "AIFusion desktop client for Claude Code, Codex & Gemini CLI",
   "type": "module",
   "scripts": {

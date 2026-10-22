@@ -45,7 +45,7 @@ vi.mock("@/hooks/usePlatformWebLogin", () => ({
 }));
 
 vi.mock("@tauri-apps/api/app", () => ({
-  getVersion: async () => "4.0.15",
+  getVersion: async () => "0.2.0",
 }));
 
 vi.mock("@/lib/whatsNew", () => ({
@@ -100,7 +100,7 @@ describe("FirstRunNoticeDialog", () => {
         expect.objectContaining({
           firstRunNoticeConfirmed: true,
           newLayoutNoticeConfirmed: true,
-          whatsNewSeenVersion: "4.0.15",
+          whatsNewSeenVersion: "0.2.0",
         }),
       ),
     );
