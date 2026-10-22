@@ -678,7 +678,7 @@
         "synologyHint": "Synology の「パッケージセンター」で WebDAV Server パッケージをインストール・有効化してください。",
         "custom": "カスタム"
       },
-      "remoteRootDefault": "デフォルト: cc-switch-sync",
+      "remoteRootDefault": "デフォルト: aifusion-sync",
       "profileDefault": "デフォルト: default",
       "saveAndTestSuccess": "設定を保存しました。接続正常です",
       "saveAndTestFailed": "設定を保存しましたが、接続テストに失敗しました：{{error}}",
@@ -743,7 +743,7 @@
       "region": "リージョン",
       "regionPlaceholder": "例: us-east-1",
       "bucket": "バケット",
-      "bucketPlaceholder": "例: my-cc-switch-bucket",
+      "bucketPlaceholder": "例: my-aifusion-bucket",
       "accessKeyId": "Access Key ID",
       "accessKeyIdPlaceholder": "例: AKIA...",
       "secretAccessKey": "Secret Access Key",
@@ -752,7 +752,7 @@
       "endpointHint": "多くの S3 互換サービスでは必須です",
       "endpointPlaceholder": "例: https://s3-compatible.example.com",
       "remoteRoot": "リモートルートディレクトリ",
-      "remoteRootDefault": "デフォルト: cc-switch-sync",
+      "remoteRootDefault": "デフォルト: aifusion-sync",
       "profile": "同期プロファイル名",
       "profileDefault": "デフォルト: default",
       "autoSync": "自動同期",
@@ -941,6 +941,7 @@
     "updateBadge": "更新あり",
     "updateFailed": "更新のインストールに失敗しました。ダウンロードページを開こうとしました。",
     "checkUpdateFailed": "更新の確認に失敗しました。時間をおいて再試行してください。",
+    "checkUpdateOpened": "AIFusion プラットフォームを開きました。最新版はそこでダウンロードしてください。",
     "openReleaseNotesFailed": "リリースノートの表示に失敗しました",
     "releaseNotes": "リリースノート",
     "viewReleaseNotes": "このバージョンのリリースノートを見る",
@@ -2308,7 +2309,6 @@
     "downloading": "更新をダウンロード中…",
     "upgradeNow": "アプリを更新",
     "retry": "更新を再試行",
-    "openReleases": "リリースページを開く",
     "openConfigDir": "設定フォルダを開く",
     "quit": "終了"
   },
@@ -3665,7 +3665,10 @@
       "stack": "集約"
     },
     "needsAttention": "対応が必要",
-    "back": "戻る"
+    "back": "戻る",
+    "overview": "概要",
+    "mcp": "MCP",
+    "skills": "スキル"
   },
   "appsPage": {
     "showInHome": "{{name}} をホームに表示",
@@ -4260,12 +4263,6 @@
     "updateAllCount": "すべて更新（{{count}} 件）",
     "updatingProgress": "更新中 {{done}}/{{total}}…"
   },
-  "newLayoutNotice": {
-    "title": "画面が新しくなりました",
-    "body": "このバージョンでは画面を一新し、いくつかの機能の場所が変わりました：\n• モードは各アプリのページ上部に移動しました\n• 使用量とアカウントはサイドバーにあります\n変更点の詳細はリリースノートをご覧ください。",
-    "viewReleaseNotes": "リリースノートを見る",
-    "confirm": "OK"
-  },
   "whatsNew": {
     "updatedTo": "v{{version}} に更新しました",
     "recentTitle": "最近の更新",
@@ -4275,9 +4272,7 @@
       "fix": "修正",
       "improve": "改善"
     },
-    "versionDetails": "詳細",
     "showEarlier": "さらに以前のバージョン {{count}} 件",
-    "viewFull": "すべての変更内容を見る",
     "confirm": "OK"
   }
 }

@@ -10,9 +10,8 @@ import {
   Loader2,
   RefreshCw,
 } from "lucide-react";
-import { AppPageHeader } from "@/components/shell/AppPageHeader";
+import { PageMasthead } from "@/components/shell/PageMasthead";
 import { AppGlyph, APP_DISPLAY_NAME } from "@/components/shell/AppGlyph";
-import { HelpTip } from "@/components/ui/help-tip";
 import { PageTabs } from "@/components/ui/page-tabs";
 import { Button } from "@/components/ui/button";
 import { HoverTip } from "@/components/ui/hover-tip";
@@ -529,7 +528,7 @@ export function UsageDashboard({
     );
 
   const filterRow = (
-    <div className="flex min-h-12 shrink-0 flex-wrap items-center gap-1.5 px-6 py-2">
+    <div className="mx-auto flex min-h-12 w-full max-w-[1160px] shrink-0 flex-wrap items-center gap-1.5 px-8 py-2.5">
       <div
         ref={appFilterIndicator.ref}
         role="group"
@@ -808,9 +807,11 @@ export function UsageDashboard({
       // 空库里只有定价可配：不画全是 0 的概览和趋势，直接给页签
       <div
         id="main-content"
-        className="flex min-h-0 flex-1 flex-col gap-3.5 overflow-y-auto scroll-stable px-6 pb-6 pt-1"
+        className="min-h-0 flex-1 overflow-y-auto scroll-stable"
       >
-        {tabsSection}
+        <div className="mx-auto flex w-full max-w-[1160px] flex-col gap-3.5 px-8 pb-10 pt-1">
+          {tabsSection}
+        </div>
       </div>
     ) : isEmpty ? (
       <div className="flex min-h-0 flex-1 flex-col items-center overflow-y-auto scroll-stable px-6 pb-6">
@@ -853,48 +854,48 @@ export function UsageDashboard({
     ) : (
       <div
         id="main-content"
-        className="flex min-h-0 flex-1 flex-col gap-3.5 overflow-y-auto scroll-stable px-6 pb-6 pt-1"
+        className="min-h-0 flex-1 overflow-y-auto scroll-stable"
       >
-        <UsageHero
-          range={range}
-          appType={scopedAppType}
-          providerName={providerName}
-          model={model}
-          refreshIntervalMs={0}
-          compact={compact}
-        />
-
-        {/* 「全部」看长期分布用热力图；24 小时到 30 天这类短范围用趋势图 */}
-        {range.preset === "all" ? (
-          <UsageHeatmap
-            appType={appType}
-            providerName={providerName}
-            model={model}
-            refreshIntervalMs={0}
-          />
-        ) : (
-          <UsageTrendChart
+        <div className="mx-auto flex w-full max-w-[1160px] flex-col gap-3.5 px-8 pb-10 pt-1">
+          <UsageHero
             range={range}
-            rangeLabel={rangeLabel}
-            appType={appType}
+            appType={scopedAppType}
             providerName={providerName}
             model={model}
             refreshIntervalMs={0}
+            compact={compact}
           />
-        )}
 
-        {tabsSection}
+          {/* 「全部」看长期分布用热力图；24 小时到 30 天这类短范围用趋势图 */}
+          {range.preset === "all" ? (
+            <UsageHeatmap
+              appType={appType}
+              providerName={providerName}
+              model={model}
+              refreshIntervalMs={0}
+            />
+          ) : (
+            <UsageTrendChart
+              range={range}
+              rangeLabel={rangeLabel}
+              appType={appType}
+              providerName={providerName}
+              model={model}
+              refreshIntervalMs={0}
+            />
+          )}
+
+          {tabsSection}
+        </div>
       </div>
     );
 
   return (
     <div ref={containerRef} className="flex min-h-0 min-w-0 flex-1 flex-col">
-      <AppPageHeader
-        icon={<ChartColumn className="h-5 w-5" strokeWidth={1.5} />}
+      <PageMasthead
+        kicker="Usage"
         title={t("nav.usage")}
-        titleExtra={
-          <HelpTip title={t("nav.usage")}>{t("usage.subtitle")}</HelpTip>
-        }
+        subtitle={t("usage.subtitle")}
         actions={headerActions}
       />
       {filterRow}

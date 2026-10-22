@@ -29,7 +29,7 @@ interface UpdateContextValue {
 const UpdateContext = createContext<UpdateContextValue | undefined>(undefined);
 
 export function UpdateProvider({ children }: { children: React.ReactNode }) {
-  const DISMISSED_VERSION_KEY = "ccswitch:update:dismissedVersion";
+  const DISMISSED_VERSION_KEY = "aifusion:update:dismissedVersion";
   const LEGACY_DISMISSED_KEY = "dismissedUpdateVersion"; // 兼容旧键
 
   const [hasUpdate, setHasUpdate] = useState(false);
@@ -116,16 +116,8 @@ export function UpdateProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem(LEGACY_DISMISSED_KEY);
   }, []);
 
-  // 应用启动时自动检查更新
-  useEffect(() => {
-    // 延迟1秒后检查，避免影响启动体验
-    const timer = setTimeout(() => {
-      checkUpdate().catch(console.error);
-    }, 1000);
-
-    return () => clearTimeout(timer);
-  }, [checkUpdate]);
-
+  // 桌面版由 AIFusion 平台分发，安装包里没有配置 updater endpoint，
+  // 因此不在启动时轮询 Tauri updater；更新入口见设置 → 关于。
   const value: UpdateContextValue = {
     hasUpdate,
     updateInfo,

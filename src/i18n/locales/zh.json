@@ -126,17 +126,11 @@
     "updatesCheck": "检查更新",
     "updatesRunAll": "全部升级",
     "manageKey": "管理连接",
-    "toolsLabel": "更多功能",
     "appConnected": "已接入平台",
     "appLocal": "使用本机配置",
     "modeLabel": "连接方式",
     "modeDirectHint": "客户端直接请求平台网关",
     "modeConvertHint": "经本机转换服务转成兼容请求",
-    "targetLabel": "配置落点",
-    "targetHint": "保存后立即写入",
-    "targetLoading": "读取中…",
-    "openFolder": "打开目录",
-    "openFolderFailed": "打开目录失败",
     "usageLabel": "最近用量",
     "usageNone": "近 7 天暂无用量记录",
     "usageLine": "{{requests}} 次请求 · ${{cost}} · {{tokens}} Token",
@@ -769,7 +763,7 @@
         "synologyHint": "请先在群晖「套件中心」安装并启用 WebDAV Server 套件。",
         "custom": "自定义"
       },
-      "remoteRootDefault": "默认: cc-switch-sync",
+      "remoteRootDefault": "默认: aifusion-sync",
       "profileDefault": "默认: default",
       "saveAndTestSuccess": "配置已保存，连接正常",
       "saveAndTestFailed": "配置已保存，但连接测试失败：{{error}}",
@@ -834,7 +828,7 @@
       "region": "区域 (Region)",
       "regionPlaceholder": "例如 us-east-1",
       "bucket": "存储桶 (Bucket)",
-      "bucketPlaceholder": "例如 my-cc-switch-bucket",
+      "bucketPlaceholder": "例如 my-aifusion-bucket",
       "accessKeyId": "Access Key ID",
       "accessKeyIdPlaceholder": "例如 AKIA...",
       "secretAccessKey": "Secret Access Key",
@@ -843,7 +837,7 @@
       "endpointHint": "多数 S3 兼容服务需要填写",
       "endpointPlaceholder": "例如 https://s3-compatible.example.com",
       "remoteRoot": "远程根目录",
-      "remoteRootDefault": "默认: cc-switch-sync",
+      "remoteRootDefault": "默认: aifusion-sync",
       "profile": "同步配置名",
       "profileDefault": "默认: default",
       "autoSync": "自动同步",
@@ -1032,6 +1026,7 @@
     "updateBadge": "有更新可用",
     "updateFailed": "更新安装失败，已尝试打开下载页面。",
     "checkUpdateFailed": "检查更新失败，请稍后重试。",
+    "checkUpdateOpened": "已打开 AIFusion 平台，请从平台下载最新版本。",
     "openReleaseNotesFailed": "打开更新日志失败",
     "releaseNotes": "更新日志",
     "viewReleaseNotes": "查看该版本更新日志",
@@ -2399,7 +2394,6 @@
     "downloading": "正在下载更新…",
     "upgradeNow": "升级应用",
     "retry": "重试升级",
-    "openReleases": "打开发布页",
     "openConfigDir": "打开配置目录",
     "quit": "退出"
   },
@@ -3739,6 +3733,7 @@
     "collapseSidebar": "收起侧栏",
     "appsGroup": "应用",
     "home": "首页总览",
+    "overview": "总览",
     "today": "今日 {{value}}",
     "todayRequests": "{{value}} 次",
     "todayHitRate": "命中 {{value}}",
@@ -3760,7 +3755,9 @@
     "back": "返回",
     "walletBalance": "钱包余额",
     "walletUnavailable": "未连接",
-    "walletHint": "用本机保存的平台密钥实时查询美元钱包余额，每分钟刷新一次"
+    "walletHint": "用本机保存的平台密钥实时查询美元钱包余额，每分钟刷新一次",
+    "mcp": "MCP",
+    "skills": "Skills"
   },
   "appsPage": {
     "showInHome": "在首页显示 {{name}}",
@@ -4356,12 +4353,6 @@
     "updateAllCount": "全部更新（{{count}} 个）",
     "updatingProgress": "正在更新 {{done}}/{{total}}…"
   },
-  "newLayoutNotice": {
-    "title": "界面改版了",
-    "body": "AIFusion 这一版重新设计了界面，常用功能的位置有变化：\n• 模式移到了每个应用页的顶部\n• 用量统计和授权中心移到了左侧边栏\n想了解全部变化，可以看看这一版的更新说明。",
-    "viewReleaseNotes": "查看更新说明",
-    "confirm": "我知道了"
-  },
   "whatsNew": {
     "updatedTo": "已更新到 v{{version}}",
     "recentTitle": "近期更新",
@@ -4371,9 +4362,7 @@
       "fix": "修复",
       "improve": "改进"
     },
-    "versionDetails": "详情",
     "showEarlier": "还有 {{count}} 个更早的版本",
-    "viewFull": "查看完整更新内容",
     "confirm": "知道了"
   }
 }

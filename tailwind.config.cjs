@@ -1,10 +1,9 @@
 /**
- * AIFusion · Ink & Grid —— Tailwind 主题
+ * AIFusion · Paper & Signal —— Tailwind 主题
  *
  * 全部颜色都指到 src/index.css 的 CSS 变量上，换肤只改变量、不改这里。
  * 命名沿用既有工具类（bg-surface / text-fg-1 / bg-action / rounded-panel …），
- * 这样 166 个组件能整体换肤；新加的 hairline / azure / heat 是给重做中的
- * 页面用的原生名。
+ * 这样所有页面能一次换到新视觉；hairline / heat / agent 等仍是原生名。
  *
  * 注意：纯 var() 颜色不支持 `/50` 这类透明度修饰符，需要透明度时改用
  * color-mix 或 index.css 里预先算好的 *-soft 变量。
@@ -70,7 +69,7 @@ module.exports = {
           3: "var(--text-3)",
         },
 
-        // azure 操作色族（替换上游的橙）
+        // 操作色族：底墨字白；action-text 才是信号蓝
         action: {
           DEFAULT: "var(--action-bg)",
           fg: "var(--action-fg)",
@@ -79,16 +78,17 @@ module.exports = {
           soft: "var(--action-soft)",
         },
         azure: {
-          300: "#8fb4ff",
-          400: "#7aa8ff",
-          500: "#4c8dff",
-          600: "#2f6ae0",
-          700: "#2456bd",
-          800: "#1b4093",
+          300: "#9bb7ff",
+          400: "#7fa4ff",
+          500: "#5d89ff",
+          600: "#1b5cff",
+          700: "#164ddb",
+          800: "#123aa5",
         },
 
         inverse: {
           DEFAULT: "var(--inverse-bg)",
+          bg: "var(--inverse-bg)",
           fg: "var(--inverse-fg)",
           hover: "var(--inverse-hover)",
         },
@@ -167,22 +167,22 @@ module.exports = {
 
         // 少数写死色值的第三方对齐点（recharts / 品牌字块）
         blue: {
-          400: "#7aa8ff",
-          500: "#4c8dff",
-          600: "#2f6ae0",
+          400: "#7fa4ff",
+          500: "#5d89ff",
+          600: "#1b5cff",
         },
         gray: {
-          50: "#f4f6fb",
-          100: "#eef2f9",
-          200: "#e2eaf8",
-          300: "#cfd8e8",
-          400: "#9aa6bf",
-          500: "#66738f",
-          600: "#4c5871",
-          700: "#2b3852",
-          800: "#1a2437",
-          900: "#101725",
-          950: "#0a0e17",
+          50: "#f4f3ef",
+          100: "#ecebe5",
+          200: "#e6e4dc",
+          300: "#c9c6bd",
+          400: "#a6a8b0",
+          500: "#6f727b",
+          600: "#5a5e68",
+          700: "#33373f",
+          800: "#1c1f26",
+          900: "#111318",
+          950: "#0b0c0f",
         },
         green: {
           100: "var(--success-soft)",
@@ -206,9 +206,9 @@ module.exports = {
         "v7-sm": "var(--shadow-sm)",
         "v7-md": "var(--shadow-md)",
         "v7-lg": "var(--shadow-lg)",
-        // Ink & Grid：卡片只在内高光 + 落影，弹层多一层发丝外描边
+        // 纸面：卡片只在内高光 + 落影，弹层多一层发丝外描边
         "af-pop": "var(--shadow-lg), 0 0 0 1px var(--hairline)",
-        "af-rail": "inset 2px 0 0 0 var(--action-bg)",
+        "af-rail": "inset 2px 0 0 0 var(--action-text)",
       },
 
       // 只写 border / divide 不带颜色时用主题边框色；不设的话 Tailwind 默认浅灰，深色下成了白线
@@ -217,14 +217,14 @@ module.exports = {
       },
 
       borderRadius: {
-        sm: "4px",
-        md: "6px",
-        lg: "8px",
-        xl: "10px",
-        // 控件 6px、卡片 10px、弹层 14px、对话框 14px
-        control: "6px",
-        panel: "10px",
-        dialog: "14px",
+        sm: "3px",
+        md: "4px",
+        lg: "6px",
+        xl: "8px",
+        // 控件 4px、卡片 8px、弹层 8px、对话框 12px
+        control: "4px",
+        panel: "8px",
+        dialog: "12px",
       },
 
       fontSize: {
@@ -233,10 +233,11 @@ module.exports = {
         caption: ["12px", { lineHeight: "18px" }],
         body: ["13px", { lineHeight: "20px" }],
         strong: ["13.5px", { lineHeight: "20px", fontWeight: "550" }],
-        section: ["13px", { lineHeight: "20px", fontWeight: "590", letterSpacing: "-0.01em" }],
-        title: ["15px", { lineHeight: "22px", fontWeight: "600", letterSpacing: "-0.015em" }],
-        page: ["19px", { lineHeight: "26px", fontWeight: "600", letterSpacing: "-0.022em" }],
-        metric: ["26px", { lineHeight: "32px", fontWeight: "600", letterSpacing: "-0.03em" }],
+        section: ["14px", { lineHeight: "20px", fontWeight: "600", letterSpacing: "-0.012em" }],
+        title: ["16px", { lineHeight: "23px", fontWeight: "600", letterSpacing: "-0.018em" }],
+        page: ["22px", { lineHeight: "28px", fontWeight: "600", letterSpacing: "-0.032em" }],
+        display: ["28px", { lineHeight: "34px", fontWeight: "600", letterSpacing: "-0.04em" }],
+        metric: ["30px", { lineHeight: "36px", fontWeight: "550", letterSpacing: "-0.04em" }],
       },
 
       fontFamily: {

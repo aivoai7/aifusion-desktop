@@ -4,10 +4,8 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 /**
- * 状态徽章（Ink & Grid）：小方块胶囊，18px 高、圆角 5、发丝描边。
+ * 状态徽章（Paper & Signal）：18px 高、近方角、发丝描边。
  * 数字与英文走等宽（调用处加 af-num），中文标签保持界面字。
- * 上游用的是圆形大胶囊 + 透明度悬停；这里改成贴合网格的方角，颜色由调用处的
- * tone 类（text-success / bg-success-soft …）决定，变体只兜底四种语义。
  */
 const badgeVariants = cva(
   "inline-flex h-[18px] items-center gap-1 rounded-[5px] border px-1.5 text-badge font-medium leading-none whitespace-nowrap transition-colors focus:outline-none",
@@ -35,18 +33,17 @@ function Badge({ className, variant, ...props }: BadgeProps) {
 }
 
 /**
- * 语义胶囊（Ink & Grid）：20px 高、圆角 99、同色浅底 + 同色文字，无描边。
- * 用于「已连接 / 直连 / 可升级 / 未配置」这类状态标记，颜色只由 tone 决定，
- * 调用处不要再叠加底色类。底色走 index.css 预算好的 *-soft 变量，
- * 不用 `/NN` 透明度修饰符（纯 var() 颜色不支持）。
+ * 语义标记（Paper & Signal）：18px 高、3px 方角，浅底 + 同色文字。
+ * 直连是常态，保持中性；只有路由 / 聚合 / 警告才借用色彩。
+ * 底色走 index.css 预算好的 *-soft 变量，不用 `/NN` 修饰符。
  */
 const chipVariants = cva(
-  "inline-flex h-5 shrink-0 items-center gap-1.5 rounded-full border border-transparent px-2 text-badge font-medium leading-none whitespace-nowrap",
+  "inline-flex h-[18px] shrink-0 items-center gap-1.5 rounded-[3px] border border-transparent px-1.5 text-badge font-medium leading-none whitespace-nowrap",
   {
     variants: {
       tone: {
         ok: "bg-success-soft text-success-text",
-        info: "bg-direct-soft text-direct-text",
+        info: "border-hairline bg-surface text-fg-2",
         route: "bg-route-soft text-route-text",
         stack: "bg-stack-soft text-stack-text",
         warn: "bg-warning-soft text-warning-text",

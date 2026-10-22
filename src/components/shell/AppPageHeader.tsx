@@ -2,20 +2,8 @@ import { createContext, useContext, type ReactNode } from "react";
 import { DRAG_REGION_ATTR, DRAG_REGION_STYLE } from "@/lib/platform";
 import { cn } from "@/lib/utils";
 
-/** 由外壳提供：Linux 自绘窗口按钮要接在每一屏页头的最右端。 */
+/** 由外壳提供：整页面板盖住顶栏时，窗口按钮要接在面板页头的最右端。 */
 export const WindowControlsContext = createContext<ReactNode>(null);
-
-/**
- * 由外壳提供的常驻页头部件（去掉侧栏之后，页头就是唯一的全局外壳）：
- * · brand 坐在最左端，点它回首页总览——首页是唯一的入口，页头必须自带回程；
- * · actions 排在页面自己的操作之后、窗口按钮之前，余额与设置齿轮在任何一页都在。
- */
-export interface HeaderChrome {
-  brand?: ReactNode;
-  actions?: ReactNode;
-}
-
-export const HeaderChromeContext = createContext<HeaderChrome>({});
 
 const NO_DRAG = { WebkitAppRegion: "no-drag" } as React.CSSProperties;
 
@@ -24,7 +12,7 @@ interface AppPageHeaderProps {
   leading?: ReactNode;
   icon?: ReactNode;
   title: ReactNode;
-  /** 应用页用 15px 的名字 + 13px 的页面名；全局页和设置用 19px 的页面标题 */
+  /** 应用页用 16px 的名字 + 13px 的页面名；全局页和设置用 22px 的页面标题 */
   variant?: "app" | "page";
   /** 应用页的页面名（如「供应商」），灰字跟在应用名后面 */
   subtitle?: ReactNode;
@@ -35,16 +23,16 @@ interface AppPageHeaderProps {
   /** 标题可能很长（如会话阅读页的会话名）：标题占满剩余宽度，放不下就截断 */
   truncateTitle?: boolean;
   /**
-   * 覆盖整块内容区的二级面板（全屏编辑器、抽屉）：不挂外壳的品牌与常驻操作。
-   * 它们自带返回按钮，再挂一份「回首页」只会多出一个回程和两条重复的余额、齿轮。
+   * 覆盖整块内容区的二级面板（全屏编辑器、抽屉）：额外挂窗口按钮。
+   * 常驻品牌、余额、设置与一级导航都在顶栏，这里不再重复。
    */
   bare?: boolean;
   className?: string;
 }
 
 /**
- * 内容区页头（Ink & Grid）：高 48，整条可拖动窗口，底部一条发丝线和内容区分层。
- * 标题靠字号与负字距分层，不加分隔线、不加底色。
+ * 内容区页头（Paper & Signal）：整条可拖动窗口，底部一条标尺线与内容分层。
+ * 顶栏是唯一全局外壳；这里只回答「当前在哪一页」，并承载页面自己的操作。
  */
 export function AppPageHeader({
   leading,
@@ -59,15 +47,12 @@ export function AppPageHeader({
   className,
 }: AppPageHeaderProps) {
   const windowControls = useContext(WindowControlsContext);
-  const { brand: shellBrand, actions: shellActions } =
-    useContext(HeaderChromeContext);
-  const brand = bare ? null : shellBrand;
-  const globalActions = bare ? null : shellActions;
 
   return (
     <header
       className={cn(
-        "hairline-b flex h-12 shrink-0 items-center gap-4 pe-4 ps-5",
+        "hairline-b flex shrink-0 items-center gap-4 pe-4 ps-6",
+        variant === "page" ? "h-[60px]" : "h-12",
         className,
       )}
       {...DRAG_REGION_ATTR}
@@ -81,26 +66,15 @@ export function AppPageHeader({
           truncateTitle ? "flex-1" : "shrink-0",
         )}
       >
-        {brand && (
-          <span className="flex shrink-0 items-center" style={NO_DRAG}>
-            {brand}
-          </span>
-        )}
-        {brand && (
-          <span
-            aria-hidden="true"
-            className="h-4 w-px shrink-0 self-center bg-hairline"
-          />
-        )}
         {leading && (
-          <span className="-ms-1.5 flex shrink-0 items-center" style={NO_DRAG}>
+          <span className="-ms-2 flex shrink-0 items-center" style={NO_DRAG}>
             {leading}
           </span>
         )}
         {icon && (
           <span
             aria-hidden="true"
-            className="pointer-events-none flex h-[22px] w-[22px] shrink-0 items-center justify-center text-fg-1"
+            className="pointer-events-none flex h-7 w-7 shrink-0 items-center justify-center rounded-[4px] border border-hairline bg-surface text-fg-1"
           >
             {icon}
           </span>
@@ -118,7 +92,7 @@ export function AppPageHeader({
         {(subtitle || titleExtra) && (
           <div className="flex items-center gap-1.5" style={NO_DRAG}>
             {subtitle && (
-              <span className="whitespace-nowrap text-body text-fg-3">
+              <span className="whitespace-nowrap text-caption text-fg-3">
                 {subtitle}
               </span>
             )}
@@ -135,12 +109,7 @@ export function AppPageHeader({
           {actions}
         </div>
       )}
-      {globalActions && (
-        <div className="flex shrink-0 items-center gap-2" style={NO_DRAG}>
-          {globalActions}
-        </div>
-      )}
-      {windowControls && (
+      {bare && windowControls && (
         <div className="flex shrink-0 items-center gap-0.5" style={NO_DRAG}>
           {windowControls}
         </div>

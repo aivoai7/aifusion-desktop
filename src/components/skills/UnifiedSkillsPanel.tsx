@@ -6,7 +6,6 @@ import {
   ArrowUpCircle,
   Check,
   ChevronDown,
-  Library,
   Loader2,
   MoreHorizontal,
   Plus,
@@ -26,7 +25,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { HoverTip } from "@/components/ui/hover-tip";
 import { Checkbox } from "@/components/ui/checkbox";
-import { AppPageHeader } from "@/components/shell/AppPageHeader";
+import { PageMasthead } from "@/components/shell/PageMasthead";
 import { AppGlyph, APP_DISPLAY_NAME } from "@/components/shell/AppGlyph";
 import {
   type ImportSkillSelection,
@@ -900,8 +899,8 @@ const UnifiedSkillsPanel: React.FC<UnifiedSkillsPanelProps> = ({
   };
 
   const header = (
-    <AppPageHeader
-      icon={<Library className="h-5 w-5" strokeWidth={1.5} />}
+    <PageMasthead
+      kicker="Tools / Skills"
       title="Skills"
       titleExtra={
         <>
@@ -1443,7 +1442,8 @@ const UnifiedSkillsPanel: React.FC<UnifiedSkillsPanelProps> = ({
     <>
       {header}
       <div id="main-content" className="flex min-h-0 flex-1 flex-col">
-        <div className="shrink-0 px-6 pt-1">{viewTabs}</div>
+        <div className="mx-auto flex min-h-0 w-full max-w-[1160px] flex-1 flex-col px-8">
+        <div className="shrink-0 pt-1">{viewTabs}</div>
         {/* 两段打开过就一直挂着，切回来不重新加载；不在看的那段只是隐藏 */}
         {discoverMounted && (
           <div
@@ -1557,7 +1557,7 @@ const UnifiedSkillsPanel: React.FC<UnifiedSkillsPanelProps> = ({
 
           <NoticeSlot
             className={cn(
-              (showUnmanagedBanner || showUpdateRepoFailBanner) && "px-6 pt-3",
+              (showUnmanagedBanner || showUpdateRepoFailBanner) && "pt-3",
             )}
           >
             {showUpdateRepoFailBanner && (
@@ -1615,9 +1615,10 @@ const UnifiedSkillsPanel: React.FC<UnifiedSkillsPanelProps> = ({
             )}
           </NoticeSlot>
 
-          <div className="flex min-h-0 flex-1 flex-col px-6 pb-5 pt-3">
+          <div className="flex min-h-0 flex-1 flex-col pb-5 pt-3">
             {renderInstalledBody()}
           </div>
+        </div>
         </div>
       </div>
 

@@ -1,28 +1,30 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
-import { homeDir } from "@tauri-apps/api/path";
-import { ArrowUpCircle, Loader2, LogIn, RefreshCw, X } from "lucide-react";
+import {
+  ArrowUpCircle,
+  ArrowUpRight,
+  Loader2,
+  LogIn,
+  RefreshCw,
+  X,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Chip } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { toast } from "sonner";
 import type { GlobalPage } from "@/lib/navigation";
 import type { AppId } from "@/lib/api";
 import type { Provider, VisibleApps } from "@/types";
 import { platformKeyApi } from "@/lib/api/platformKey";
-import { settingsApi } from "@/lib/api/settings";
 import { usePlatformKeyStatusQuery } from "@/lib/query";
 import { useAppMode, useProxyStatusQuery } from "@/lib/query/proxy";
 import { useUsageSummaryByApp } from "@/lib/query/usage";
-import { CLIENT_CONFIG_FILE } from "@/config/clientConfigTargets";
 import {
   APP_IDS,
   isAdditiveAppId,
   isModeAppId,
   isProxyAppId,
 } from "@/config/appConfig";
-import { extractErrorMessage } from "@/utils/errorUtils";
 import { ToolUpgradeConfirmDialog } from "@/components/settings/ToolUpgradeConfirmDialog";
 import { PlatformModelDialog } from "@/components/providers/PlatformModelDialog";
 import { ModeSwitch } from "@/components/providers/ModeSwitch";
@@ -57,32 +59,11 @@ function isPlatformProvider(provider: Provider): boolean {
 }
 
 /**
- * 把后端解析出的配置目录 + 已知文件名收成一行可读路径，用户目录显示成 `~`。
- * 目录可能是用户在设置里自定义的，所以不写死。
- */
-function formatConfigTarget(
-  app: AppId,
-  dir: string | undefined,
-  home: string | undefined,
-) {
-  if (!dir) return null;
-  const base = dir.replace(/[\\/]+$/, "");
-  const separator = base.includes("\\") ? "\\" : "/";
-  const fileName = CLIENT_CONFIG_FILE[app];
-  const full = fileName ? `${base}${separator}${fileName}` : base;
-  const homeBase = home?.replace(/[\\/]+$/, "");
-  if (homeBase && full.toLowerCase().startsWith(homeBase.toLowerCase())) {
-    return `~${full.slice(homeBase.length).replace(/\\/g, "/")}`;
-  }
-  return full;
-}
-
-/**
- * 客户端详情页（Ink & Grid 第二屏）。
+ * 客户端详情页（Paper & Signal）。
  *
- * 一屏讲清一个客户端：左边一张规格表（主模型 / 连接方式 / 配置落点 / 密钥来源 /
- * 最近用量 / 应用更新 / 更多功能），右边可用模型清单和横向切客户端的入口。
- * 全页只用发丝线分格，没有上游的圆角玻璃卡与光晕。
+ * 报头给出客户端身份与平台状态，正文是一张没有外框的规格表：
+ * 主模型、连接方式、最近用量、组件更新。
+ * 右栏是只读的可用模型清单和其他客户端的入口。
  *
  * 这个构建只对接 AIFusion 自有平台：供应商 / 渠道由平台统一下发，
  * 不在客户端里展示，也不提供手动添加，所以页面里没有地址和密钥。
@@ -121,22 +102,6 @@ export function PlatformConnectionPanel({
     staleTime: 60_000,
   });
 
-  // 配置落点：目录由后端按当前设置解析，再补上该客户端的配置文件名
-  const { data: configDir } = useQuery({
-    queryKey: ["configDir", app],
-    queryFn: () => settingsApi.getConfigDir(app),
-    staleTime: 60_000,
-  });
-  const { data: homePath } = useQuery({
-    queryKey: ["homeDir"],
-    queryFn: () => homeDir(),
-    staleTime: Infinity,
-  });
-  const targetPath = useMemo(
-    () => formatConfigTarget(app, configDir, homePath),
-    [app, configDir, homePath],
-  );
-
   // 近 7 天用量：和首页「最近用量」同一份缓存（按客户端汇总的那一条）
   const usageRange = useMemo(() => ({ preset: "7d" as const }), []);
   const { data: usageByApp, isLoading: usageLoading } =
@@ -145,7 +110,7 @@ export function PlatformConnectionPanel({
   const usageKey = app === "claude-desktop" ? "claude" : app;
   const usageRow = usageByApp?.find((item) => item.appType === usageKey);
 
-  // 其他可见客户端：详情页右侧一行胶囊，横向切换不用回首页
+  // 其他可见客户端：详情页右栏的切换入口，不用回首页
   const otherApps = useMemo(
     () => APP_IDS.filter((item) => item !== app && visibleApps[item]),
     [app, visibleApps],
@@ -233,94 +198,51 @@ export function PlatformConnectionPanel({
     });
   })();
 
-  const openConfigFolder = () => {
-    settingsApi.openConfigFolder(app).catch((error: unknown) => {
-      toast.error(
-        t("platformConnection.openFolderFailed", {
-          defaultValue: "打开目录失败",
-        }),
-        { description: extractErrorMessage(error) || undefined },
-      );
-    });
-  };
+  const toggleLogin = () =>
+    void (webLogin.busy ? webLogin.cancel() : webLogin.login());
 
-  const signInButton = (
-    <Button
-      size="compact"
-      onClick={() =>
-        void (webLogin.busy ? webLogin.cancel() : webLogin.login())
-      }
-    >
-      {webLogin.busy ? (
-        <X className="h-3.5 w-3.5" />
-      ) : (
-        <LogIn className="h-3.5 w-3.5" />
-      )}
-      {webLogin.busy
-        ? t("platformKey.cancelWaiting", { defaultValue: "取消等待" })
-        : t("platformConnection.signIn", { defaultValue: "登录平台" })}
-    </Button>
+  const connectionChip = isLoading ? (
+    <Chip tone="mute" dot>
+      {t("platformKey.loading", { defaultValue: "读取中…" })}
+    </Chip>
+  ) : configured ? (
+    <Chip tone="ok" dot>
+      {t("platformConnection.connected", { defaultValue: "已连接" })}
+    </Chip>
+  ) : (
+    <Chip tone="warn" dot>
+      {t("platformConnection.disconnected", { defaultValue: "未连接平台" })}
+    </Chip>
   );
 
   return (
     <>
-      <div className="grid items-start gap-3.5 lg:grid-cols-[minmax(0,1fr)_296px]">
-        {/* ── 规格表 ───────────────────────────────────────────────── */}
-        <section className="overflow-hidden rounded-panel border border-hairline bg-surface shadow-sm">
-          <Spec
-            label={t("platformConnection.modelLabel", {
-              defaultValue: "主模型",
-            })}
-          >
-            <span className="inline-flex min-w-0 items-baseline gap-1.5">
+      <div className="mx-auto w-full max-w-[1160px] px-8 pb-16 pt-8">
+        {/* ── 报头：客户端身份与平台状态 ─────────────────────────────── */}
+        <header className="flex flex-wrap items-end justify-between gap-x-8 gap-y-5 border-b border-hairline pb-6">
+          <div className="min-w-0">
+            <div className="af-kicker flex flex-wrap items-center gap-2.5">
+              <span>Client / Configuration</span>
               <span
-                className="af-num truncate text-body text-fg-1"
-                title={mainModel ?? undefined}
-              >
-                {mainModel ??
-                  (configured
-                    ? t("platformConnection.modelNone", {
-                        defaultValue: "未选择模型",
-                      })
-                    : t("platformConnection.modelSignedOut", {
-                        defaultValue: "登录平台后可选择",
-                      }))}
+                aria-hidden="true"
+                className="h-2.5 w-px bg-hairline-strong"
+              />
+              <span className="af-num tracking-normal">
+                {APP_DISPLAY_NAME[app]}
               </span>
-              {mainModel && vendorByName.get(mainModel) && (
-                <span className="shrink-0 text-badge text-fg-3">
-                  · {vendorByName.get(mainModel)}
-                </span>
-              )}
-            </span>
-            <Button
-              variant="neutral"
-              size="compact"
-              className="ms-auto shrink-0"
-              disabled={!configured}
-              onClick={() => setModelDialogOpen(true)}
-            >
-              {t("platformConnection.chooseModel", {
-                defaultValue: "选择模型",
+            </div>
+            <h1 className="mt-2 text-display text-fg-1">
+              {APP_DISPLAY_NAME[app]}
+            </h1>
+            <p className="mt-1.5 max-w-xl text-body text-fg-2">
+              {t("platformConnection.detailSubtitle", {
+                defaultValue:
+                  "模型、路由与密钥由平台统一管理；保存后立即写入本机配置。",
               })}
-            </Button>
-          </Spec>
-
-          <Spec
-            label={t("platformConnection.title", {
-              defaultValue: "AIFusion 平台",
-            })}
-          >
-            <Chip tone={configured ? "ok" : "warn"} dot>
-              {isLoading
-                ? t("platformKey.loading", { defaultValue: "读取中…" })
-                : configured
-                  ? t("platformConnection.connected", {
-                      defaultValue: "已连接",
-                    })
-                  : t("platformConnection.disconnected", {
-                      defaultValue: "未连接平台",
-                    })}
-            </Chip>
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            {connectionChip}
             {configured && (
               <Chip tone={platformProvider ? "mute" : "warn"}>
                 {platformProvider
@@ -332,227 +254,41 @@ export function PlatformConnectionPanel({
                     })}
               </Chip>
             )}
-            <span className="ms-auto flex shrink-0 items-center gap-2">
-              {configured ? (
-                <Button
-                  variant="neutral"
-                  size="compact"
-                  onClick={onOpenKeySettings}
-                >
-                  {t("platformConnection.manageKey", {
-                    defaultValue: "管理连接",
-                  })}
-                </Button>
-              ) : (
-                signInButton
-              )}
-            </span>
-          </Spec>
-
-          <Spec
-            label={t("platformConnection.modeLabel", {
-              defaultValue: "连接方式",
-            })}
-          >
-            {isModeAppId(app) ? (
-              <>
-                {mode === "stack" && (
-                  <Chip tone="stack">
-                    {t("mode.names.stack", { defaultValue: "聚合" })}
-                  </Chip>
-                )}
-                <ModeSwitch app={app} mode={mode} disabled={!configured} />
-              </>
-            ) : (
-              <Chip tone="info">{modeLabel}</Chip>
-            )}
-            <span
-              className={cn(
-                "text-badge",
-                routed && isProxyAppId(app) && !proxyRunning
-                  ? "text-warning-text"
-                  : "text-fg-3",
-              )}
+            <Chip
+              tone={
+                mode === "stack" ? "stack" : mode === "route" ? "route" : "mute"
+              }
             >
-              {modeNote}
-            </span>
-          </Spec>
-
-          <Spec
-            label={t("platformConnection.targetLabel", {
-              defaultValue: "配置落点",
-            })}
-          >
-            <span
-              className="af-num min-w-0 truncate text-body text-fg-2"
-              title={targetPath ?? undefined}
-            >
-              {targetPath ??
-                t("platformConnection.targetLoading", {
-                  defaultValue: "读取中…",
-                })}
-            </span>
-            <span className="shrink-0 text-badge text-fg-3">
-              {t("platformConnection.targetHint", {
-                defaultValue: "保存后立即写入",
-              })}
-            </span>
-            <Button
-              variant="neutral"
-              size="compact"
-              className="ms-auto shrink-0"
-              onClick={openConfigFolder}
-            >
-              {t("platformConnection.openFolder", {
-                defaultValue: "打开配置目录",
-              })}
-            </Button>
-          </Spec>
-
-          <Spec
-            label={t("platformConnection.keyLabel", {
-              defaultValue: "密钥来源",
-            })}
-          >
-            <span className="text-body text-fg-1">
-              {t("platformConnection.keyHint", {
-                defaultValue: "平台登录自动下发",
-              })}
-            </span>
-            <Chip tone="mute">
-              {t("platformConnection.keyLocal", { defaultValue: "本机保存" })}
+              {modeLabel}
             </Chip>
-          </Spec>
-
-          <Spec
-            label={t("platformConnection.usageLabel", {
-              defaultValue: "最近用量",
-            })}
-          >
-            <span className="af-num text-body text-fg-1">{usageText}</span>
-            <Button
-              variant="neutral"
-              size="compact"
-              className="ms-auto"
-              onClick={() => onOpenPage("usage")}
-            >
-              {t("platformConnection.usageOpen", { defaultValue: "查看统计" })}
-            </Button>
-          </Spec>
-
-          <Spec
-            label={t("platformConnection.appUpdates", {
-              defaultValue: "应用更新",
-            })}
-          >
-            <Chip tone={updatableCount > 0 ? "warn" : "mute"}>
-              {tools.isLoadingTools
-                ? t("platformConnection.updatesChecking", {
-                    defaultValue: "检查中…",
-                  })
-                : updatableCount > 0
-                  ? t("platformConnection.updatesAvailable", {
-                      count: updatableCount,
-                      defaultValue: "{{count}} 个可升级",
-                    })
-                  : tools.lastCheckedAt
-                    ? t("platformConnection.updatesLatest", {
-                        defaultValue: "已是最新",
-                      })
-                    : t("platformConnection.updatesUnchecked", {
-                        defaultValue: "未检查",
-                      })}
-            </Chip>
-            <span className="ms-auto flex shrink-0 items-center gap-2">
-              <Button
-                variant="neutral"
-                size="compact"
-                disabled={tools.isLoadingTools || tools.isAnyBusy}
-                onClick={() => void tools.checkForUpdates()}
-              >
-                <RefreshCw
-                  className={cn(
-                    "h-3.5 w-3.5",
-                    tools.isLoadingTools && "animate-spin",
-                  )}
-                />
-                {t("platformConnection.updatesCheck", {
-                  defaultValue: "检查更新",
+            {configured ? (
+              <Button size="compact" onClick={onOpenKeySettings}>
+                {t("platformConnection.manageKey", {
+                  defaultValue: "管理连接",
                 })}
+                <ArrowUpRight className="h-3.5 w-3.5" strokeWidth={1.6} />
               </Button>
-              {updatableCount > 0 && (
-                <Button
-                  size="compact"
-                  disabled={Boolean(tools.batchAction)}
-                  onClick={() =>
-                    void tools.handleRunToolAction(
-                      tools.updatableToolNames,
-                      "update",
-                      { fromBatchEntry: true },
-                    )
-                  }
-                >
-                  {tools.batchAction === "update" ? (
-                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  ) : (
-                    <ArrowUpCircle className="h-3.5 w-3.5" />
-                  )}
-                  {t("platformConnection.updatesRunAll", {
-                    count: updatableCount,
-                    defaultValue: "全部升级",
-                  })}
-                </Button>
-              )}
-            </span>
-          </Spec>
-
-          <Spec
-            label={t("platformConnection.toolsLabel", {
-              defaultValue: "更多功能",
-            })}
-            last
-          >
-            <span className="flex flex-wrap items-center gap-x-4 gap-y-1.5">
-              {[
-                {
-                  page: "mcp" as const,
-                  label: "MCP",
-                },
-                { page: "skills" as const, label: "Skills" },
-                {
-                  page: "prompts" as const,
-                  label: t("nav.prompts", { defaultValue: "提示词" }),
-                },
-                {
-                  page: "sessions" as const,
-                  label: t("nav.sessions", { defaultValue: "会话" }),
-                },
-                {
-                  page: "usage" as const,
-                  label: t("nav.usage", { defaultValue: "用量统计" }),
-                },
-              ].map((item) => (
-                <button
-                  key={item.page}
-                  type="button"
-                  onClick={() => onOpenPage(item.page)}
-                  className="text-caption text-fg-2 transition-colors hover:text-action-text active:translate-y-px"
-                >
-                  {item.label}
-                </button>
-              ))}
-              <span className="text-badge text-fg-3">
-                {t("platformConnection.toolsHint", {
-                  defaultValue: "作用于全部客户端",
-                })}
-              </span>
-            </span>
-          </Spec>
-
+            ) : (
+              <Button size="compact" onClick={toggleLogin}>
+                {webLogin.busy ? (
+                  <X className="h-3.5 w-3.5" />
+                ) : (
+                  <LogIn className="h-3.5 w-3.5" />
+                )}
+                {webLogin.busy
+                  ? t("platformKey.cancelWaiting", {
+                      defaultValue: "取消等待",
+                    })
+                  : t("platformConnection.signIn", {
+                      defaultValue: "登录平台",
+                    })}
+              </Button>
+            )}
+          </div>
           {webLogin.busy || (!configured && webLogin.error) ? (
             <p
               className={cn(
-                "hairline border-t px-4 py-2.5 text-caption",
+                "w-full text-caption",
                 !configured && webLogin.error ? "text-danger" : "text-fg-3",
               )}
             >
@@ -563,76 +299,295 @@ export function PlatformConnectionPanel({
                 : webLogin.error}
             </p>
           ) : null}
-        </section>
+        </header>
 
-        {/* ── 右列：可用模型 + 横向切客户端 ─────────────────────────── */}
-        <div className="flex flex-col gap-3.5">
-          <section className="rounded-panel border border-hairline bg-surface shadow-sm">
-            <h3 className="hairline border-b px-4 py-2.5 text-badge text-fg-3">
-              {t("platformConnection.availableModels", {
-                defaultValue: "可用模型",
+        <div className="mt-8 grid items-start gap-x-10 gap-y-10 lg:grid-cols-[minmax(0,1fr)_318px]">
+          {/* ── 规格表 ─────────────────────────────────────────────── */}
+          <section className="min-w-0">
+            <SectionHead
+              kicker={t("platformConnection.specKicker", {
+                defaultValue: "Specification",
               })}
-              <span className="af-num ms-1 text-fg-2">
-                {availableModels.length}
-              </span>
-            </h3>
-            {availableModels.length === 0 ? (
-              <p className="px-4 py-4 text-caption text-fg-3">
-                {configured
-                  ? t("platformConnection.modelNone", {
-                      defaultValue: "未选择模型",
-                    })
-                  : t("platformConnection.modelSignedOut", {
-                      defaultValue: "登录平台后可选择",
-                    })}
-              </p>
-            ) : (
-              <ul>
-                {availableModels.map((id) => (
-                  <li
-                    key={id}
-                    className="hairline flex items-baseline gap-2 border-b px-4 py-2 last:border-b-0"
+              title={t("platformConnection.specTitle", {
+                defaultValue: "配置",
+              })}
+              hint={t("platformConnection.specHint", {
+                defaultValue: "只写入这个客户端，不影响其他应用",
+              })}
+            />
+
+            <div className="mt-4 border-t border-hairline">
+              <Spec
+                label={t("platformConnection.modelLabel", {
+                  defaultValue: "主模型",
+                })}
+              >
+                <span className="flex min-w-0 flex-1 flex-col">
+                  <span
+                    className="af-num truncate text-strong text-fg-1"
+                    title={mainModel ?? undefined}
                   >
-                    <span
+                    {mainModel ??
+                      (configured
+                        ? t("platformConnection.modelNone", {
+                            defaultValue: "未选择模型",
+                          })
+                        : t("platformConnection.modelSignedOut", {
+                            defaultValue: "登录平台后可选择",
+                          }))}
+                  </span>
+                  <span className="mt-0.5 truncate text-badge text-fg-3">
+                    {mainModel && vendorByName.get(mainModel)
+                      ? vendorByName.get(mainModel)
+                      : t("platformConnection.modelSource", {
+                          defaultValue: "由平台下发",
+                        })}
+                  </span>
+                </span>
+                <Button
+                  variant="neutral"
+                  size="compact"
+                  className="shrink-0"
+                  disabled={!configured}
+                  onClick={() => setModelDialogOpen(true)}
+                >
+                  {t("platformConnection.chooseModel", {
+                    defaultValue: "选择模型",
+                  })}
+                </Button>
+              </Spec>
+
+              <Spec
+                label={t("platformConnection.modeLabel", {
+                  defaultValue: "连接方式",
+                })}
+              >
+                <span className="flex min-w-0 flex-1 flex-col gap-1">
+                  <span className="flex flex-wrap items-center gap-2">
+                    {isModeAppId(app) ? (
+                      <ModeSwitch
+                        app={app}
+                        mode={mode}
+                        disabled={!configured}
+                      />
+                    ) : (
+                      <Chip tone="info">{modeLabel}</Chip>
+                    )}
+                    {mode === "stack" && (
+                      <Chip tone="stack">
+                        {t("mode.names.stack", { defaultValue: "聚合" })}
+                      </Chip>
+                    )}
+                  </span>
+                  <span
+                    className={cn(
+                      "text-badge",
+                      routed && isProxyAppId(app) && !proxyRunning
+                        ? "text-warning-text"
+                        : "text-fg-3",
+                    )}
+                  >
+                    {modeNote}
+                  </span>
+                </span>
+              </Spec>
+
+              <Spec
+                label={t("platformConnection.usageLabel", {
+                  defaultValue: "最近用量",
+                })}
+              >
+                <span className="af-num min-w-0 flex-1 truncate text-caption text-fg-1">
+                  {usageText}
+                </span>
+                <Button
+                  variant="neutral"
+                  size="compact"
+                  className="shrink-0"
+                  onClick={() => onOpenPage("usage")}
+                >
+                  {t("platformConnection.usageOpen", {
+                    defaultValue: "查看统计",
+                  })}
+                </Button>
+              </Spec>
+
+              <Spec
+                label={t("platformConnection.appUpdates", {
+                  defaultValue: "应用更新",
+                })}
+                last
+              >
+                <span className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
+                  <Chip tone={updatableCount > 0 ? "warn" : "mute"}>
+                    {tools.isLoadingTools
+                      ? t("platformConnection.updatesChecking", {
+                          defaultValue: "检查中…",
+                        })
+                      : updatableCount > 0
+                        ? t("platformConnection.updatesAvailable", {
+                            count: updatableCount,
+                            defaultValue: "{{count}} 个可升级",
+                          })
+                        : tools.lastCheckedAt
+                          ? t("platformConnection.updatesLatest", {
+                              defaultValue: "已是最新",
+                            })
+                          : t("platformConnection.updatesUnchecked", {
+                              defaultValue: "未检查",
+                            })}
+                  </Chip>
+                  <span className="text-badge text-fg-3">
+                    {t("platformConnection.updatesForApp", {
+                      defaultValue: "升级会替换该客户端的命令行程序",
+                    })}
+                  </span>
+                </span>
+                <span className="flex shrink-0 items-center gap-2">
+                  <Button
+                    variant="neutral"
+                    size="compact"
+                    disabled={tools.isLoadingTools || tools.isAnyBusy}
+                    onClick={() => void tools.checkForUpdates()}
+                  >
+                    <RefreshCw
                       className={cn(
-                        "af-num min-w-0 flex-1 truncate",
-                        id === mainModel ? "text-fg-1" : "text-fg-2",
+                        "h-3.5 w-3.5",
+                        tools.isLoadingTools && "animate-spin",
                       )}
-                      title={id}
+                    />
+                    {t("platformConnection.updatesCheck", {
+                      defaultValue: "检查更新",
+                    })}
+                  </Button>
+                  {updatableCount > 0 && (
+                    <Button
+                      size="compact"
+                      disabled={Boolean(tools.batchAction)}
+                      onClick={() =>
+                        void tools.handleRunToolAction(
+                          tools.updatableToolNames,
+                          "update",
+                          { fromBatchEntry: true },
+                        )
+                      }
                     >
-                      {id}
-                    </span>
-                    <span className="shrink-0 text-badge text-fg-3">
-                      {vendorByName.get(id) ?? ""}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            )}
+                      {tools.batchAction === "update" ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <ArrowUpCircle className="h-3.5 w-3.5" />
+                      )}
+                      {t("platformConnection.updatesRunAll", {
+                        count: updatableCount,
+                        defaultValue: "全部升级",
+                      })}
+                    </Button>
+                  )}
+                </span>
+              </Spec>
+            </div>
           </section>
 
-          {otherApps.length > 0 && (
-            <section className="rounded-panel border border-hairline bg-surface shadow-sm">
-              <h3 className="hairline border-b px-4 py-2.5 text-badge text-fg-3">
-                {t("platformConnection.switchTitle", {
-                  defaultValue: "切换到其他客户端",
+          {/* ── 右栏：可用模型 + 切换客户端 ───────────────────────────── */}
+          <aside className="flex min-w-0 flex-col gap-8">
+            <section>
+              <SectionHead
+                kicker={t("platformConnection.modelsKicker", {
+                  defaultValue: "Models",
                 })}
-              </h3>
-              <div className="flex flex-wrap gap-1.5 px-4 py-3">
-                {otherApps.map((item) => (
-                  <button
-                    key={item}
-                    type="button"
-                    onClick={() => onOpenApp(item)}
-                    className="inline-flex h-6 items-center gap-1.5 rounded-full border border-hairline bg-subtle px-2 text-badge text-fg-2 transition-colors hover:border-hairline-strong hover:text-fg-1 active:translate-y-px"
-                  >
-                    <AppGlyph app={item} size={13} badgeClassName="bg-subtle" />
-                    {APP_DISPLAY_NAME[item]}
-                  </button>
-                ))}
+                title={t("platformConnection.availableModels", {
+                  defaultValue: "可用模型",
+                })}
+                hint={t("platformConnection.modelsCount", {
+                  count: availableModels.length,
+                  defaultValue: "{{count}} 个",
+                })}
+              />
+              <div className="mt-4 border-t border-hairline">
+                {availableModels.length === 0 ? (
+                  <p className="border-b border-hairline py-5 text-caption text-fg-3">
+                    {configured
+                      ? t("platformConnection.modelNone", {
+                          defaultValue: "未选择模型",
+                        })
+                      : t("platformConnection.modelSignedOut", {
+                          defaultValue: "登录平台后可选择",
+                        })}
+                  </p>
+                ) : (
+                  <ul>
+                    {availableModels.map((id) => (
+                      <li
+                        key={id}
+                        className="flex items-center gap-2.5 border-b border-hairline px-1 py-2.5"
+                      >
+                        <span
+                          aria-hidden="true"
+                          className={cn(
+                            "h-1 w-1 shrink-0 rounded-full",
+                            id === mainModel
+                              ? "bg-action-text"
+                              : "bg-transparent",
+                          )}
+                        />
+                        <span
+                          className={cn(
+                            "af-num min-w-0 flex-1 truncate text-caption",
+                            id === mainModel ? "text-fg-1" : "text-fg-2",
+                          )}
+                          title={id}
+                        >
+                          {id}
+                        </span>
+                        <span className="shrink-0 text-badge text-fg-3">
+                          {vendorByName.get(id) ?? ""}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
             </section>
-          )}
+
+            {otherApps.length > 0 && (
+              <section>
+                <SectionHead
+                  kicker={t("platformConnection.switchKicker", {
+                    defaultValue: "Clients",
+                  })}
+                  title={t("platformConnection.switchTitle", {
+                    defaultValue: "切换到其他客户端",
+                  })}
+                  hint={t("platformConnection.switchHint", {
+                    defaultValue: "只改当前查看的应用",
+                  })}
+                />
+                <div className="mt-4 grid grid-cols-2 gap-1.5">
+                  {otherApps.map((item) => (
+                    <button
+                      key={item}
+                      type="button"
+                      onClick={() => onOpenApp(item)}
+                      className="group flex min-w-0 items-center gap-2 rounded-[4px] border border-hairline bg-surface px-2 py-2 text-start transition-colors hover:border-hairline-strong hover:bg-subtle active:translate-y-px"
+                    >
+                      <AppGlyph
+                        app={item}
+                        size={14}
+                        badgeClassName="bg-surface"
+                      />
+                      <span className="min-w-0 flex-1 truncate text-badge text-fg-2 group-hover:text-fg-1">
+                        {APP_DISPLAY_NAME[item]}
+                      </span>
+                      <ArrowUpRight
+                        className="h-3 w-3 shrink-0 text-fg-3"
+                        strokeWidth={1.6}
+                      />
+                    </button>
+                  ))}
+                </div>
+              </section>
+            )}
+          </aside>
         </div>
       </div>
 
@@ -653,7 +608,10 @@ export function PlatformConnectionPanel({
   );
 }
 
-/** 规格表的一行：左标签固定宽，右边内容自由排；行之间只用发丝线。 */
+/**
+ * 规格表的一行：92px 标签 + 可换行的值 + 右对齐操作。
+ * 行之间只用发丝线，容器不再套卡片。
+ */
 function Spec({
   label,
   last = false,
@@ -666,14 +624,37 @@ function Spec({
   return (
     <div
       className={cn(
-        "hairline flex flex-wrap items-center gap-x-3 gap-y-1.5 border-b px-4 py-2.5 md:flex-nowrap",
+        "flex flex-col gap-2 border-b border-hairline px-1 py-4 md:flex-row md:items-center md:gap-x-4",
         last && "border-b-0",
       )}
     >
-      <span className="w-[92px] shrink-0 text-caption text-fg-3">{label}</span>
-      <span className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1">
+      <span className="shrink-0 text-badge text-fg-3 md:w-[92px]">{label}</span>
+      <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-3 gap-y-2">
         {children}
-      </span>
+      </div>
+    </div>
+  );
+}
+
+/** 小节抬头：等宽 kicker + 标题 + 灰色注解。 */
+function SectionHead({
+  kicker,
+  title,
+  hint,
+}: {
+  kicker: string;
+  title: string;
+  hint?: string;
+}) {
+  return (
+    <div className="flex flex-wrap items-end justify-between gap-x-3 gap-y-1.5">
+      <div className="min-w-0">
+        <div className="af-kicker">{kicker}</div>
+        <div className="mt-1 flex flex-wrap items-baseline gap-x-2.5 gap-y-1">
+          <h2 className="text-title text-fg-1">{title}</h2>
+          {hint && <span className="text-badge text-fg-3">{hint}</span>}
+        </div>
+      </div>
     </div>
   );
 }

@@ -666,7 +666,7 @@
         "synologyHint": "Önce Synology Paket Merkezi'nde WebDAV Sunucu paketini kurun ve etkinleştirin.",
         "custom": "Özel"
       },
-      "remoteRootDefault": "Varsayılan: cc-switch-sync",
+      "remoteRootDefault": "Varsayılan: aifusion-sync",
       "profileDefault": "Varsayılan: varsayılan",
       "saveAndTestSuccess": "Yapılandırma kaydedildi, bağlantı tamam",
       "saveAndTestFailed": "Yapılandırma kaydedildi ancak bağlantı testi başarısız oldu: {{error}}",
@@ -731,7 +731,7 @@
       "region": "Bölge",
       "regionPlaceholder": "örneğin us-east-1",
       "bucket": "Bucket",
-      "bucketPlaceholder": "örneğin my-cc-switch-bucket",
+      "bucketPlaceholder": "örneğin my-aifusion-bucket",
       "accessKeyId": "Erişim Anahtarı Kimliği",
       "accessKeyIdPlaceholder": "örneğin AKIA...",
       "secretAccessKey": "Gizli Erişim Anahtarı",
@@ -740,7 +740,7 @@
       "endpointHint": "Çoğu S3 uyumlu hizmet için gereklidir",
       "endpointPlaceholder": "örneğin https://s3-compatible.example.com",
       "remoteRoot": "Uzak Kök Dizini",
-      "remoteRootDefault": "Varsayılan: cc-switch-sync",
+      "remoteRootDefault": "Varsayılan: aifusion-sync",
       "profile": "Eşitleme profili adı",
       "profileDefault": "Varsayılan: varsayılan",
       "autoSync": "Otomatik eşitleme",
@@ -928,6 +928,7 @@
     "updateBadge": "Güncelleme mevcut",
     "updateFailed": "Güncelleme yüklemesi başarısız oldu, indirme sayfası açılmaya çalışıldı.",
     "checkUpdateFailed": "Güncellemeler kontrol edilemedi. Lütfen daha sonra tekrar deneyin.",
+    "checkUpdateOpened": "AIFusion platformu açıldı — en son sürümü oradan indirin.",
     "openReleaseNotesFailed": "Sürüm notları açılamadı",
     "releaseNotes": "Sürüm Notları",
     "viewReleaseNotes": "Bu sürümün sürüm notlarını görüntüle",
@@ -2256,7 +2257,6 @@
     "downloading": "Güncelleme indiriliyor…",
     "upgradeNow": "Uygulamayı yükselt",
     "retry": "Yükseltmeyi yeniden dene",
-    "openReleases": "Sürümler sayfasını aç",
     "openConfigDir": "Yapılandırma klasörünü aç",
     "quit": "Çık"
   },
@@ -3612,7 +3612,10 @@
       "mappingFull": "Model eşleme"
     },
     "needsAttention": "Dikkat edilmesi gerekiyor",
-    "back": "Geri"
+    "back": "Geri",
+    "overview": "Genel bakış",
+    "mcp": "MCP",
+    "skills": "Yetenekler"
   },
   "appsPage": {
     "showInHome": "Ana sayfada {{name}}'yi göster",
@@ -4187,12 +4190,6 @@
     "updateAllCount": "Tümünü güncelle ({{count}})",
     "updatingProgress": "{{done}}/{{total}} güncelleniyor…"
   },
-  "newLayoutNotice": {
-    "title": "AIFusion yeni bir görünüme sahip",
-    "body": "Bu sürüm, arayüzü yeniden tasarladığı için birkaç şey değişti:\n• Modlar artık her uygulama sayfasının üst kısmında yer alıyor\n• Kullanım ve Hesaplar kenar çubuğundadır\nDeğişen her şey için sürüm notlarına bakın.",
-    "viewReleaseNotes": "Sürüm notlarını görüntüle",
-    "confirm": "Anladım"
-  },
   "whatsNew": {
     "updatedTo": "v{{version}}'ye güncellendi",
     "recentTitle": "Son güncellemeler",
@@ -4202,9 +4199,7 @@
       "fix": "Düzeltme",
       "improve": "Geliştirilmiş"
     },
-    "versionDetails": "Ayrıntılar",
     "showEarlier": "{{count}} önceki sürüm(ler)",
-    "viewFull": "Değişiklik günlüğünün tamamını görüntüle",
     "confirm": "Anladım"
   }
 }

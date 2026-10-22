@@ -1,7 +1,7 @@
 import React, { useMemo, useRef, useState } from "react";
 import { useDelayedFlag } from "@/hooks/useDelayedFlag";
 import { useTranslation } from "react-i18next";
-import { Download, MoreHorizontal, Pencil, Plus, Server } from "lucide-react";
+import { Download, MoreHorizontal, Pencil, Plus } from "lucide-react";
 import { toast } from "@/lib/toast";
 import { Button } from "@/components/ui/button";
 import { HelpTip } from "@/components/ui/help-tip";
@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { DialogTitle } from "@/components/ui/dialog";
 import { HoverTip } from "@/components/ui/hover-tip";
-import { AppPageHeader } from "@/components/shell/AppPageHeader";
+import { PageMasthead } from "@/components/shell/PageMasthead";
 import { APP_DISPLAY_NAME } from "@/components/shell/AppGlyph";
 import { useIsMutating } from "@tanstack/react-query";
 import {
@@ -574,8 +574,8 @@ const UnifiedMcpPanel: React.FC<UnifiedMcpPanelProps> = ({
 
   return (
     <>
-      <AppPageHeader
-        icon={<Server className="h-5 w-5" strokeWidth={1.5} />}
+      <PageMasthead
+        kicker="Tools / MCP"
         title="MCP"
         titleExtra={
           <HelpTip title={t("mcpPage.helpTitle")}>{t("mcpPage.help")}</HelpTip>
@@ -643,8 +643,9 @@ const UnifiedMcpPanel: React.FC<UnifiedMcpPanelProps> = ({
       />
 
       <div id="main-content" className="flex min-h-0 flex-1 flex-col">
+        <div className="mx-auto flex min-h-0 w-full max-w-[1160px] flex-1 flex-col px-8">
         {showList && (
-          <div className="flex h-14 shrink-0 items-center gap-3 px-6">
+          <div className="flex h-14 shrink-0 items-center gap-3">
             <MatrixSearch
               className="w-[320px] min-w-[180px] shrink"
               value={searchQuery}
@@ -673,7 +674,7 @@ const UnifiedMcpPanel: React.FC<UnifiedMcpPanelProps> = ({
           </div>
         )}
 
-        <NoticeSlot className={cn(failedApps.size > 0 && "px-6 pb-3")}>
+        <NoticeSlot className={cn(failedApps.size > 0 && "pb-3")}>
           {Array.from(failedApps.entries()).map(([app, error]) => (
             <Notice
               key={app}
@@ -698,7 +699,7 @@ const UnifiedMcpPanel: React.FC<UnifiedMcpPanelProps> = ({
           ))}
         </NoticeSlot>
 
-        <div className="flex min-h-0 flex-1 flex-col px-6 pb-5">
+        <div className="flex min-h-0 flex-1 flex-col pb-5">
           {isLoading ? (
             <div className="py-12 text-center text-body text-fg-2">
               {t("mcp.loading")}
@@ -1015,6 +1016,7 @@ const UnifiedMcpPanel: React.FC<UnifiedMcpPanelProps> = ({
               </MatrixColumnHighlight>
             </div>
           )}
+        </div>
         </div>
       </div>
 

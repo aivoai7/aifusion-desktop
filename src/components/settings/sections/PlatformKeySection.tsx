@@ -4,12 +4,9 @@ import { useQueryClient } from "@tanstack/react-query";
 import { LogIn, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { Chip } from "@/components/ui/badge";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
-import {
-  SettingsBlock,
-  SettingsCard,
-  SettingsRow,
-} from "@/components/settings/SettingsLayout";
+import { SettingsBlock } from "@/components/settings/SettingsLayout";
 import { platformKeyApi } from "@/lib/api";
 import {
   PLATFORM_KEY_STATUS_QUERY_KEY,
@@ -77,64 +74,66 @@ export function PlatformKeySection() {
 
   return (
     <>
-      <SettingsBlock title={t("platformKey.title")}>
-        <SettingsCard>
-          <SettingsRow
-            label={t("platformKey.label")}
-            help={{
-              title: t("platformKey.title"),
-              body: t("platformKey.help"),
-            }}
-            control={
-              <div className="flex flex-wrap items-center justify-end gap-2">
-                <span
-                  className={
-                    configured
-                      ? "text-caption text-fg-1"
-                      : "text-caption text-danger"
-                  }
-                >
-                  {statusText}
-                  {sourceText ? ` (${sourceText})` : ""}
-                </span>
-                <Button
-                  onClick={() =>
-                    void (webLogin.busy ? webLogin.cancel() : webLogin.login())
-                  }
-                  disabled={!webLogin.busy && busy}
-                >
-                  {webLogin.busy ? (
-                    <X className="h-3.5 w-3.5" />
-                  ) : (
-                    <LogIn className="h-3.5 w-3.5" />
-                  )}
-                  {loginButtonLabel}
-                </Button>
-                {configured && (
-                  <Button
-                    variant="quiet"
-                    size="compact"
-                    onClick={() => setClearOpen(true)}
-                    disabled={busy || webLogin.busy}
-                  >
-                    {t("platformKey.clear")}
-                  </Button>
-                )}
-              </div>
-            }
-          >
-            <div className="space-y-2">
-              <p className="text-caption text-fg-2">
-                {webLogin.busy
-                  ? t("platformKey.webLoginWaiting")
+      <SettingsBlock
+        title={t("platformKey.title")}
+        help={{ title: t("platformKey.title"), body: t("platformKey.help") }}
+      >
+        <div className="overflow-hidden rounded-[4px] border border-hairline bg-surface">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-3 px-4 py-3.5">
+            <Chip tone={configured ? "ok" : "warn"} dot>
+              {statusText}
+            </Chip>
+            <span className="min-w-0 flex-1">
+              <span className="block text-caption text-fg-1">
+                {t("platformKey.label")}
+              </span>
+              <span className="mt-0.5 block text-badge text-fg-3">
+                {sourceText
+                  ? `${sourceText} · ${t("platformKey.webLoginHint")}`
                   : t("platformKey.webLoginHint")}
-              </p>
-              {displayError && (
-                <p className="text-caption text-danger">{displayError}</p>
+              </span>
+            </span>
+            <span className="flex shrink-0 items-center gap-2">
+              <Button
+                size="compact"
+                onClick={() =>
+                  void (webLogin.busy ? webLogin.cancel() : webLogin.login())
+                }
+                disabled={!webLogin.busy && busy}
+              >
+                {webLogin.busy ? (
+                  <X className="h-3.5 w-3.5" />
+                ) : (
+                  <LogIn className="h-3.5 w-3.5" />
+                )}
+                {loginButtonLabel}
+              </Button>
+              {configured && (
+                <Button
+                  variant="quiet"
+                  size="compact"
+                  onClick={() => setClearOpen(true)}
+                  disabled={busy || webLogin.busy}
+                >
+                  {t("platformKey.clear")}
+                </Button>
               )}
-            </div>
-          </SettingsRow>
-        </SettingsCard>
+            </span>
+          </div>
+          {webLogin.busy || displayError ? (
+            <p
+              className={
+                displayError
+                  ? "border-t border-hairline px-4 py-2 text-caption text-danger"
+                  : "border-t border-hairline px-4 py-2 text-caption text-fg-3"
+              }
+            >
+              {webLogin.busy
+                ? t("platformKey.webLoginWaiting")
+                : displayError}
+            </p>
+          ) : null}
+        </div>
       </SettingsBlock>
 
       <ConfirmDialog

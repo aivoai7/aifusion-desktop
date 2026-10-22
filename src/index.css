@@ -3,247 +3,246 @@
 @tailwind utilities;
 
 /* ══════════════════════════════════════════════════════════════════════
-   AIFusion · Ink & Grid 设计 token
+   AIFusion · Paper & Signal 设计 token
    ──────────────────────────────────────────────────────────────────────
-   深蓝墨底 + 发丝分隔线 + 等宽数字 + 2px 强调条。刻意与上游 cc-switch 的
-   「暖橙实心操作色 + 20px 玻璃光晕卡」区分开：
-   · 操作色从橙 #F97316 换成 azure（变量名仍是 --action-*，换肤只改这里）
-   · 卡片底不透明、分隔走 --hairline 发丝线，阴影只做 1px 内高光 + 落影
-   · 数字一律等宽 tabular，标题收紧字距
-   变量名保持不变是为了让既有组件（bg-surface / text-fg-1 / bg-action …）
-   整体换肤；组件逐个重做时再收敛到新名字。
-   主题开关沿用 src/index.html 的 html.dark 类（cc-switch-theme = dark /
-   light / system），所以 :root 写浅色、.dark 写深色。
+   暖纸底 / 墨字 / 发丝标尺 / 电光蓝只做信号色。这一版刻意离开了上一代
+   「深蓝墨 + azure 按钮」的观感：
+   · 主操作改走墨色（浅色主题黑底白字，深色主题白底黑字），电光蓝只标
+     当前页、链接与连接中的状态，颜色重新变成信息而不是装饰；
+   · 面板全部直角小圆角 + 1px 标尺线，没有玻璃模糊、渐变和彩色光晕；
+   · 标题用负字距，分区说明用等宽小字大写，数字一律 tabular。
+   变量名保持不变（bg-surface / text-fg-1 / bg-action …），既有的两百多个
+   组件一次换肤；页面结构另在 components 里重写。
+   明暗仍由 html.dark 控制，存储键见 src/components/theme-provider.tsx。
    ══════════════════════════════════════════════════════════════════════ */
 
 @layer base {
-  /* ── 浅色 ───────────────────────────────────────────────────────── */
+  /* ── 浅色：暖纸 ─────────────────────────────────────────────────── */
   :root {
-    /* shadcn 风格 HSL 三元组（可带 /50 透明度修饰符） */
-    --background: 222 47% 97%;
-    --foreground: 222 26% 11%;
+    /* shadcn 风格 HSL 三元组（Radix 弹层继续消费） */
+    --background: 45 18% 95%;
+    --foreground: 220 14% 9%;
     --card: 0 0% 100%;
-    --card-foreground: 222 26% 11%;
+    --card-foreground: 220 14% 9%;
     --popover: 0 0% 100%;
-    --popover-foreground: 222 26% 11%;
+    --popover-foreground: 220 14% 9%;
 
-    /* 主操作 = azure；浅色下底与文字反白，深色下见 .dark */
-    --primary: 221 74% 53%;
+    /* 电光蓝：只用于选中、链接、连接状态 */
+    --primary: 222 100% 55%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 216 43% 95%;
-    --secondary-foreground: 222 26% 11%;
-    --muted: 216 43% 95%;
-    --muted-foreground: 220 16% 48%;
-    --accent: 216 43% 92%;
-    --accent-foreground: 222 26% 11%;
+    --secondary: 45 12% 92%;
+    --secondary-foreground: 220 14% 9%;
+    --muted: 45 12% 92%;
+    --muted-foreground: 220 7% 43%;
+    --accent: 45 12% 89%;
+    --accent-foreground: 220 14% 9%;
 
-    --destructive: 353 74% 47%;
+    --destructive: 4 66% 46%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 218 27% 91%;
-    --input: 218 27% 88%;
-    --ring: 221 74% 53%;
+    --border: 45 10% 87%;
+    --input: 45 10% 84%;
+    --ring: 222 100% 55%;
 
-    --radius: 6px;
+    --radius: 4px;
 
-    --bg-app: #f4f6fb;
-    --bg-sidebar: #ffffff;
-    --bg-subtle: #eef2f9;
-    --bg-selected: #e2eaf8;
+    --bg-app: #f4f3ef;
+    --bg-sidebar: #fbfaf7;
+    --bg-subtle: #ecebe5;
+    --bg-selected: #e6e4dc;
     --bg-card: #ffffff;
-    --hairline: rgba(16, 24, 40, 0.09);
-    --hairline-strong: rgba(16, 24, 40, 0.16);
-    --border-strong: #cfd8e8;
+    --hairline: rgba(20, 22, 26, 0.1);
+    --hairline-strong: rgba(20, 22, 26, 0.2);
+    --border-strong: #c9c6bd;
 
-    --text-1: #101728;
-    --text-2: #4c5871;
-    --text-3: #7c889f;
+    --text-1: #15171b;
+    --text-2: #5a5e68;
+    --text-3: #8a8e98;
 
-    --action-bg: #2f6ae0;
-    --action-fg: #ffffff;
-    --action-hover: #2456bd;
-    --action-text: #2456bd;
-    --action-soft: rgba(47, 106, 224, 0.09);
+    /* 主操作 = 墨色；信号蓝只用于文字与焦点 */
+    --action-bg: #17191f;
+    --action-fg: #fbfaf7;
+    --action-hover: #2d313a;
+    --action-text: #1b5cff;
+    --action-soft: rgba(27, 92, 255, 0.08);
 
-    --inverse-bg: #101728;
-    --inverse-fg: #f4f6fb;
-    --inverse-hover: #242c40;
-    --overlay: rgba(16, 24, 40, 0.34);
-    --control-off: #b6c1d4;
+    --inverse-bg: #17191f;
+    --inverse-fg: #fbfaf7;
+    --inverse-hover: #2d313a;
+    --overlay: rgba(12, 13, 16, 0.36);
+    --control-off: #c9c6bd;
 
-    /* 连接形态：直连 azure、本机路由 teal、聚合 violet */
-    --direct-fill: #2f6ae0;
-    --direct-text: #2456bd;
-    --direct-soft: rgba(47, 106, 224, 0.09);
-    --direct-solid: #2f6ae0;
+    /* 连接形态：直连电光蓝、本机路由翡翠、聚合紫罗兰 */
+    --direct-fill: #1b5cff;
+    --direct-text: #164ddb;
+    --direct-soft: rgba(27, 92, 255, 0.09);
+    --direct-solid: #1b5cff;
     --direct-on: #ffffff;
-    --direct-border: rgba(47, 106, 224, 0.3);
+    --direct-border: rgba(27, 92, 255, 0.32);
 
-    --route-fill: #0d9488;
-    --route-text: #0b7a70;
-    --route-soft: rgba(13, 148, 136, 0.1);
-    --route-solid: #0d9488;
+    --route-fill: #0f8a6a;
+    --route-text: #0b755b;
+    --route-soft: rgba(15, 138, 106, 0.1);
+    --route-solid: #0f8a6a;
     --route-on: #ffffff;
-    --route-border: rgba(13, 148, 136, 0.28);
+    --route-border: rgba(15, 138, 106, 0.3);
 
-    --stack-fill: #6d56e0;
-    --stack-text: #5b45c9;
-    --stack-soft: rgba(109, 86, 224, 0.1);
-    --stack-solid: #6d56e0;
+    --stack-fill: #6b53d8;
+    --stack-text: #5943c2;
+    --stack-soft: rgba(107, 83, 216, 0.1);
+    --stack-solid: #6b53d8;
     --stack-on: #ffffff;
-    --stack-border: rgba(109, 86, 224, 0.26);
+    --stack-border: rgba(107, 83, 216, 0.28);
 
-    --success: #12a45a;
-    --success-text: #0d8a4b;
-    --success-soft: rgba(18, 164, 90, 0.1);
-    --warning: #b47800;
-    --warning-text: #96640a;
-    --warning-soft: rgba(180, 120, 0, 0.1);
-    --danger: #d62d42;
-    --danger-text: #b31f33;
-    --danger-soft: rgba(214, 45, 66, 0.09);
+    --success: #0e9f62;
+    --success-text: #0a7f4e;
+    --success-soft: rgba(14, 159, 98, 0.1);
+    --warning: #9a6b00;
+    --warning-text: #835a00;
+    --warning-soft: rgba(154, 107, 0, 0.1);
+    --danger: #c0362d;
+    --danger-text: #a52b23;
+    --danger-soft: rgba(192, 54, 45, 0.09);
 
-    --chart-1: #2f6ae0;
-    --chart-2: #0d9488;
-    --chart-3: #6d56e0;
-    --chart-grid: #e6ecf6;
-    /* 热力图四档：azure 由浅到实，最深档直接用主色 */
-    --heat-1: rgba(47, 106, 224, 0.14);
-    --heat-2: rgba(47, 106, 224, 0.34);
-    --heat-3: rgba(47, 106, 224, 0.6);
-    --heat-4: #2f6ae0;
+    --chart-1: #1b5cff;
+    --chart-2: #0f8a6a;
+    --chart-3: #6b53d8;
+    --chart-grid: #e7e5de;
+    --heat-1: rgba(27, 92, 255, 0.14);
+    --heat-2: rgba(27, 92, 255, 0.34);
+    --heat-3: rgba(27, 92, 255, 0.62);
+    --heat-4: #1b5cff;
 
     /* 会话阅读页按 Agent 上色：统一压到同一亮度档，正文保持中性 */
-    --agent-claude: #c2613f;
-    --agent-codex: #4c5871;
-    --agent-gemini: #2456bd;
-    --agent-opencode: #0b7a70;
-    --agent-pi: #5b45c9;
+    --agent-claude: #b65a3a;
+    --agent-codex: #5a5e68;
+    --agent-gemini: #164ddb;
+    --agent-opencode: #0b755b;
+    --agent-pi: #5943c2;
     --agent-generic: var(--text-2);
     --diff-add-bg: var(--success-soft);
     --diff-del-bg: var(--danger-soft);
 
-    --shadow-sm: 0 1px 2px rgba(16, 24, 40, 0.06);
-    --shadow-md: 0 1px 2px rgba(16, 24, 40, 0.05),
-      0 6px 18px rgba(16, 24, 40, 0.06);
-    --shadow-lg: 0 2px 4px rgba(16, 24, 40, 0.06),
-      0 18px 44px rgba(16, 24, 40, 0.12);
+    /* 阴影只做 1px 落影；纸面靠标尺线分层 */
+    --shadow-sm: 0 1px 1px rgba(16, 18, 22, 0.04);
+    --shadow-md: 0 1px 2px rgba(16, 18, 22, 0.05),
+      0 8px 24px rgba(16, 18, 22, 0.06);
+    --shadow-lg: 0 2px 4px rgba(16, 18, 22, 0.06),
+      0 24px 64px rgba(16, 18, 22, 0.14);
   }
 
-  /* ── 深色（默认观感）────────────────────────────────────────────── */
+  /* ── 深色：墨底（默认观感）──────────────────────────────────────── */
   .dark {
-    --background: 213 40% 6%;
-    --foreground: 220 48% 94%;
-    --card: 217 40% 10%;
-    --card-foreground: 220 48% 94%;
-    --popover: 217 42% 12%;
-    --popover-foreground: 220 48% 94%;
+    --background: 220 9% 5%;
+    --foreground: 60 7% 95%;
+    --card: 225 8% 8%;
+    --card-foreground: 60 7% 95%;
+    --popover: 225 8% 10%;
+    --popover-foreground: 60 7% 95%;
 
-    /* 深色下实心按钮仍是 azure 深底 + 白字；文字/描边用的 azure 提亮一档 */
-    --primary: 218 100% 65%;
-    --primary-foreground: 216 45% 8%;
+    --primary: 222 100% 68%;
+    --primary-foreground: 220 14% 7%;
 
-    --secondary: 217 39% 13%;
-    --secondary-foreground: 220 30% 90%;
-    --muted: 217 39% 13%;
-    --muted-foreground: 220 45% 68%;
-    --accent: 217 39% 16%;
-    --accent-foreground: 220 30% 92%;
+    --secondary: 225 7% 12%;
+    --secondary-foreground: 60 7% 92%;
+    --muted: 225 7% 12%;
+    --muted-foreground: 220 6% 64%;
+    --accent: 225 7% 15%;
+    --accent-foreground: 60 7% 93%;
 
-    --destructive: 354 100% 68%;
-    --destructive-foreground: 355 60% 10%;
+    --destructive: 4 100% 67%;
+    --destructive-foreground: 4 40% 8%;
 
-    --border: 218 26% 22%;
-    --input: 218 26% 26%;
-    --ring: 218 100% 65%;
+    --border: 225 7% 17%;
+    --input: 225 7% 21%;
+    --ring: 222 100% 68%;
 
-    --bg-app: #0a0e17;
-    --bg-sidebar: #0c1220;
-    --bg-subtle: #141d2e;
-    --bg-selected: #1a2437;
-    --bg-card: #101725;
-    --hairline: rgba(255, 255, 255, 0.075);
-    --hairline-strong: rgba(255, 255, 255, 0.14);
-    --border-strong: #2b3852;
+    --bg-app: #0b0c0f;
+    --bg-sidebar: #101216;
+    --bg-subtle: #15171c;
+    --bg-selected: #1c1f26;
+    --bg-card: #111318;
+    --hairline: rgba(255, 255, 255, 0.08);
+    --hairline-strong: rgba(255, 255, 255, 0.16);
+    --border-strong: #33373f;
 
-    --text-1: #e8edf7;
-    --text-2: #9aa6bf;
-    --text-3: #66738f;
+    --text-1: #f2f2ed;
+    --text-2: #a6a8b0;
+    --text-3: #6f727b;
 
-    /* 操作色：底色用深一档 azure（白字对比度 ≥ 4.5:1），悬停才提亮 */
-    --action-bg: #2f6ae0;
-    --action-fg: #ffffff;
-    --action-hover: #4c8dff;
-    --action-text: #7aa8ff;
-    --action-soft: rgba(76, 141, 255, 0.13);
+    /* 深色下的主操作反过来：白底墨字 */
+    --action-bg: #f1f1ec;
+    --action-fg: #101115;
+    --action-hover: #ffffff;
+    --action-text: #7fa4ff;
+    --action-soft: rgba(93, 137, 255, 0.13);
 
-    --inverse-bg: #e8edf7;
-    --inverse-fg: #101728;
+    --inverse-bg: #f1f1ec;
+    --inverse-fg: #101115;
     --inverse-hover: #ffffff;
-    --overlay: rgba(4, 7, 14, 0.62);
-    --control-off: #3a4761;
+    --overlay: rgba(0, 0, 0, 0.68);
+    --control-off: #3a3e46;
 
-    --direct-fill: #4c8dff;
-    --direct-text: #8fb4ff;
-    --direct-soft: rgba(76, 141, 255, 0.13);
-    --direct-solid: #2f6ae0;
+    --direct-fill: #6b93ff;
+    --direct-text: #9bb7ff;
+    --direct-soft: rgba(107, 147, 255, 0.13);
+    --direct-solid: #4d7cff;
     --direct-on: #ffffff;
-    --direct-border: rgba(76, 141, 255, 0.45);
+    --direct-border: rgba(107, 147, 255, 0.46);
 
-    --route-fill: #35d6c0;
-    --route-text: #6fe3d2;
-    --route-soft: rgba(53, 214, 192, 0.12);
-    --route-solid: #17a894;
-    --route-on: #04211d;
-    --route-border: rgba(53, 214, 192, 0.42);
+    --route-fill: #47d7ae;
+    --route-text: #79e8c8;
+    --route-soft: rgba(71, 215, 174, 0.12);
+    --route-solid: #17a887;
+    --route-on: #04201a;
+    --route-border: rgba(71, 215, 174, 0.4);
 
-    --stack-fill: #9b8cff;
-    --stack-text: #b6aaff;
-    --stack-soft: rgba(155, 140, 255, 0.13);
-    --stack-solid: #6d56e0;
+    --stack-fill: #a490ff;
+    --stack-text: #bdaaff;
+    --stack-soft: rgba(164, 144, 255, 0.13);
+    --stack-solid: #7459e8;
     --stack-on: #ffffff;
-    --stack-border: rgba(155, 140, 255, 0.42);
+    --stack-border: rgba(164, 144, 255, 0.4);
 
-    --success: #3ddc84;
-    --success-text: #58e396;
-    --success-soft: rgba(61, 220, 132, 0.12);
-    --warning: #ffb020;
-    --warning-text: #ffc357;
-    --warning-soft: rgba(255, 176, 32, 0.12);
-    --danger: #ff5a6e;
-    --danger-text: #ff8593;
-    --danger-soft: rgba(255, 90, 110, 0.12);
+    --success: #3edc97;
+    --success-text: #6ce7b2;
+    --success-soft: rgba(62, 220, 151, 0.12);
+    --warning: #f2b44c;
+    --warning-text: #f7c66f;
+    --warning-soft: rgba(242, 180, 76, 0.12);
+    --danger: #ff6b5f;
+    --danger-text: #ff958c;
+    --danger-soft: rgba(255, 107, 95, 0.12);
 
-    --chart-1: #4c8dff;
-    --chart-2: #35d6c0;
-    --chart-3: #9b8cff;
-    --chart-grid: #1c2739;
-    --heat-1: rgba(76, 141, 255, 0.18);
-    --heat-2: rgba(76, 141, 255, 0.4);
-    --heat-3: rgba(76, 141, 255, 0.68);
-    --heat-4: #4c8dff;
+    --chart-1: #6b93ff;
+    --chart-2: #47d7ae;
+    --chart-3: #a490ff;
+    --chart-grid: #1f2229;
+    --heat-1: rgba(107, 147, 255, 0.18);
+    --heat-2: rgba(107, 147, 255, 0.4);
+    --heat-3: rgba(107, 147, 255, 0.68);
+    --heat-4: #6b93ff;
 
-    --agent-claude: #e08a6a;
-    --agent-codex: #9aa6bf;
-    --agent-gemini: #7aa8ff;
-    --agent-opencode: #6fe3d2;
-    --agent-pi: #b6aaff;
+    --agent-claude: #e09172;
+    --agent-codex: #a6a8b0;
+    --agent-gemini: #9bb7ff;
+    --agent-opencode: #79e8c8;
+    --agent-pi: #bdaaff;
     --agent-generic: var(--text-2);
     --diff-add-bg: var(--success-soft);
     --diff-del-bg: var(--danger-soft);
 
-    /* 阴影：1px 内高光 + 落影，不做玻璃模糊与彩色光晕 */
-    --shadow-sm: 0 1px 0 rgba(255, 255, 255, 0.04) inset,
-      0 1px 2px rgba(0, 0, 0, 0.3);
-    --shadow-md: 0 1px 0 rgba(255, 255, 255, 0.04) inset,
-      0 8px 24px rgba(0, 0, 0, 0.35);
-    --shadow-lg: 0 1px 0 rgba(255, 255, 255, 0.05) inset,
-      0 20px 48px rgba(0, 0, 0, 0.5);
+    --shadow-sm: 0 1px 0 rgba(255, 255, 255, 0.03) inset,
+      0 1px 1px rgba(0, 0, 0, 0.35);
+    --shadow-md: 0 1px 0 rgba(255, 255, 255, 0.03) inset,
+      0 10px 28px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 1px 0 rgba(255, 255, 255, 0.04) inset,
+      0 28px 72px rgba(0, 0, 0, 0.55);
   }
 }
 
-/* 勾选框 / 单选框：统一 16px、发丝描边、4px 圆角；选中 = azure 底 + 反白勾。
+/* 勾选框 / 单选框：统一 15px、发丝描边、3px 圆角；选中 = 墨色底 + 反白勾。
    原生 input 加 ui-checkbox / ui-radio 即可，Checkbox 组件已带上。 */
 @layer components {
   .ui-checkbox,
@@ -253,8 +252,8 @@
     display: inline-grid;
     place-content: center;
     flex-shrink: 0;
-    width: 16px;
-    height: 16px;
+    width: 15px;
+    height: 15px;
     margin: 0;
     border: 1px solid var(--border-strong);
     background-color: var(--bg-card);
@@ -264,7 +263,7 @@
       border-color 140ms ease;
   }
   .ui-checkbox {
-    border-radius: 4px;
+    border-radius: 3px;
   }
   .ui-radio {
     border-radius: 9999px;
@@ -314,7 +313,7 @@
     opacity: 0.45;
   }
 
-  /* Ink & Grid 的招牌细节：卡片悬停时左侧出现 2px 强调条 */
+  /* 纸面招牌细节：行悬停时左侧出现 2px 信号蓝标尺 */
   .af-accent-rail {
     position: relative;
     overflow: hidden;
@@ -326,7 +325,7 @@
     top: 0;
     bottom: 0;
     width: 2px;
-    background: var(--action-bg);
+    background: var(--action-text);
     transform: scaleY(0);
     transform-origin: center;
     transition: transform 160ms ease;
@@ -338,10 +337,48 @@
 
   /* 数字一律等宽对齐，KPI 与表格共用 */
   .af-num {
-    font-family: ui-monospace, "JetBrains Mono", "SFMono-Regular", Consolas,
-      monospace;
+    font-family: ui-monospace, "JetBrains Mono", "SFMono-Regular", "Cascadia Mono",
+      Consolas, monospace;
     font-variant-numeric: tabular-nums;
     letter-spacing: -0.02em;
+  }
+
+  /* 分区眉标：等宽小字 + 宽字距，像印刷品的栏目标签 */
+  .af-kicker {
+    font-family: ui-monospace, "JetBrains Mono", "SFMono-Regular", "Cascadia Mono",
+      Consolas, monospace;
+    font-size: 10px;
+    font-weight: 600;
+    line-height: 14px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-3);
+  }
+
+  /* 一整行标尺：比 border 更轻，不占布局高度 */
+  .af-rule {
+    height: 1px;
+    background: var(--hairline);
+  }
+
+  /* 页眉里的选中记号：一条 2px 信号蓝短线，不铺满整格 */
+  .af-nav-mark {
+    position: relative;
+  }
+  .af-nav-mark::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -1px;
+    height: 2px;
+    background: var(--action-text);
+    transform: scaleX(0);
+    transform-origin: left center;
+    transition: transform 160ms ease;
+  }
+  .af-nav-mark[data-active="true"]::after {
+    transform: scaleX(1);
   }
 }
 

@@ -127,17 +127,11 @@
     "updatesCheck": "Check for updates",
     "updatesRunAll": "Update all",
     "manageKey": "Manage connection",
-    "toolsLabel": "More",
     "appConnected": "Connected to the platform",
     "appLocal": "Using local configuration",
     "modeLabel": "Connection",
     "modeDirectHint": "The client talks to the platform gateway directly",
     "modeConvertHint": "Routed through the local conversion service",
-    "targetLabel": "Saved to",
-    "targetHint": "Written as soon as you save",
-    "targetLoading": "Loading…",
-    "openFolder": "Open folder",
-    "openFolderFailed": "Could not open the folder",
     "usageLabel": "Recent usage",
     "usageNone": "No usage in the last 7 days",
     "usageLine": "{{requests}} requests · ${{cost}} · {{tokens}} tokens",
@@ -771,7 +765,7 @@
         "synologyHint": "Install and enable the WebDAV Server package in Synology Package Center first.",
         "custom": "Custom"
       },
-      "remoteRootDefault": "Default: cc-switch-sync",
+      "remoteRootDefault": "Default: aifusion-sync",
       "profileDefault": "Default: default",
       "saveAndTestSuccess": "Config saved, connection OK",
       "saveAndTestFailed": "Config saved, but connection test failed: {{error}}",
@@ -836,7 +830,7 @@
       "region": "Region",
       "regionPlaceholder": "e.g. us-east-1",
       "bucket": "Bucket",
-      "bucketPlaceholder": "e.g. my-cc-switch-bucket",
+      "bucketPlaceholder": "e.g. my-aifusion-bucket",
       "accessKeyId": "Access Key ID",
       "accessKeyIdPlaceholder": "e.g. AKIA...",
       "secretAccessKey": "Secret Access Key",
@@ -845,7 +839,7 @@
       "endpointHint": "Required for most S3-compatible services",
       "endpointPlaceholder": "e.g. https://s3-compatible.example.com",
       "remoteRoot": "Remote Root Directory",
-      "remoteRootDefault": "Default: cc-switch-sync",
+      "remoteRootDefault": "Default: aifusion-sync",
       "profile": "Sync Profile Name",
       "profileDefault": "Default: default",
       "autoSync": "Auto Sync",
@@ -1034,6 +1028,7 @@
     "updateBadge": "Update available",
     "updateFailed": "Update installation failed, attempted to open download page.",
     "checkUpdateFailed": "Failed to check for updates, please try again later.",
+    "checkUpdateOpened": "Opened the AIFusion platform — download the latest version there.",
     "openReleaseNotesFailed": "Failed to open release notes",
     "releaseNotes": "Release Notes",
     "viewReleaseNotes": "View release notes for this version",
@@ -2401,7 +2396,6 @@
     "downloading": "Downloading update…",
     "upgradeNow": "Upgrade app",
     "retry": "Retry upgrade",
-    "openReleases": "Open releases page",
     "openConfigDir": "Open config folder",
     "quit": "Quit"
   },
@@ -3741,6 +3735,7 @@
     "collapseSidebar": "Collapse sidebar",
     "appsGroup": "Apps",
     "home": "Overview",
+    "overview": "Overview",
     "today": "Today {{value}}",
     "todayRequests": "{{value}} req",
     "todayHitRate": "Hit {{value}}",
@@ -3762,7 +3757,9 @@
     "back": "Back",
     "walletBalance": "Wallet balance",
     "walletUnavailable": "Not connected",
-    "walletHint": "Live USD balance from the platform, queried with the locally stored key and refreshed every minute"
+    "walletHint": "Live USD balance from the platform, queried with the locally stored key and refreshed every minute",
+    "mcp": "MCP",
+    "skills": "Skills"
   },
   "appsPage": {
     "showInHome": "Show {{name}} on the home page",
@@ -4358,12 +4355,6 @@
     "updateAllCount": "Update all ({{count}})",
     "updatingProgress": "Updating {{done}}/{{total}}…"
   },
-  "newLayoutNotice": {
-    "title": "AIFusion has a new look",
-    "body": "This version redesigns the interface, so a few things have moved:\n• Modes now sit at the top of each app page\n• Usage and Accounts are in the sidebar\nSee the release notes for everything that changed.",
-    "viewReleaseNotes": "View release notes",
-    "confirm": "Got it"
-  },
   "whatsNew": {
     "updatedTo": "Updated to v{{version}}",
     "recentTitle": "Recent updates",
@@ -4373,9 +4364,7 @@
       "fix": "Fix",
       "improve": "Improved"
     },
-    "versionDetails": "Details",
     "showEarlier": "{{count}} earlier version(s)",
-    "viewFull": "View full changelog",
     "confirm": "Got it"
   }
 }

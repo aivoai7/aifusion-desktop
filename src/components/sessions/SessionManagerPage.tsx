@@ -11,7 +11,6 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Check,
   ChevronDown,
-  History,
   LayoutGrid,
   MoreHorizontal,
 } from "lucide-react";
@@ -37,7 +36,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { HoverTip } from "@/components/ui/hover-tip";
-import { AppPageHeader } from "@/components/shell/AppPageHeader";
+import { PageMasthead } from "@/components/shell/PageMasthead";
 import { AppGlyph, APP_DISPLAY_NAME } from "@/components/shell/AppGlyph";
 import { extractErrorMessage } from "@/utils/errorUtils";
 import { isMac } from "@/lib/platform";
@@ -62,10 +61,10 @@ import {
   type SessionTimeBucket,
 } from "./utils";
 
-const GROUP_MODE_STORAGE_KEY = "cc-switch.sessionManager.groupMode";
+const GROUP_MODE_STORAGE_KEY = "aifusion.sessionManager.groupMode";
 // 按项目分组时默认全部收起，只记住用户手动展开过的项目。
 // 换了新键：旧的 collapsedProjects 记的是「收起了哪些」，语义相反，直接弃用。
-const EXPANDED_STORAGE_KEY = "cc-switch.sessionManager.expandedProjects";
+const EXPANDED_STORAGE_KEY = "aifusion.sessionManager.expandedProjects";
 
 type AppFilter = SessionAppId | "all";
 type GroupMode = "time" | "project";
@@ -937,8 +936,8 @@ export function SessionManagerPage({
     >
       {/* 阅读页自己画页头（返回、会话名和会话的操作并在一条里），这里只在列表时画 */}
       {!readerSession && (
-        <AppPageHeader
-          icon={<History className="h-5 w-5" strokeWidth={1.5} />}
+        <PageMasthead
+          kicker="Sessions"
           title={t("nav.sessions", { defaultValue: "会话" })}
           titleExtra={
             <HelpTip
@@ -1055,7 +1054,8 @@ export function SessionManagerPage({
             readerSession && "hidden",
           )}
         >
-          <div className="flex shrink-0 items-center gap-2 px-6 pt-3.5">
+          <div className="mx-auto flex min-h-0 w-full max-w-[1160px] flex-1 flex-col px-8">
+          <div className="flex shrink-0 items-center gap-2 pt-3.5">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
@@ -1224,7 +1224,7 @@ export function SessionManagerPage({
           )}
           {appFilter === "pi" &&
             (piStatus === "unavailable" || piSessionDiscovery.isError) && (
-              <div role="alert" className="mx-6 mt-3 shrink-0">
+              <div role="alert" className="mt-3 shrink-0">
                 <Notice
                   tone="danger"
                   title={t("sessionManager.piDiscoveryUnavailable", {
@@ -1238,7 +1238,7 @@ export function SessionManagerPage({
             )}
 
           {selectionMode && (
-            <div className="flex shrink-0 items-center gap-1.5 whitespace-nowrap px-6 pt-2 text-caption text-fg-2">
+            <div className="flex shrink-0 items-center gap-1.5 whitespace-nowrap pt-2 text-caption text-fg-2">
               <span className="tabular-nums">
                 {trimmedQuery
                   ? t("sessionManager.matchCount", {
@@ -1307,13 +1307,13 @@ export function SessionManagerPage({
                   defaultValue: "会话列表",
                 })}
                 ref={listScrollRef}
-                className="mx-6 mt-3 min-h-0 shrink overflow-y-auto scroll-stable overscroll-contain rounded-panel border border-border bg-surface"
+                className="mt-3 min-h-0 shrink overflow-y-auto scroll-stable overscroll-contain rounded-panel border border-border bg-surface"
                 style={{ scrollPaddingTop: groupMode === "project" ? 44 : 8 }}
               >
                 {renderList()}
               </div>
               {appFilter === "hermes" && (
-                <p className="m-0 mx-6 mt-2 shrink-0 text-caption text-fg-3">
+                <p className="m-0 mt-2 shrink-0 text-caption text-fg-3">
                   {t("sessionManager.hermesLimit", {
                     defaultValue: "Hermes 只显示最近 500 个会话",
                   })}
@@ -1325,7 +1325,7 @@ export function SessionManagerPage({
           <div className="h-4 shrink-0" />
 
           {selectionMode && (
-            <div className="flex h-14 shrink-0 items-center gap-2 border-t border-border bg-surface pe-4 ps-6">
+            <div className="flex h-14 shrink-0 items-center gap-2 border-t border-border bg-surface pe-1">
               <span
                 role="status"
                 className="min-w-0 flex-1 truncate text-body text-fg-1"
@@ -1373,6 +1373,7 @@ export function SessionManagerPage({
               </Button>
             </div>
           )}
+          </div>
         </div>
       </div>
 

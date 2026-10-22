@@ -1,87 +1,35 @@
-mod app_config;
+//! Tauri 壳：窗口、托盘、深链接、前端命令。业务逻辑都在 `aifusion_engine` 里。
+//!
+//! 引擎模块（配置读写、SQLite、模式切换、15721 代理、会话读取、各 service）已经
+//! 物理搬到 `native/engine/`，这里用 `pub use aifusion_engine::*` 把它们重新摊到壳层
+//! 根路径上，`commands/` 里原有的 `crate::xxx::yyy` 调用点因此不用改。
+
 mod app_store;
-mod auto_launch;
-mod claude_desktop_config;
-mod claude_mcp;
-mod claude_plugin;
-mod codex_config;
-mod codex_history_migration;
-mod codex_rollout_file;
-mod codex_state_db;
 mod commands;
-mod config;
-mod database;
-mod deeplink;
-mod error;
-mod gemini_config;
-mod gemini_mcp;
-mod grok_config;
-pub mod hermes_config;
-mod init_status;
-mod jsonc_document;
 mod lightweight;
 #[cfg(target_os = "linux")]
 mod linux_fix;
-pub mod live;
-mod mcode_config;
-mod mcp;
-pub mod mode;
-mod model_capabilities;
-mod openclaw_config;
-mod opencode_config;
-mod panic_hook;
-mod pi_config;
-mod prompt;
-mod prompt_files;
-mod provider;
-mod proxy;
-mod services;
-mod session_manager;
-mod settings;
-mod store;
-
+mod platform_login;
+mod shell_impl;
 mod tray;
 mod tray_panel;
-mod usage_events;
-mod usage_script;
 
-pub use app_config::{AppType, InstalledSkill, McpApps, McpServer, MultiAppConfig, SkillApps};
-pub use codex_config::{
-    extract_codex_experimental_bearer_token, get_codex_auth_path, get_codex_config_path,
-    read_codex_live_settings, write_codex_live_atomic,
-};
+pub use aifusion_engine::*;
+use aifusion_engine::shell::global as shell_global;
 pub use commands::open_provider_terminal;
 pub use commands::*;
-pub use config::{
-    get_app_config_path, get_claude_mcp_path, get_claude_settings_path, read_json_file,
-};
-pub use database::{Database, Profile};
-pub use deeplink::{import_provider_from_deeplink, parse_deeplink_url, DeepLinkImportRequest};
-pub use error::AppError;
-pub use grok_config::get_grok_config_path;
-pub use mcp::{
-    import_from_claude, import_from_codex, import_from_gemini, import_from_grokbuild,
-    remove_server_from_claude, remove_server_from_codex, remove_server_from_gemini,
-    remove_server_from_grokbuild, sync_enabled_to_claude, sync_enabled_to_codex,
-    sync_enabled_to_gemini, sync_single_server_to_claude, sync_single_server_to_codex,
-    sync_single_server_to_gemini, sync_single_server_to_grokbuild,
-};
-pub use prompt::Prompt;
-pub use provider::{Provider, ProviderMeta};
-pub use services::{
-    profile::{ProfilePayload, ProfileScope, ProfileService},
-    provider::{reapply_current_codex_official_live, EditorSave, EditorView},
-    skill::{migrate_skills_to_ssot, ImportSkillSelection},
-    ConfigService, EndpointLatency, McpService, PromptService, ProviderService, ProxyService,
-    SkillService, SpeedtestService,
-};
-pub use settings::{update_settings, AppSettings};
-pub use store::AppState;
+pub use shell_impl::TauriShell;
+
+// 两个名字在引擎和壳层命令里都出现过（壳层那边只是给 invoke_handler 用的包装）。
+// 这里显式指回引擎实现，根路径 `crate::xxx` 的调用点才不会出现二义性；
+// 命令包装仍然可以从 `commands::config::…` / `commands::misc::…` 正常拿到。
+pub use aifusion_engine::{decode_command_output, get_app_config_path};
+
 use tauri_plugin_deep_link::DeepLinkExt;
 use tauri_plugin_dialog::{DialogExt, MessageDialogButtons, MessageDialogKind};
 
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::{fmt, sync::Arc};
+use std::sync::Arc;
 use tauri::tray::{TrayIconBuilder, TrayIconEvent};
 use tauri::RunEvent;
 use tauri::{Emitter, Manager};
@@ -103,157 +51,6 @@ fn set_windows_app_user_model_id(app: &tauri::AppHandle) {
     }
 }
 
-pub(crate) struct RedactedUrl<'a> {
-    url: &'a str,
-    known_secrets: &'a [String],
-}
-
-impl fmt::Display for RedactedUrl<'_> {
-    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-        formatter.write_str(&redact_url_for_log_with_secrets(
-            self.url,
-            self.known_secrets,
-        ))
-    }
-}
-
-/// 为日志提供惰性 URL 脱敏包装；只有日志实际输出时才解析和重建 URL。
-pub(crate) fn url_for_log(url: &str) -> RedactedUrl<'_> {
-    RedactedUrl {
-        url,
-        known_secrets: &[],
-    }
-}
-
-/// 为持有确切认证材料的调用方提供优先精确匹配、再启发式兜底的 URL 脱敏。
-pub(crate) fn url_for_log_with_secrets<'a>(
-    url: &'a str,
-    known_secrets: &'a [String],
-) -> RedactedUrl<'a> {
-    RedactedUrl { url, known_secrets }
-}
-
-/// 已知密钥参与子串脱敏的最短长度：过短的值(如 "api")当作子串会误伤无关文本，
-/// 所以只对足够长、几乎不可能是普通词的值做替换。
-const MIN_KNOWN_SECRET_LEN: usize = 8;
-
-/// 唯一的密钥脱敏原语：把字符串里出现的、我们确切握有的密钥值替换为 [REDACTED]。
-/// 不做任何“看起来像密钥”的形状猜测——只隐藏已知值，天然收敛、不误伤正常路径。
-pub(crate) fn redact_known_secrets(text: &str, known_secrets: &[String]) -> String {
-    redact_known_secrets_with_min_length(text, known_secrets, MIN_KNOWN_SECRET_LEN)
-}
-
-/// Exact-value redaction for user-visible error text. Unlike URL logging, a
-/// short known credential must still be hidden because the result reaches the
-/// UI rather than a diagnostic-only path.
-pub(crate) fn redact_known_secrets_strict(text: &str, known_secrets: &[String]) -> String {
-    redact_known_secrets_with_min_length(text, known_secrets, 1)
-}
-
-fn redact_known_secrets_with_min_length(
-    text: &str,
-    known_secrets: &[String],
-    minimum_chars: usize,
-) -> String {
-    let mut output = text.to_string();
-    for secret in known_secrets {
-        if secret.chars().count() >= minimum_chars {
-            output = output.replace(secret.as_str(), "[REDACTED]");
-        }
-    }
-    output
-}
-
-/// 无 scheme 的裸 authority 形态(如 `user:pass@host/path`)剥掉 userinfo：
-/// 仅当 `@` 出现在第一个 `/` 之前时才视为凭据。
-fn strip_bare_userinfo(input: &str) -> &str {
-    let authority_end = input.find('/').unwrap_or(input.len());
-    match input[..authority_end].rfind('@') {
-        Some(at) => &input[at + 1..],
-        None => input,
-    }
-}
-
-pub(crate) fn redact_url_for_log(url_str: &str) -> String {
-    redact_url_for_log_with_secrets(url_str, &[])
-}
-
-/// 为日志脱敏 URL：剥掉 userinfo(user:pass@) 与整个 query/fragment，保留
-/// scheme/host/port/path 供诊断(如 base_url 配错路径导致 404)，最后再抹掉已知密钥值。
-pub(crate) fn redact_url_for_log_with_secrets(url_str: &str, known_secrets: &[String]) -> String {
-    let scheme_relative = url_str.starts_with("//");
-    let parsed = if scheme_relative {
-        url::Url::parse(&format!("https:{url_str}"))
-    } else {
-        url::Url::parse(url_str)
-    };
-
-    let sanitized = match parsed {
-        Ok(mut url) if url.has_host() => {
-            let _ = url.set_username("");
-            let _ = url.set_password(None);
-            url.set_query(None);
-            url.set_fragment(None);
-            let rendered = url.as_str();
-            if scheme_relative {
-                rendered
-                    .strip_prefix("https:")
-                    .unwrap_or(rendered)
-                    .to_string()
-            } else {
-                rendered.to_string()
-            }
-        }
-        _ => {
-            // 解析失败(相对路径、含裸 userinfo 的非法 URL 等)：丢掉 query/fragment，
-            // 尽力剥掉 userinfo，其余原样保留。
-            let without_tail = url_str.split(['?', '#']).next().unwrap_or(url_str);
-            strip_bare_userinfo(without_tail).to_string()
-        }
-    };
-
-    redact_known_secrets(&sanitized, known_secrets)
-}
-
-/// 只保留 `scheme://host:port`，丢掉 path/query/userinfo。用于我们手里没有任何
-/// 已知密钥可脱敏 path 的场景——凭据可能整个内嵌在 base_url 的 path 里，此时
-/// 记录 path 无法保证不泄漏，只能退回到 origin。
-pub(crate) fn redact_url_origin_for_log(url_str: &str) -> String {
-    let scheme_relative = url_str.starts_with("//");
-    let parsed = if scheme_relative {
-        url::Url::parse(&format!("https:{url_str}"))
-    } else {
-        url::Url::parse(url_str)
-    };
-
-    match parsed {
-        Ok(url) if url.has_host() => {
-            let authority = &url[url::Position::BeforeHost..url::Position::AfterPort];
-            if scheme_relative {
-                format!("//{authority}")
-            } else {
-                format!("{}://{authority}", url.scheme())
-            }
-        }
-        _ => "[invalid target]".to_string(),
-    }
-}
-
-/// 给日志用的错误文本：去掉 TOML 解析诊断里引用的源码行（`1 | key = "..."` 和它上下的
-/// `|`、`^` 标注行）。那一行是用户配置原文，出错的可能正是密钥那一行；行列号和原因留着。
-pub(crate) fn error_for_log(error: &str) -> String {
-    error
-        .lines()
-        .filter(|line| {
-            !line
-                .trim_start()
-                .trim_start_matches(|c: char| c.is_ascii_digit())
-                .trim_start()
-                .starts_with('|')
-        })
-        .collect::<Vec<_>>()
-        .join("\n")
-}
 
 fn runtime_log_level_allows(level: log::Level, max_level: log::LevelFilter) -> bool {
     max_level.to_level().is_some_and(|maximum| level <= maximum)
@@ -486,7 +283,7 @@ pub fn run() {
             app_store::refresh_app_config_dir_override(app.handle());
             panic_hook::init_app_config_dir(crate::config::get_app_config_dir());
 
-            // 初始化日志（输出到 <app_config_dir>/logs/cc-switch.log）
+            // 初始化日志（输出到 <app_config_dir>/logs/aifusion.log）
             {
                 use tauri_plugin_log::{RotationStrategy, Target, TargetKind, TimezoneStrategy};
 
@@ -562,10 +359,10 @@ pub fn run() {
                 }
             }
 
-            // 注入 AppHandle 给 usage_events，让无 AppHandle 持有的写日志路径
-            // 也能向前端推送 `usage-log-recorded`。
-            // 放在日志系统初始化之后，确保 init 的日志能正常输出。
-            usage_events::init(app.handle().clone());
+            // 把壳层登记给引擎：发事件、取 OAuth 状态、刷托盘、跑本机工具命令
+            // 都从这里走。放在日志初始化之后，确保登记日志能落盘。
+            let shell = Arc::new(TauriShell::new(app.handle().clone()));
+            aifusion_engine::shell::set_global(shell);
 
             // 初始化数据库
             let app_config_dir = crate::config::get_app_config_dir();
@@ -703,8 +500,8 @@ pub fn run() {
 
             let app_state = AppState::new(db);
 
-            // 设置 AppHandle 用于代理故障转移时的 UI 更新
-            app_state.proxy_service.set_app_handle(app.handle().clone());
+            // 代理故障转移后要发事件、刷托盘，都通过壳层句柄
+            app_state.proxy_service.set_shell(shell_global());
 
             // 补完上次崩溃时写到一半的客户端文件（写前意图在 ~/.cc-switch/live-state.json），
             // 要在任何写客户端文件的启动步骤之前。
@@ -1246,12 +1043,9 @@ pub fn run() {
             let _tray = tray_builder.build(app)?;
             crate::services::webdav_auto_sync::start_worker(
                 app_state.db.clone(),
-                app.handle().clone(),
+                shell_global(),
             );
-            crate::services::s3_auto_sync::start_worker(
-                app_state.db.clone(),
-                app.handle().clone(),
-            );
+            crate::services::s3_auto_sync::start_worker(app_state.db.clone(), shell_global());
             // 将同一个实例注入到全局状态，避免重复创建导致的不一致
             app.manage(app_state);
 
@@ -2096,89 +1890,6 @@ async fn bootstrap_aifusion_platform(state: &store::AppState) {
     let _ = state.db.set_setting("aifusion_bootstrapped", "true");
 }
 
-fn initialize_common_config_snippets(state: &store::AppState) {
-    // Auto-extract common config snippets from clean live files when snippet is missing.
-    // This must run before proxy mode is re-attached on startup, otherwise we'd read
-    // proxy-placeholder configs instead of the user's actual live settings. A client
-    // still attached from an update restart (no detach on the way out) is skipped too.
-    for app_type in crate::app_config::AppType::all() {
-        if !state
-            .db
-            .should_auto_extract_config_snippet(app_type.as_str())
-            .unwrap_or(false)
-        {
-            continue;
-        }
-        if state.proxy_service.live_has_proxy_placeholder(&app_type) {
-            continue;
-        }
-
-        let settings = match crate::services::provider::ProviderService::read_live_settings(
-            app_type.clone(),
-        ) {
-            Ok(s) => s,
-            Err(_) => continue,
-        };
-
-        match crate::services::provider::ProviderService::extract_common_config_snippet_from_settings(
-            app_type.clone(),
-            &settings,
-        ) {
-            Ok(snippet) if !snippet.is_empty() && snippet != "{}" => {
-                match state.db.set_config_snippet(app_type.as_str(), Some(snippet)) {
-                    Ok(()) => {
-                        let _ = state.db.set_config_snippet_cleared(app_type.as_str(), false);
-                        log::info!(
-                            "✓ Auto-extracted common config snippet for {}",
-                            app_type.as_str()
-                        );
-                    }
-                    Err(e) => log::warn!(
-                        "✗ Failed to save config snippet for {}: {e}",
-                        app_type.as_str()
-                    ),
-                }
-            }
-            Ok(_) => log::debug!(
-                "○ Live config for {} has no extractable common fields",
-                app_type.as_str()
-            ),
-            Err(e) => log::warn!(
-                "✗ Failed to extract config snippet for {}: {e}",
-                app_type.as_str()
-            ),
-        }
-    }
-
-    let should_run_legacy_migration = state
-        .db
-        .is_legacy_common_config_migrated()
-        .map(|done| !done)
-        .unwrap_or(true);
-
-    if should_run_legacy_migration {
-        for app_type in [
-            crate::app_config::AppType::Claude,
-            crate::app_config::AppType::Codex,
-            crate::app_config::AppType::Gemini,
-        ] {
-            if let Err(e) = crate::services::provider::ProviderService::migrate_legacy_common_config_usage_if_needed(
-                state,
-                app_type.clone(),
-            ) {
-                log::warn!(
-                    "✗ Failed to migrate legacy common-config usage for {}: {e}",
-                    app_type.as_str()
-                );
-            }
-        }
-
-        if let Err(e) = state.db.set_legacy_common_config_migrated(true) {
-            log::warn!("✗ Failed to persist legacy common-config migration flag: {e}");
-        }
-    }
-}
-
 // ============================================================
 // 迁移错误对话框辅助函数
 // ============================================================
@@ -2263,7 +1974,7 @@ fn show_database_init_error_dialog(
             您的数据尚未丢失，应用不会自动删除数据库文件。\n\
             常见原因包括：数据库版本过新、文件损坏、权限不足、磁盘空间不足等。\n\n\
             建议：\n\
-            1) 先备份整个配置目录（包含 cc-switch.db）\n\
+            1) 先备份整个配置目录（包含 aifusion.db）\n\
             2) 如果提示“数据库版本过新”，请升级到更新版本\n\
             3) 如果刚升级出现异常，可回退旧版本导出/备份后再升级\n\n\
             点击「重试」重新尝试初始化\n\
@@ -2277,7 +1988,7 @@ fn show_database_init_error_dialog(
             Your data is NOT lost - the app will not delete the database automatically.\n\
             Common causes include: newer database version, corrupted file, permission issues, or low disk space.\n\n\
             Suggestions:\n\
-            1) Back up the entire config directory (including cc-switch.db)\n\
+            1) Back up the entire config directory (including aifusion.db)\n\
             2) If you see “database version is newer”, please upgrade AIFusion\n\
             3) If this happened right after upgrading, consider rolling back to export/backup then upgrade again\n\n\
             Click 'Retry' to attempt initialization again\n\

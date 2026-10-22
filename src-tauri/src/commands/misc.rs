@@ -78,30 +78,16 @@ pub async fn copy_text_to_clipboard(text: String) -> Result<bool, String> {
 pub async fn check_for_updates(handle: AppHandle) -> Result<bool, String> {
     handle
         .opener()
-        .open_url(
-            "https://github.com/farion1231/cc-switch/releases/latest",
-            None::<String>,
-        )
+        .open_url("https://op.aifusion.sbs", None::<String>)
         .map_err(|e| format!("打开更新页面失败: {e}"))?;
 
     Ok(true)
 }
 
-/// 便携版新版本压缩包的下载地址，命名与 release.yml 的「Prepare Windows Assets」一致：
-/// `CC-Switch-v<版本>-Windows[-arm64]-Portable.zip`。版本号不像版本号时返回 None。
-fn portable_zip_url(version: &str, arm64: bool) -> Option<String> {
-    let version = version.trim().trim_start_matches('v');
-    let looks_like_version = version.starts_with(|c: char| c.is_ascii_digit())
-        && version
-            .chars()
-            .all(|c| c.is_ascii_alphanumeric() || matches!(c, '.' | '-' | '+'));
-    if !looks_like_version {
-        return None;
-    }
-    let suffix = if arm64 { "-arm64" } else { "" };
-    Some(format!(
-        "https://github.com/farion1231/cc-switch/releases/download/v{version}/CC-Switch-v{version}-Windows{suffix}-Portable.zip"
-    ))
+/// 便携版更新入口：当前分发走平台，打开平台主页由用户重新下载。
+/// 不再拼接第三方仓库地址，避免把上游安装包当成 AIFusion 更新。
+fn portable_zip_url(_version: &str, _arm64: bool) -> Option<String> {
+    None
 }
 
 /// 便携版更新：直接下载对应架构的新版压缩包（解压覆盖即可，数据在 ~/.cc-switch 不受影响）。
@@ -112,7 +98,7 @@ pub async fn open_portable_update_download(
     version: String,
 ) -> Result<bool, String> {
     let url = portable_zip_url(&version, cfg!(target_arch = "aarch64"))
-        .unwrap_or_else(|| "https://github.com/farion1231/cc-switch/releases/latest".to_string());
+        .unwrap_or_else(|| "https://op.aifusion.sbs".to_string());
     handle
         .opener()
         .open_url(url, None::<String>)
@@ -461,78 +447,7 @@ fn last_lines(text: &str, n: usize) -> String {
 }
 
 pub(crate) fn decode_command_output(bytes: &[u8]) -> String {
-    #[cfg(target_os = "windows")]
-    {
-        decode_windows_command_output(bytes)
-    }
-
-    #[cfg(not(target_os = "windows"))]
-    {
-        String::from_utf8_lossy(bytes).into_owned()
-    }
-}
-
-#[cfg(target_os = "windows")]
-fn decode_windows_command_output(bytes: &[u8]) -> String {
-    if bytes.is_empty() {
-        return String::new();
-    }
-
-    if let Ok(text) = std::str::from_utf8(bytes) {
-        return text.to_string();
-    }
-
-    use windows_sys::Win32::Globalization::{GetACP, GetOEMCP, MultiByteToWideChar};
-
-    fn decode_codepage(bytes: &[u8], codepage: u32) -> Option<String> {
-        if codepage == 0 {
-            return None;
-        }
-
-        let input_len = i32::try_from(bytes.len()).ok()?;
-        unsafe {
-            let wide_len = MultiByteToWideChar(
-                codepage,
-                0,
-                bytes.as_ptr(),
-                input_len,
-                std::ptr::null_mut(),
-                0,
-            );
-            if wide_len <= 0 {
-                return None;
-            }
-
-            let mut wide = vec![0u16; wide_len as usize];
-            let written = MultiByteToWideChar(
-                codepage,
-                0,
-                bytes.as_ptr(),
-                input_len,
-                wide.as_mut_ptr(),
-                wide_len,
-            );
-            if written <= 0 {
-                return None;
-            }
-
-            Some(String::from_utf16_lossy(&wide[..written as usize]))
-        }
-    }
-
-    let oem_cp = unsafe { GetOEMCP() };
-    if let Some(decoded) = decode_codepage(bytes, oem_cp) {
-        return decoded;
-    }
-
-    let ansi_cp = unsafe { GetACP() };
-    if ansi_cp != oem_cp {
-        if let Some(decoded) = decode_codepage(bytes, ansi_cp) {
-            return decoded;
-        }
-    }
-
-    String::from_utf8_lossy(bytes).into_owned()
+    aifusion_engine::decode_command_output(bytes)
 }
 
 fn normalize_requested_tools(tools: &[String]) -> Vec<&'static str> {
@@ -1420,7 +1335,7 @@ async fn fetch_github_latest_version(client: &reqwest::Client, repo: &str) -> Op
     let url = format!("https://api.github.com/repos/{repo}/releases/latest");
     let resp = client
         .get(&url)
-        .header("User-Agent", "cc-switch")
+        .header("User-Agent", "AIFusion")
         .header("Accept", "application/vnd.github+json")
         .timeout(LATEST_PROBE_TIMEOUT)
         .send()
@@ -5451,11 +5366,11 @@ pub(crate) fn launch_terminal_running(command_line: &str, label: &str) -> Result
         let content = format!(
             r#"#!/usr/bin/env sh
 trap 'rm -f "{script_path}"' EXIT
-echo "[cc-switch] Starting: {label}"
+echo "[AIFusion] Starting: {label}"
 echo ""
 {cmd}
 echo ""
-echo "[cc-switch] Command exited. Press Enter to close."
+echo "[AIFusion] Command exited. Press Enter to close."
 read -r _
 "#,
             script_path = file.display(),
@@ -5576,7 +5491,7 @@ read -r _
 
         let bat_file = temp_dir.join(format!("cc_switch_{}_{}.bat", label, pid));
         let content = format!(
-            "@echo off\r\necho [cc-switch] Starting: {label}\r\necho.\r\n{cmd}\r\necho.\r\necho [cc-switch] Command exited. Press any key to close.\r\npause >nul\r\ndel \"%~f0\" >nul 2>&1\r\n",
+            "@echo off\r\necho [AIFusion] Starting: {label}\r\necho.\r\n{cmd}\r\necho.\r\necho [AIFusion] Command exited. Press any key to close.\r\npause >nul\r\ndel \"%~f0\" >nul 2>&1\r\n",
             label = label,
             cmd = command_line,
         );

@@ -99,8 +99,8 @@ const homeButton = () =>
   screen.getByRole("button", { name: "首页总览", hidden: true });
 
 /**
- * 首页是唯一的入口（v9）：客户端走九宫格卡片，MCP / 用量统计这些走
- * 「更多功能」那一排 chips，所以都是先回首页再点。
+ * 首页是唯一的入口（v9）：客户端走卡片，MCP / 用量统计这些走顶部导航，
+ * 所以都是先回首页再点。
  */
 const openFromHome = async (name: RegExp) => {
   fireEvent.click(homeButton());

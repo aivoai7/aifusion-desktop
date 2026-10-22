@@ -33,3 +33,6 @@ mainWindow.js
 # 本地验证产物与临时文件
 /.tmp_*
 /aifusion-*.png
+
+# 原生版（iced）构建产物
+/native/target/

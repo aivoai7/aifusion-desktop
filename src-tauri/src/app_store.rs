@@ -1,6 +1,5 @@
 use serde_json::Value;
 use std::path::PathBuf;
-use std::sync::{OnceLock, RwLock};
 use tauri_plugin_store::StoreExt;
 
 use crate::error::AppError;
@@ -8,22 +7,11 @@ use crate::error::AppError;
 /// Store 中的键名
 const STORE_KEY_APP_CONFIG_DIR: &str = "app_config_dir_override";
 
-/// 缓存当前的 app_config_dir 覆盖路径，避免存储 AppHandle
-static APP_CONFIG_DIR_OVERRIDE: OnceLock<RwLock<Option<PathBuf>>> = OnceLock::new();
-
-fn override_cache() -> &'static RwLock<Option<PathBuf>> {
-    APP_CONFIG_DIR_OVERRIDE.get_or_init(|| RwLock::new(None))
-}
-
+/// 缓存的覆盖路径归引擎所有（`aifusion_engine::paths`）：配置目录在哪只有一个答案，
+/// 壳层读到什么就写进那一份缓存，所以这里不再留一份 `get_app_config_dir_override` 包装，
+/// 调用方直接用 `aifusion_engine::paths::get_app_config_dir_override()`。
 fn update_cached_override(value: Option<PathBuf>) {
-    if let Ok(mut guard) = override_cache().write() {
-        *guard = value;
-    }
-}
-
-/// 获取缓存中的 app_config_dir 覆盖路径
-pub fn get_app_config_dir_override() -> Option<PathBuf> {
-    override_cache().read().ok()?.clone()
+    aifusion_engine::paths::set_app_config_dir_override(value);
 }
 
 fn read_override_from_store(app: &tauri::AppHandle) -> Option<PathBuf> {
@@ -105,23 +93,10 @@ pub fn set_app_config_dir_to_store(
     Ok(())
 }
 
-/// 解析路径，支持 ~ 开头的相对路径
+/// 解析路径（支持 `~`、`~/`、`~\` 前缀）：实现只有一份，在引擎的 `paths` 里，
+/// 免得多一个壳就多一套「这个路径到底指哪儿」的判断。
 fn resolve_path(raw: &str) -> PathBuf {
-    if raw == "~" {
-        if let Some(home) = dirs::home_dir() {
-            return home;
-        }
-    } else if let Some(stripped) = raw.strip_prefix("~/") {
-        if let Some(home) = dirs::home_dir() {
-            return home.join(stripped);
-        }
-    } else if let Some(stripped) = raw.strip_prefix("~\\") {
-        if let Some(home) = dirs::home_dir() {
-            return home.join(stripped);
-        }
-    }
-
-    PathBuf::from(raw)
+    aifusion_engine::paths::resolve_path(raw)
 }
 
 /// 从旧的 settings.json 迁移 app_config_dir 到 Store

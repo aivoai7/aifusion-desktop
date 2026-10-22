@@ -5,18 +5,8 @@ import {
   useMemo,
   useRef,
   useState,
-  type ComponentType,
 } from "react";
-import {
-  Database,
-  Folder,
-  FolderOpen,
-  Globe,
-  Info,
-  Loader2,
-  Route,
-  SlidersHorizontal,
-} from "lucide-react";
+import { FolderOpen, Loader2 } from "lucide-react";
 import { toast } from "@/lib/toast";
 import { useTranslation } from "react-i18next";
 import {
@@ -31,8 +21,6 @@ import { settingsApi, type AppId } from "@/lib/api";
 import { useSettingsQuery } from "@/lib/query";
 import type { SettingsSection } from "@/lib/navigation";
 import { SETTINGS_SECTIONS } from "@/lib/navigation";
-import { AppPageHeader } from "@/components/shell/AppPageHeader";
-import { PageTabs } from "@/components/ui/page-tabs";
 import { DirectoryInput } from "@/components/settings/DirectorySettings";
 import { ImportExportSection } from "@/components/settings/ImportExportSection";
 import { BackupListSection } from "@/components/settings/BackupListSection";
@@ -45,7 +33,6 @@ import { GeneralSection } from "@/components/settings/sections/GeneralSection";
 import { AppConfigSection } from "@/components/settings/sections/AppConfigSection";
 import {
   SettingsBlock,
-  SettingsBody,
   SettingsCard,
   SettingsRow,
 } from "@/components/settings/SettingsLayout";
@@ -53,18 +40,7 @@ import { useSettings } from "@/hooks/useSettings";
 import { useImportExport } from "@/hooks/useImportExport";
 import type { SettingsFormState } from "@/hooks/useSettings";
 import { isTextEditableTarget } from "@/utils/domUtils";
-
-const SECTION_ICON: Record<
-  SettingsSection,
-  ComponentType<{ className?: string; strokeWidth?: number | string }>
-> = {
-  general: SlidersHorizontal,
-  appConfig: Folder,
-  routing: Route,
-  network: Globe,
-  data: Database,
-  about: Info,
-};
+import { cn } from "@/lib/utils";
 
 interface SettingsPageProps {
   section: SettingsSection;
@@ -366,7 +342,7 @@ export function SettingsPage({
   );
 
   const isBusy = useMemo(() => isLoading && !settings, [isLoading, settings]);
-  const SectionIcon = SECTION_ICON[section];
+  const sectionIndex = Math.max(SETTINGS_SECTIONS.indexOf(section), 0) + 1;
 
   const appConfigDirty =
     (appConfigDir?.trim() || undefined) !==
@@ -408,7 +384,7 @@ export function SettingsPage({
               body: t("settings.advanced.globalProxy.description"),
             }}
           >
-            <div className="rounded-panel border border-border bg-surface p-5">
+            <div className="rounded-[4px] border border-hairline bg-surface p-5">
               <GlobalProxySettings />
             </div>
           </SettingsBlock>
@@ -461,19 +437,17 @@ export function SettingsPage({
                 body: t("settings.advanced.data.description"),
               }}
             >
-              <div className="rounded-panel border border-border bg-surface p-5">
-                <ImportExportSection
-                  status={importStatus}
-                  selectedFile={selectedFile}
-                  errorMessage={errorMessage}
-                  backupId={backupId}
-                  isImporting={isImporting}
-                  onSelectFile={selectImportFile}
-                  onImport={importConfig}
-                  onExport={exportConfig}
-                  onClear={clearSelection}
-                />
-              </div>
+              <ImportExportSection
+                status={importStatus}
+                selectedFile={selectedFile}
+                errorMessage={errorMessage}
+                backupId={backupId}
+                isImporting={isImporting}
+                onSelectFile={selectImportFile}
+                onImport={importConfig}
+                onExport={exportConfig}
+                onClear={clearSelection}
+              />
             </SettingsBlock>
             <SettingsBlock
               title={t("settings.advanced.backup.title")}
@@ -482,7 +456,7 @@ export function SettingsPage({
                 body: t("settings.advanced.backup.description"),
               }}
             >
-              <div className="rounded-panel border border-border bg-surface p-5">
+              <div className="rounded-[4px] border border-hairline bg-surface p-4">
                 <BackupListSection
                   backupIntervalHours={settings.backupIntervalHours}
                   backupRetainCount={settings.backupRetainCount}
@@ -497,14 +471,12 @@ export function SettingsPage({
                 body: t("settings.advanced.cloudSync.description"),
               }}
             >
-              <div className="rounded-panel border border-border bg-surface p-5">
-                <WebdavSyncSection
-                  config={settings.webdavSync}
-                  s3Config={settings.s3Sync}
-                  settings={settings}
-                  onAutoSave={handleAutoSave}
-                />
-              </div>
+              <WebdavSyncSection
+                config={settings.webdavSync}
+                s3Config={settings.s3Sync}
+                settings={settings}
+                onAutoSave={handleAutoSave}
+              />
             </SettingsBlock>
             <SettingsBlock
               title={t("settings.advanced.logConfig.title")}
@@ -523,7 +495,7 @@ export function SettingsPage({
                 </Button>
               }
             >
-              <div className="rounded-panel border border-border bg-surface p-5">
+              <div className="rounded-[4px] border border-hairline bg-surface p-5">
                 <LogConfigPanel />
               </div>
             </SettingsBlock>
@@ -536,38 +508,101 @@ export function SettingsPage({
 
   return (
     <>
-      <AppPageHeader
-        icon={<SectionIcon className="h-5 w-5" strokeWidth={1.5} />}
-        title={t("settings.title", { defaultValue: "设置" })}
-        subtitle={t(`settings.sections.${section}`)}
-      />
-      {onSectionChange && (
-        <div className="shrink-0 px-5 pt-2">
-          <PageTabs
-            aria-label={t("settings.title", { defaultValue: "设置" })}
-            idPrefix="settings-section"
-            controls="main-content"
-            value={section}
-            onValueChange={onSectionChange}
-            items={SETTINGS_SECTIONS.map((item) => ({
-              value: item,
-              label: t(`settings.sections.${item}`),
-            }))}
-          />
-        </div>
-      )}
       <div
         ref={scrollRef}
         id="main-content"
         className="min-h-0 flex-1 overflow-y-auto scroll-stable"
       >
-        {isBusy ? (
-          <div className="flex h-full items-center justify-center">
-            <Loader2 className="h-8 w-8 animate-spin text-fg-3" />
+        <div className="mx-auto w-full max-w-[1160px] px-8 pb-16 pt-8">
+          <header className="flex flex-wrap items-end justify-between gap-x-8 gap-y-4 border-b border-hairline pb-6">
+            <div className="min-w-0">
+              <div className="af-kicker flex flex-wrap items-center gap-2.5">
+                <span>Settings</span>
+                <span
+                  aria-hidden="true"
+                  className="h-2.5 w-px bg-hairline-strong"
+                />
+                <span className="af-num tracking-normal">
+                  {String(sectionIndex).padStart(2, "0")} /{" "}
+                  {String(SETTINGS_SECTIONS.length).padStart(2, "0")}
+                </span>
+              </div>
+              <h1 className="mt-2 text-display text-fg-1">
+                {t("settings.title", { defaultValue: "设置" })}
+              </h1>
+              <p className="mt-1.5 max-w-xl text-body text-fg-2">
+                {t("settings.pageHint", {
+                  defaultValue:
+                    "只影响这台电脑；开关即时保存，目录改动点保存后写入。",
+                })}
+              </p>
+            </div>
+            {isSaving && (
+              <span className="inline-flex items-center gap-1.5 text-badge text-fg-3">
+                <Loader2 className="h-3 w-3 animate-spin" />
+                {t("common.saving", { defaultValue: "保存中…" })}
+              </span>
+            )}
+          </header>
+
+          {onSectionChange && (
+            <nav
+              aria-label={t("settings.title", { defaultValue: "设置" })}
+              className="flex gap-0.5 overflow-x-auto border-b border-hairline no-scrollbar"
+            >
+              {SETTINGS_SECTIONS.map((item, index) => {
+                const active = item === section;
+                return (
+                  <button
+                    key={item}
+                    type="button"
+                    aria-current={active ? "page" : undefined}
+                    onClick={() => onSectionChange(item)}
+                    className={cn(
+                      "relative flex h-11 shrink-0 items-baseline gap-1.5 px-3 transition-colors",
+                      active
+                        ? "text-fg-1"
+                        : "text-fg-2 hover:text-fg-1",
+                    )}
+                  >
+                    <span
+                      className={cn(
+                        "af-num text-[9px]",
+                        active ? "text-action-text" : "text-fg-3",
+                      )}
+                    >
+                      {String(index + 1).padStart(2, "0")}
+                    </span>
+                    <span
+                      className={cn(
+                        "text-caption",
+                        active ? "font-semibold" : "font-medium",
+                      )}
+                    >
+                      {t(`settings.sections.${item}`)}
+                    </span>
+                    {active && (
+                      <span
+                        aria-hidden="true"
+                        className="absolute inset-x-2 bottom-[-1px] h-[2px] bg-action-text"
+                      />
+                    )}
+                  </button>
+                );
+              })}
+            </nav>
+          )}
+
+          <div className="mt-8 max-w-[880px]">
+            {isBusy ? (
+              <div className="flex items-center justify-center py-24">
+                <Loader2 className="h-6 w-6 animate-spin text-fg-3" />
+              </div>
+            ) : (
+              renderSection()
+            )}
           </div>
-        ) : (
-          <SettingsBody>{renderSection()}</SettingsBody>
-        )}
+        </div>
       </div>
 
       <Dialog

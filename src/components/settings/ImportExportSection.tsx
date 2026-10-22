@@ -44,14 +44,9 @@ export function ImportExportSection({
 
   return (
     <section className="space-y-4">
-      <header className="space-y-2">
-        <h3 className="text-base font-semibold text-fg-1">
-          {t("settings.importExport")}
-        </h3>
-        <p className="text-sm text-fg-2">{t("settings.importExportHint")}</p>
-      </header>
+      <p className="text-caption text-fg-2">{t("settings.importExportHint")}</p>
 
-      <div className="space-y-4 rounded-lg border border-border bg-subtle p-6">
+      <div className="space-y-4 rounded-[4px] border border-hairline bg-surface p-5">
         {/* Import and Export Buttons Side by Side */}
         <div className="grid grid-cols-2 gap-4 items-stretch">
           {/* Import Button */}

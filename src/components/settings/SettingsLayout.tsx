@@ -4,7 +4,8 @@ import { HelpTip } from "@/components/ui/help-tip";
 import { cn } from "@/lib/utils";
 
 /**
- * 设置页的版式（v7）：分节标题 15/600 → 带边框的卡片 → 一行一项，左边名称、右边控件。
+ * 设置页的版式（Paper & Signal）：分节标题压一条发丝线，下面是一组方角设置行。
+ * 行内左边放名称与说明，右边放控件；需要整行输入时放在行下方。
  */
 export function SettingsBlock({
   id,
@@ -26,7 +27,7 @@ export function SettingsBlock({
   return (
     <section id={id} className={cn("space-y-3", className)}>
       {(title || actions) && (
-        <div className="flex min-h-7 items-center gap-2">
+        <div className="flex min-h-7 items-center gap-2 border-b border-hairline pb-2">
           {title && <h2 className="m-0 text-section text-fg-1">{title}</h2>}
           {help && <HelpTip title={help.title}>{help.body}</HelpTip>}
           {actions && (
@@ -39,7 +40,7 @@ export function SettingsBlock({
   );
 }
 
-/** 一组设置行：白底卡片，行与行之间一条细线。 */
+/** 一组设置行：浅底方角卡，行与行之间一条细线。 */
 export function SettingsCard({
   children,
   className,
@@ -50,7 +51,7 @@ export function SettingsCard({
   return (
     <div
       className={cn(
-        "divide-y divide-border overflow-hidden rounded-panel border border-border bg-surface",
+        "divide-y divide-hairline overflow-hidden rounded-[4px] border border-hairline bg-surface",
         className,
       )}
     >
@@ -80,7 +81,7 @@ export function SettingsRow({
 }) {
   const Label = htmlFor ? "label" : "div";
   return (
-    <div className={cn("px-4 py-3", className)}>
+    <div className={cn("px-4 py-3.5", className)}>
       <div className="flex min-h-[28px] items-center gap-4">
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1">
@@ -139,11 +140,3 @@ export function SettingsSwitchRow({
   );
 }
 
-/** 设置页正文：最大宽度 760，左右 24 的内边距，分节间距 28。 */
-export function SettingsBody({ children }: { children: ReactNode }) {
-  return (
-    <div className="mx-auto w-full max-w-[760px] space-y-7 px-6 pb-10 pt-6">
-      {children}
-    </div>
-  );
-}

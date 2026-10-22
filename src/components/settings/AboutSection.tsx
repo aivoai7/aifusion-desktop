@@ -1,15 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Download,
-  ExternalLink,
-  Github,
-  Globe,
   Info,
   Loader2,
   RefreshCw,
   Sparkles,
-  Star,
-  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "react-i18next";
@@ -18,6 +13,7 @@ import { getVersion } from "@tauri-apps/api/app";
 import { settingsApi } from "@/lib/api";
 import { useUpdate } from "@/contexts/UpdateContext";
 import { Badge } from "@/components/ui/badge";
+import { SettingsBlock } from "@/components/settings/SettingsLayout";
 import { WhatsNewDialog } from "@/components/WhatsNewDialog";
 import { WHATS_NEW_ENTRIES, entriesUpTo } from "@/lib/whatsNew";
 import appIcon from "@/assets/icons/app-icon.png";
@@ -30,20 +26,9 @@ interface AboutSectionProps {
 // 应用自身版本（getVersion，本地毫秒级、无网络）也缓存一份，纯为重挂时免去 loading 闪烁。
 let appVersionCache: string | null = null;
 
-// 邀 Star 条关掉后记在本机（纯界面偏好，不进库、不随云同步）
-const STAR_PROMPT_DISMISSED_KEY = "ccswitch:about:starPromptDismissed";
-
-function readStarPromptDismissed(): boolean {
-  try {
-    return localStorage.getItem(STAR_PROMPT_DISMISSED_KEY) === "1";
-  } catch {
-    return false;
-  }
-}
-
 /**
- * 设置 → 关于：版本、便携模式、检查更新 / 安装并重启、项目链接。
- * 命令行应用的安装与升级在侧栏「应用」页。
+ * 设置 → 关于：版本、便携模式、检查更新 / 安装并重启。
+ * 命令行应用的安装与升级在独立的「应用」页。
  */
 export function AboutSection({ isPortable }: AboutSectionProps) {
   const { t } = useTranslation();
@@ -55,16 +40,12 @@ export function AboutSection({ isPortable }: AboutSectionProps) {
   );
   const [isDownloading, setIsDownloading] = useState(false);
   const [whatsNewOpen, setWhatsNewOpen] = useState(false);
-  const [starPromptDismissed, setStarPromptDismissed] = useState(
-    readStarPromptDismissed,
-  );
   const recentEntries = useMemo(
     () => (version ? entriesUpTo(WHATS_NEW_ENTRIES, version) : []),
     [version],
   );
 
-  const { hasUpdate, updateInfo, checkUpdate, resetDismiss, isChecking } =
-    useUpdate();
+  const { hasUpdate, updateInfo, resetDismiss, isChecking } = useUpdate();
 
   useEffect(() => {
     let active = true;
@@ -91,44 +72,6 @@ export function AboutSection({ isPortable }: AboutSectionProps) {
     return () => {
       active = false;
     };
-  }, []);
-
-  const handleOpenReleaseNotes = useCallback(async () => {
-    try {
-      const targetVersion = updateInfo?.availableVersion ?? version ?? "";
-      const displayVersion = targetVersion.startsWith("v")
-        ? targetVersion
-        : targetVersion
-          ? `v${targetVersion}`
-          : "";
-
-      if (!displayVersion) {
-        await settingsApi.openExternal(
-          "https://github.com/farion1231/cc-switch/releases",
-        );
-        return;
-      }
-
-      await settingsApi.openExternal(
-        `https://github.com/farion1231/cc-switch/releases/tag/${displayVersion}`,
-      );
-    } catch (error) {
-      console.error("[AboutSection] Failed to open release notes", error);
-      toast.error(t("settings.openReleaseNotesFailed"));
-    }
-  }, [t, updateInfo?.availableVersion, version]);
-
-  const handleOpenGithub = useCallback(() => {
-    void settingsApi.openExternal("https://github.com/farion1231/cc-switch");
-  }, []);
-
-  const handleDismissStarPrompt = useCallback(() => {
-    setStarPromptDismissed(true);
-    try {
-      localStorage.setItem(STAR_PROMPT_DISMISSED_KEY, "1");
-    } catch {
-      // 存不下就只在本次会话里隐藏
-    }
   }, []);
 
   const handleCheckUpdate = useCallback(async () => {
@@ -172,10 +115,10 @@ export function AboutSection({ isPortable }: AboutSectionProps) {
     }
 
     try {
-      const available = await checkUpdate();
-      if (!available) {
-        toast.success(t("settings.upToDate"), { closeButton: true });
-      }
+      // 桌面版由 AIFusion 平台分发，没有配置 Tauri updater endpoint。
+      // 这里直接打开平台下载页，避免调用注定失败的更新检查。
+      await settingsApi.checkUpdates();
+      toast.success(t("settings.checkUpdateOpened"), { closeButton: true });
     } catch (error) {
       console.error("[AboutSection] Check update failed", error);
       toast.error(t("settings.checkUpdateFailed"), {
@@ -184,7 +127,6 @@ export function AboutSection({ isPortable }: AboutSectionProps) {
       });
     }
   }, [
-    checkUpdate,
     hasUpdate,
     isPortable,
     resetDismiss,
@@ -195,162 +137,119 @@ export function AboutSection({ isPortable }: AboutSectionProps) {
   const displayVersion = version ?? t("common.unknown");
 
   return (
-    <div className="divide-y divide-border overflow-hidden rounded-panel border border-border bg-surface">
-      <div className="flex flex-wrap items-center gap-4 px-5 py-4">
-        <img src={appIcon} alt="" className="h-10 w-10 shrink-0" />
-        <div className="min-w-0 flex-1">
-          <div className="text-title text-fg-1">AIFusion</div>
-          <div className="flex flex-wrap items-center gap-2 text-caption text-fg-2">
-            {isLoadingVersion ? (
-              <Loader2 className="h-3 w-3 animate-spin" />
+    <SettingsBlock
+      title={t("settings.sections.about", { defaultValue: "关于" })}
+    >
+      <div className="overflow-hidden rounded-[4px] border border-hairline bg-surface">
+        <div className="flex flex-wrap items-start gap-4 px-5 py-4">
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[4px] border border-hairline bg-app">
+            <img src={appIcon} alt="" className="h-7 w-7" />
+          </span>
+          <div className="min-w-0 flex-1">
+            <div className="af-kicker">
+              {t("settings.desktopClient", { defaultValue: "Desktop client" })}
+            </div>
+            <div className="mt-1 flex flex-wrap items-center gap-2">
+              <span className="text-title text-fg-1">AIFusion</span>
+              {isPortable && (
+                <Badge
+                  variant="secondary"
+                  className="gap-1 px-1.5 py-0 text-badge"
+                >
+                  <Info className="h-3 w-3" />
+                  {t("settings.portableMode")}
+                </Badge>
+              )}
+            </div>
+            <div className="mt-1 flex flex-wrap items-center gap-2 text-caption text-fg-2">
+              {isLoadingVersion ? (
+                <Loader2 className="h-3 w-3 animate-spin" />
+              ) : (
+                <span className="af-num">
+                  {t("common.version", { defaultValue: "版本" })} v
+                  {displayVersion}
+                </span>
+              )}
+              <span aria-hidden="true" className="h-3 w-px bg-hairline" />
+              <span>Windows · Tauri + WebView</span>
+            </div>
+          </div>
+          <Button
+            type="button"
+            variant={hasUpdate ? "solid" : "neutral"}
+            size="regular"
+            onClick={handleCheckUpdate}
+            disabled={isChecking || isDownloading}
+          >
+            {isDownloading ? (
+              <>
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                {t("settings.updating")}
+              </>
+            ) : hasUpdate ? (
+              <>
+                <Download className="h-3.5 w-3.5" />
+                {t("settings.updateTo", {
+                  version: updateInfo?.availableVersion ?? "",
+                })}
+              </>
+            ) : isChecking ? (
+              <>
+                <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                {t("settings.checking")}
+              </>
             ) : (
-              <span className="tabular-nums">{`${t("common.version")} v${displayVersion}`}</span>
+              <>
+                <RefreshCw className="h-3.5 w-3.5" />
+                {t("settings.checkForUpdates")}
+              </>
+            )}
+          </Button>
+        </div>
+
+        {hasUpdate && updateInfo && (
+          <div className="space-y-1 border-t border-hairline px-5 py-4 text-body">
+            <p className="font-medium text-fg-1">
+              {t("settings.updateAvailable", {
+                version: updateInfo.availableVersion,
+              })}
+            </p>
+            {updateInfo.notes && (
+              <p className="line-clamp-3 text-fg-2">{updateInfo.notes}</p>
             )}
             {isPortable && (
-              <Badge
-                variant="secondary"
-                className="gap-1 px-1.5 py-0 text-badge"
-              >
-                <Info className="h-3 w-3" />
-                {t("settings.portableMode")}
-              </Badge>
+              <p className="text-fg-2">{t("settings.portableUpdateHint")}</p>
             )}
           </div>
-        </div>
-        <Button
-          type="button"
-          variant={hasUpdate ? "solid" : "neutral"}
-          size="regular"
-          onClick={handleCheckUpdate}
-          disabled={isChecking || isDownloading}
-        >
-          {isDownloading ? (
-            <>
-              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-              {t("settings.updating")}
-            </>
-          ) : hasUpdate ? (
-            <>
-              <Download className="h-3.5 w-3.5" />
-              {t("settings.updateTo", {
-                version: updateInfo?.availableVersion ?? "",
-              })}
-            </>
-          ) : isChecking ? (
-            <>
-              <RefreshCw className="h-3.5 w-3.5 animate-spin" />
-              {t("settings.checking")}
-            </>
-          ) : (
-            <>
-              <RefreshCw className="h-3.5 w-3.5" />
-              {t("settings.checkForUpdates")}
-            </>
-          )}
-        </Button>
-      </div>
+        )}
 
-      {hasUpdate && updateInfo && (
-        <div className="space-y-1 px-5 py-4 text-body">
-          <p className="font-medium text-fg-1">
-            {t("settings.updateAvailable", {
-              version: updateInfo.availableVersion,
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2 border-t border-hairline px-5 py-3">
+          <span className="text-badge text-fg-3">
+            {t("settings.aboutHint", {
+              defaultValue:
+                "模型、密钥与用量由 AIFusion 平台统一管理，本机只保留登录凭据。",
             })}
-          </p>
-          {updateInfo.notes && (
-            <p className="line-clamp-3 text-fg-2">{updateInfo.notes}</p>
-          )}
-          {isPortable && (
-            <p className="text-fg-2">{t("settings.portableUpdateHint")}</p>
-          )}
-        </div>
-      )}
-
-      <div className="flex flex-wrap items-center gap-2 px-5 py-4">
-        {starPromptDismissed && (
-          <Button
-            type="button"
-            variant="neutral"
-            size="compact"
-            onClick={handleOpenGithub}
-          >
-            <Github className="h-3.5 w-3.5" />
-            {t("settings.github")}
-          </Button>
-        )}
-        <Button
-          type="button"
-          variant="neutral"
-          size="compact"
-          onClick={() => settingsApi.openExternal("https://ccswitch.io")}
-        >
-          <Globe className="h-3.5 w-3.5" />
-          {t("settings.officialWebsite")}
-        </Button>
-        <Button
-          type="button"
-          variant="neutral"
-          size="compact"
-          onClick={handleOpenReleaseNotes}
-        >
-          <ExternalLink className="h-3.5 w-3.5" />
-          {t("settings.releaseNotes")}
-        </Button>
-        {recentEntries.length > 0 && (
-          <Button
-            type="button"
-            variant="neutral"
-            size="compact"
-            onClick={() => setWhatsNewOpen(true)}
-          >
-            <Sparkles className="h-3.5 w-3.5" />
-            {t("whatsNew.recentTitle")}
-          </Button>
-        )}
-      </div>
-
-      {/* 下载与更新都走 ccswitch.io，用户不再经过仓库页，邀 Star 单独占一行；按钮即 GitHub 入口。
-          关掉后链接行补回 GitHub 按钮 */}
-      {!starPromptDismissed && (
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-3 bg-action-soft py-3.5 ps-5 pe-3">
-          <div className="flex min-w-0 flex-1 items-center gap-3">
-            <Star
-              aria-hidden="true"
-              className="h-5 w-5 shrink-0 animate-[spin_6s_linear_infinite] fill-warning text-warning motion-reduce:animate-none"
-            />
-            <p className="min-w-0 text-body text-fg-1">
-              {t("settings.starPrompt")}
-            </p>
-          </div>
-          <div className="flex shrink-0 items-center gap-1">
-            <Button
-              type="button"
-              variant="neutral"
-              size="compact"
-              onClick={handleOpenGithub}
-            >
-              <Github className="h-3.5 w-3.5" />
-              {t("settings.starOnGithub")}
-            </Button>
+          </span>
+          {recentEntries.length > 0 && (
             <Button
               type="button"
               variant="quiet"
-              size="icon-compact"
-              onClick={handleDismissStarPrompt}
-              aria-label={t("common.close")}
-              title={t("common.close")}
+              size="compact"
+              className="ms-auto"
+              onClick={() => setWhatsNewOpen(true)}
             >
-              <X className="h-3.5 w-3.5" />
+              <Sparkles className="h-3.5 w-3.5" />
+              {t("whatsNew.recentTitle")}
             </Button>
-          </div>
+          )}
         </div>
-      )}
+      </div>
 
       <WhatsNewDialog
         open={whatsNewOpen}
         onClose={() => setWhatsNewOpen(false)}
         entries={recentEntries}
       />
-    </div>
+    </SettingsBlock>
   );
 }

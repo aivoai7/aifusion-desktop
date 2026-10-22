@@ -6,7 +6,10 @@ import "./tray-panel.css";
 import "../i18n";
 import { FrontendErrorBoundary } from "@/components/FrontendErrorBoundary";
 import { installGlobalErrorHandlers } from "@/lib/frontendLogger";
+import { migrateLegacyStorage } from "@/lib/storageMigration";
 import { TrayPanel } from "./TrayPanel";
+
+migrateLegacyStorage();
 
 installGlobalErrorHandlers();
 

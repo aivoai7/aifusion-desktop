@@ -87,13 +87,3 @@ export function resolveWhatsNewLanguage(language: string): WhatsNewLanguage {
     ? (language as WhatsNewLanguage)
     : "en";
 }
-
-/** 官网更新日志：不带版本是列表页。官网只有 zh / en / ja，繁中用简中页面 */
-export function changelogUrl(
-  language: WhatsNewLanguage,
-  version?: string,
-): string {
-  const siteLanguage = language === "zh-TW" ? "zh" : language;
-  const base = `https://ccswitch.io/${siteLanguage}/changelog`;
-  return version ? `${base}/${version}` : base;
-}

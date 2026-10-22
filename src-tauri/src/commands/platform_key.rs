@@ -26,7 +26,7 @@ pub async fn get_platform_api_key_status(
 pub async fn login_platform_web(
     app_handle: AppHandle,
 ) -> Result<Option<PlatformLoginResult>, String> {
-    let Some(api_key) = crate::services::platform_login::open_login_in_browser(&app_handle).await?
+    let Some(api_key) = crate::platform_login::open_login_in_browser(&app_handle).await?
     else {
         return Ok(None);
     };
@@ -47,7 +47,7 @@ pub async fn login_platform_web(
 /// 取消正在等待的浏览器登录。
 #[tauri::command]
 pub async fn cancel_platform_web_login() -> Result<bool, String> {
-    Ok(crate::services::platform_login::cancel_pending_login())
+    Ok(crate::platform_login::cancel_pending_login())
 }
 
 /// 侧栏钱包余额（美元）；未登录或平台还没有钱包接口时返回 `None`。

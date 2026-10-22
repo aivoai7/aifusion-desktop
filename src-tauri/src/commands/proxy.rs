@@ -288,8 +288,7 @@ pub async fn set_proxy_client_host(
 }
 
 pub(crate) async fn save_proxy_client_host(state: &AppState, host: &str) -> Result<(), String> {
-    crate::settings::set_proxy_client_host(host).map_err(|e| e.to_string())?;
-    resync_proxy_clients(state).await
+    crate::services::proxy::save_client_host(state, host).await
 }
 
 /// 按当前的代理地址重写接上路由的客户端（含 Claude Desktop 的路由模式）。
@@ -441,7 +440,6 @@ pub async fn get_provider_health(
 /// 2. 如果恢复的供应商在队列中优先级更高（queue_order 更小），则自动切换
 #[tauri::command]
 pub async fn reset_circuit_breaker(
-    app_handle: tauri::AppHandle,
     state: tauri::State<'_, AppState>,
     provider_id: String,
     app_type: String,
@@ -510,8 +508,9 @@ pub async fn reset_circuit_breaker(
                     // 创建故障转移切换管理器并执行切换
                     let switch_manager =
                         crate::proxy::failover_switch::FailoverSwitchManager::new();
+                    let shell = aifusion_engine::shell::global();
                     if let Err(e) = switch_manager
-                        .try_switch(Some(&app_handle), &app_type, &provider_id, &provider_name)
+                        .try_switch(Some(&shell), &app_type, &provider_id, &provider_name)
                         .await
                     {
                         log::error!("[Recovery] 自动切换失败: {e}");

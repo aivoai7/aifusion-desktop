@@ -1,0 +1,14 @@
+[workspace]
+resolver = "2"
+members = ["engine"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+
+# 这里只保留引擎层（aifusion-engine），由 Tauri 壳 `src-tauri` 通过路径依赖复用。
+# 原生 iced 壳（app）与只读 core 已按用户要求删除，桌面端只保留 aifusion.exe。
+[profile.release]
+lto = "thin"
+strip = "symbols"

@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
 import {
-  changelogUrl,
   entriesSince,
   entriesUpTo,
   isNewerThanSeen,
@@ -80,17 +79,10 @@ describe("seen version", () => {
   });
 });
 
-describe("language and links", () => {
+describe("language", () => {
   it("falls back to English for unknown languages", () => {
     expect(resolveWhatsNewLanguage("zh-TW")).toBe("zh-TW");
     expect(resolveWhatsNewLanguage("ja")).toBe("ja");
     expect(resolveWhatsNewLanguage("fr")).toBe("en");
-  });
-
-  it("links to the website changelog, Traditional Chinese uses the zh pages", () => {
-    expect(changelogUrl("en", "4.0.2")).toBe(
-      "https://ccswitch.io/en/changelog/4.0.2",
-    );
-    expect(changelogUrl("zh-TW")).toBe("https://ccswitch.io/zh/changelog");
   });
 });

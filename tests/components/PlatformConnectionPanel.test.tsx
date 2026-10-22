@@ -16,7 +16,6 @@ const state = vi.hoisted(() => ({
 }));
 
 const loginWebMock = vi.hoisted(() => vi.fn(async () => null));
-const openFolderMock = vi.hoisted(() => vi.fn(async () => {}));
 const setTakeoverMock = vi.hoisted(() => vi.fn(async () => {}));
 
 function shape(over: Partial<PlatformModelConfig>): PlatformModelConfig {
@@ -102,7 +101,7 @@ vi.mock("@/hooks/usePlatformWebLogin", () => ({
   }),
 }));
 
-// 详情页会读模型配置、本机目录和用量，全部换成可控的假数据
+// 详情页会读模型配置和用量，全部换成可控的假数据
 vi.mock("@/lib/api/platformKey", () => ({
   platformKeyApi: {
     modelConfig: async (app: AppId) => MODELS[app] ?? null,
@@ -114,19 +113,6 @@ vi.mock("@/lib/api/platformKey", () => ({
     setModel: async () => {},
   },
 }));
-
-vi.mock("@/lib/api/settings", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@/lib/api/settings")>();
-  return {
-    ...actual,
-    settingsApi: {
-      ...actual.settingsApi,
-      // homeDir 的测试桩是 /home/mock，所以这里能显示成 ~/.claude/settings.json
-      getConfigDir: async () => "/home/mock/.claude",
-      openConfigFolder: openFolderMock,
-    },
-  };
-});
 
 vi.mock("@/lib/query/usage", () => ({
   useUsageSummaryByApp: () => ({
@@ -201,18 +187,25 @@ describe("PlatformConnectionPanel", () => {
     resetState();
     renderPanel("claude", [platformProvider], "claude-official");
 
-    expect(screen.getByText("AIFusion 平台")).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { level: 1, name: "Claude Code" }),
+    ).toBeInTheDocument();
     expect(
       screen.queryByText("https://op.aifusion.sbs"),
     ).not.toBeInTheDocument();
     expect(screen.getByText("已连接")).toBeInTheDocument();
     expect(screen.queryByText("abcd…wxyz")).not.toBeInTheDocument();
     expect(screen.getByText(/已接入平台/)).toBeInTheDocument();
-    expect(screen.getByText("路由")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "路由" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
     expect(screen.getByText("路由服务运行中")).toBeInTheDocument();
-    // 密钥来源只说来源，不给地址、不给 key
-    expect(screen.getByText("平台登录自动下发")).toBeInTheDocument();
-    expect(screen.getByText("本机保存")).toBeInTheDocument();
+    // 详情页不再暴露密钥来源、配置落点，也没有全局功能入口
+    expect(screen.queryByText("密钥来源")).not.toBeInTheDocument();
+    expect(screen.queryByText("配置落点")).not.toBeInTheDocument();
+    expect(screen.queryByText("更多功能")).not.toBeInTheDocument();
+    expect(screen.queryByText("作用于全部客户端")).not.toBeInTheDocument();
   });
 
   it("switches a routing-capable client back to direct", async () => {
@@ -292,7 +285,7 @@ describe("PlatformConnectionPanel", () => {
     expect(screen.queryByText(/已接入平台/)).not.toBeInTheDocument();
   });
 
-  it("shows the model, the local file it lands in and the recent usage", async () => {
+  it("shows the model, its vendor and the recent usage", async () => {
     resetState();
     renderPanel("claude", [platformProvider], "claude-official");
 
@@ -300,25 +293,17 @@ describe("PlatformConnectionPanel", () => {
     expect(
       (await screen.findAllByText("claude-sonnet-5")).length,
     ).toBeGreaterThan(0);
-    // 厂商跟在模型后面，来自平台模型列表
-    expect(await screen.findByText("· anthropic")).toBeInTheDocument();
-    expect(screen.getByText("配置落点")).toBeInTheDocument();
-    expect(
-      await screen.findByText("~/.claude/settings.json"),
-    ).toBeInTheDocument();
-    expect(screen.getByText("保存后立即写入")).toBeInTheDocument();
+    // 厂商来自平台模型列表：主模型行与右栏清单都会出现
+    expect((await screen.findAllByText("anthropic")).length).toBeGreaterThan(0);
     expect(screen.getByText("最近用量")).toBeInTheDocument();
     expect(
       screen.getByText("12 次请求 · $0.42 · 5,000 Token"),
     ).toBeInTheDocument();
+    expect(screen.getByText("应用更新")).toBeInTheDocument();
     // 白标：页面里不出现网关地址、密钥或官网域名
     expect(document.body.textContent).not.toMatch(
       /op\.aifusion|https?:\/\/|192\.168|fk_|sk-/,
     );
-
-    openFolderMock.mockClear();
-    await userEvent.click(screen.getByRole("button", { name: "打开配置目录" }));
-    expect(openFolderMock).toHaveBeenCalledWith("claude");
   });
 
   it("lists the other clients and opens their details", async () => {
@@ -333,8 +318,10 @@ describe("PlatformConnectionPanel", () => {
     );
 
     expect(await screen.findByText("切换到其他客户端")).toBeInTheDocument();
-    // 当前客户端不重复出现，其余可见客户端各一枚胶囊
-    expect(screen.queryByText("Claude Code")).not.toBeInTheDocument();
+    // 当前客户端不重复出现在切换列表里
+    expect(
+      screen.queryByRole("button", { name: /Claude Code/ }),
+    ).not.toBeInTheDocument();
     const codex = screen.getByText("Codex");
     expect(codex.closest("button")).toHaveTextContent("Codex");
 
@@ -342,18 +329,18 @@ describe("PlatformConnectionPanel", () => {
     expect(onOpenApp).toHaveBeenCalledWith("codex");
   });
 
-  it("opens the global pages from the panel", async () => {
+  it("opens the usage page from the panel without other global shortcuts", async () => {
     resetState();
     const onOpenPage = vi.fn();
     renderPanel("claude", [platformProvider], "claude-official", onOpenPage);
 
     for (const label of ["MCP", "Skills", "提示词", "会话", "用量统计"]) {
-      expect(screen.getByRole("button", { name: label })).toBeInTheDocument();
+      expect(
+        screen.queryByRole("button", { name: label }),
+      ).not.toBeInTheDocument();
     }
 
-    await userEvent.click(screen.getByRole("button", { name: "MCP" }));
-    expect(onOpenPage).toHaveBeenCalledWith("mcp");
-    await userEvent.click(screen.getByRole("button", { name: "用量统计" }));
+    await userEvent.click(screen.getByRole("button", { name: "查看统计" }));
     expect(onOpenPage).toHaveBeenCalledWith("usage");
   });
 

@@ -186,7 +186,7 @@ impl TrayTexts {
         match language {
             "en" => Self {
                 show_main: "Open AIFusion",
-                open_website: "Open official website",
+                open_website: "Open AIFusion platform",
                 lightweight_mode: "Lightweight mode",
                 quit: "Quit AIFusion",
                 quit_stops_routing: "Quit AIFusion (stops the routing service)",
@@ -246,7 +246,7 @@ impl TrayTexts {
             "tr" => {
                 let mut texts = Self::from_language("en");
                 texts.show_main = "AIFusion'i aç";
-                texts.open_website = "Resmî web sitesini aç";
+                texts.open_website = "AIFusion platformunu aç";
                 texts.lightweight_mode = "Hafif mod";
                 texts.quit = "AIFusion'ten çık";
                 texts.quit_stops_routing = "AIFusion'ten çık (yönlendirme hizmeti durur)";
@@ -301,7 +301,7 @@ impl TrayTexts {
             }
             "ja" => Self {
                 show_main: "AIFusion を開く",
-                open_website: "公式サイトを開く",
+                open_website: "AIFusion プラットフォームを開く",
                 lightweight_mode: "軽量モード",
                 quit: "AIFusion を終了",
                 quit_stops_routing: "AIFusion を終了（ルーティングサービスが停止します）",
@@ -358,7 +358,7 @@ impl TrayTexts {
             },
             "zh-TW" => Self {
                 show_main: "開啟 AIFusion",
-                open_website: "開啟官方網站",
+                open_website: "開啟 AIFusion 平台",
                 lightweight_mode: "輕量模式",
                 quit: "退出 AIFusion",
                 quit_stops_routing: "退出 AIFusion（路由服務會停止）",
@@ -413,7 +413,7 @@ impl TrayTexts {
             },
             _ => Self {
                 show_main: "打开 AIFusion",
-                open_website: "打开官方网站",
+                open_website: "打开 AIFusion 平台",
                 lightweight_mode: "轻量模式",
                 quit: "退出 AIFusion",
                 quit_stops_routing: "退出 AIFusion（路由服务会停止）",
@@ -2979,7 +2979,7 @@ pub fn handle_tray_menu_event(app: &tauri::AppHandle, event_id: &str) {
     match event_id {
         "show_main" => show_main_window(app),
         "open_website" => {
-            if let Err(e) = app.opener().open_url("https://ccswitch.io", None::<String>) {
+            if let Err(e) = app.opener().open_url("https://op.aifusion.sbs", None::<String>) {
                 log::error!("打开官方网站失败: {e}");
             }
         }

@@ -7,7 +7,6 @@ import {
   ChevronDown,
   Copy,
   Download,
-  LayoutGrid,
   Loader2,
   MoreHorizontal,
   RefreshCw,
@@ -45,7 +44,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { AppPageHeader } from "@/components/shell/AppPageHeader";
+import { PageMasthead } from "@/components/shell/PageMasthead";
 import { APP_DISPLAY_NAME, AppGlyph } from "@/components/shell/AppGlyph";
 import { ToolUpgradeConfirmDialog } from "@/components/settings/ToolUpgradeConfirmDialog";
 import { ToolInstallRow } from "@/components/settings/ToolInstallRow";
@@ -209,8 +208,8 @@ export function AppsPage() {
 
   return (
     <>
-      <AppPageHeader
-        icon={<LayoutGrid className="h-5 w-5" strokeWidth={1.5} />}
+      <PageMasthead
+        kicker="Tools / Clients"
         title={t("nav.apps")}
         titleExtra={
           <HelpTip title={t("appsPage.helpTitle")}>
@@ -315,7 +314,7 @@ export function AppsPage() {
         id="main-content"
         className="min-h-0 flex-1 overflow-y-auto scroll-stable"
       >
-        <div ref={tableRef} className="px-6 pb-10 pt-4">
+        <div ref={tableRef} className="mx-auto w-full max-w-[1160px] px-8 pb-10 pt-4">
           <div
             className={cn(
               APP_ROW_GRID,

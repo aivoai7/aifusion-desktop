@@ -28,6 +28,9 @@ import {
 } from "./lib/modelsDevAutoSync";
 import { initializeWindowActivity } from "@/lib/windowActivity";
 import { initializeInputModality } from "@/lib/inputModality";
+import { migrateLegacyStorage } from "@/lib/storageMigration";
+
+migrateLegacyStorage();
 
 installGlobalErrorHandlers();
 
@@ -101,7 +104,7 @@ async function bootstrap() {
       ReactDOM.createRoot(document.getElementById("root")!).render(
         <React.StrictMode>
           <FrontendErrorBoundary>
-            <ThemeProvider defaultTheme="system" storageKey="cc-switch-theme">
+            <ThemeProvider defaultTheme="system" storageKey="aifusion-theme">
               <DatabaseUpgrade payload={initError} />
               <Toaster />
             </ThemeProvider>
@@ -134,7 +137,7 @@ async function bootstrap() {
     <React.StrictMode>
       <FrontendErrorBoundary>
         <QueryClientProvider client={queryClient}>
-          <ThemeProvider defaultTheme="system" storageKey="cc-switch-theme">
+          <ThemeProvider defaultTheme="system" storageKey="aifusion-theme">
             <UpdateProvider>
               {/* 系统开了「减少动态效果」时，framer-motion 的位移动画一律跳过 */}
               <MotionConfig reducedMotion="user">

@@ -3,15 +3,13 @@
 //! 提供 Copilot OAuth 认证相关的 Tauri 命令，支持多账号管理。
 
 use crate::proxy::providers::copilot_auth::{
-    CopilotAuthManager, CopilotAuthStatus, CopilotModel, CopilotUsageResponse, GitHubAccount,
+    CopilotAuthStatus, CopilotModel, CopilotUsageResponse, GitHubAccount,
     GitHubDeviceCodeResponse,
 };
-use std::sync::Arc;
 use tauri::State;
-use tokio::sync::RwLock;
 
-/// Copilot 认证状态
-pub struct CopilotAuthState(pub Arc<RwLock<CopilotAuthManager>>);
+/// Copilot 认证状态：类型定义在引擎里（代理转发器也要用），这里重新导出。
+pub use aifusion_engine::CopilotAuthState;
 
 // ==================== 设备码流程 ====================
 

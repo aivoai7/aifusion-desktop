@@ -2,32 +2,32 @@
   "version": "4.0.15",
   "items": [
     {
-      "type": "fix",
-      "zh": "修复 Windows 更新后设置被重置、更新 Codex 时误卸载",
-      "zh-TW": "修正 Windows 更新後設定被重設、更新 Codex 時誤解除安裝",
-      "en": "Fixed settings resetting after updates on Windows, and Codex updates removing a working install",
-      "ja": "Windows で更新後に設定が初期化される問題と、Codex 更新時の誤アンインストールを修正"
-    },
-    {
-      "type": "fix",
-      "zh": "路由重新认出 Claude Code 会话，修复 DeepSeek 报 400",
-      "zh-TW": "路由重新認出 Claude Code 工作階段，修正 DeepSeek 400",
-      "en": "Routing recognizes Claude Code sessions again; fixed 400 errors from DeepSeek",
-      "ja": "Claude Code のセッションを再び認識、Codex→DeepSeek の 400 を修正"
-    },
-    {
-      "type": "fix",
-      "zh": "macOS 26 的应用图标不再显示在灰色底板里",
-      "zh-TW": "macOS 26 的應用程式圖示不再顯示在灰色底板裡",
-      "en": "The app icon no longer sits in a grey tile on macOS 26",
-      "ja": "macOS 26 でアプリアイコンがグレーの背景に入らなくなりました"
+      "type": "new",
+      "zh": "全新界面：顶栏六个入口，总览一屏看清平台、客户端与用量",
+      "zh-TW": "全新介面：頂欄六個入口，總覽一屏看清平台、客戶端與用量",
+      "en": "A new interface: six top-bar entries and an overview with platform, clients and usage",
+      "ja": "新UI：トップバーに6つの入口、概要画面でプラットフォーム・クライアント・利用状況を一覧"
     },
     {
       "type": "new",
-      "zh": "用量趋势图可选柱形图或曲线面积图，Hermes 可声明模型支持图片",
-      "zh-TW": "使用趨勢圖可選長條圖或曲線面積圖，Hermes 可宣告模型支援圖片",
-      "en": "Usage trend chart can switch between bar and area; Hermes models can declare image input",
-      "ja": "利用推移グラフを棒/面グラフで切替、Hermes でモデルの画像入力を宣言可能に"
+      "zh": "网页登录：官网登录后自动取回 API Key，并下发到已勾选客户端",
+      "zh-TW": "網頁登入：官網登入後自動取回 API Key，並下發到已勾選客戶端",
+      "en": "Web sign-in fetches your API key from the platform and delivers it to selected clients",
+      "ja": "Webログイン：サイトでログインするとAPIキーを取得し、選択したクライアントへ配信"
+    },
+    {
+      "type": "new",
+      "zh": "客户端详情改为规格表：主模型、连接方式、最近用量与应用更新",
+      "zh-TW": "客戶端詳情改為規格表：主模型、連線方式、最近用量與應用程式更新",
+      "en": "Client details are now a spec sheet: model, connection mode, recent usage and app updates",
+      "ja": "クライアント詳細を仕様表に刷新：モデル、接続方式、最近の利用状況、アプリ更新を1ページに"
+    },
+    {
+      "type": "improve",
+      "zh": "设置重排为六节并全面白标：不再出现第三方品牌与链接",
+      "zh-TW": "設定重排為六節並全面白標：不再出現第三方品牌與連結",
+      "en": "Settings reorganized into six sections and fully white-labeled: no third-party branding or links",
+      "ja": "設定を6セクションに再編し全面ホワイトラベル化：第三者ブランドとリンクを排除"
     }
   ]
 }

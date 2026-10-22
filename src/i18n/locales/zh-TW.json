@@ -678,7 +678,7 @@
         "synologyHint": "請先在 Synology「套件中心」安裝並啟用 WebDAV Server 套件。",
         "custom": "自訂"
       },
-      "remoteRootDefault": "預設: cc-switch-sync",
+      "remoteRootDefault": "預設: aifusion-sync",
       "profileDefault": "預設: default",
       "saveAndTestSuccess": "設定已儲存，連線正常",
       "saveAndTestFailed": "設定已儲存，但連線測試失敗：{{error}}",
@@ -743,7 +743,7 @@
       "region": "區域 (Region)",
       "regionPlaceholder": "例如 us-east-1",
       "bucket": "儲存桶 (Bucket)",
-      "bucketPlaceholder": "例如 my-cc-switch-bucket",
+      "bucketPlaceholder": "例如 my-aifusion-bucket",
       "accessKeyId": "Access Key ID",
       "accessKeyIdPlaceholder": "例如 AKIA...",
       "secretAccessKey": "Secret Access Key",
@@ -752,7 +752,7 @@
       "endpointHint": "多數 S3 相容服務需要填寫",
       "endpointPlaceholder": "例如 https://s3-compatible.example.com",
       "remoteRoot": "遠端根目錄",
-      "remoteRootDefault": "預設: cc-switch-sync",
+      "remoteRootDefault": "預設: aifusion-sync",
       "profile": "同步設定檔名稱",
       "profileDefault": "預設: default",
       "autoSync": "自動同步",
@@ -941,6 +941,7 @@
     "updateBadge": "有更新可用",
     "updateFailed": "更新安裝失敗，已嘗試開啟下載頁面。",
     "checkUpdateFailed": "檢查更新失敗，請稍後重試。",
+    "checkUpdateOpened": "已開啟 AIFusion 平台，請從平台下載最新版本。",
     "openReleaseNotesFailed": "開啟更新日誌失敗",
     "releaseNotes": "更新日誌",
     "viewReleaseNotes": "檢視該版本更新日誌",
@@ -2309,7 +2310,6 @@
     "downloading": "正在下載更新…",
     "upgradeNow": "升級應用",
     "retry": "重試升級",
-    "openReleases": "開啟發佈頁",
     "openConfigDir": "開啟設定目錄",
     "quit": "結束"
   },
@@ -3666,7 +3666,10 @@
       "stack": "聚合"
     },
     "needsAttention": "需要處理",
-    "back": "返回"
+    "back": "返回",
+    "overview": "總覽",
+    "mcp": "MCP",
+    "skills": "Skills"
   },
   "appsPage": {
     "showInHome": "在首頁顯示 {{name}}",
@@ -4261,12 +4264,6 @@
     "updateAllCount": "全部更新（{{count}} 個）",
     "updatingProgress": "正在更新 {{done}}/{{total}}…"
   },
-  "newLayoutNotice": {
-    "title": "介面改版了",
-    "body": "AIFusion 這一版重新設計了介面，常用功能的位置有變化：\n• 模式移到了每個應用頁的頂部\n• 用量統計和授權中心移到了左側邊欄\n想了解全部變化，可以看看這一版的更新說明。",
-    "viewReleaseNotes": "查看更新說明",
-    "confirm": "我知道了"
-  },
   "whatsNew": {
     "updatedTo": "已更新至 v{{version}}",
     "recentTitle": "近期更新",
@@ -4276,9 +4273,7 @@
       "fix": "修復",
       "improve": "改進"
     },
-    "versionDetails": "詳情",
     "showEarlier": "還有 {{count}} 個更早的版本",
-    "viewFull": "查看完整更新內容",
     "confirm": "知道了"
   }
 }

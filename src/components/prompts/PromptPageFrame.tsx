@@ -2,13 +2,12 @@ import { useState, type ReactNode } from "react";
 import { useQueries } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import {
-  BookOpen,
   Check,
   ChevronDown,
   MoreHorizontal,
   Plus,
 } from "lucide-react";
-import { AppPageHeader } from "@/components/shell/AppPageHeader";
+import { PageMasthead } from "@/components/shell/PageMasthead";
 import { AppGlyph, APP_DISPLAY_NAME } from "@/components/shell/AppGlyph";
 import { Button } from "@/components/ui/button";
 import { HelpTip } from "@/components/ui/help-tip";
@@ -90,8 +89,8 @@ export function PromptPageFrame({
 
   return (
     <>
-      <AppPageHeader
-        icon={<BookOpen className="h-[18px] w-[18px]" strokeWidth={2} />}
+      <PageMasthead
+        kicker="Prompts"
         title={t("nav.prompts")}
         titleExtra={
           <HelpTip title={help.title}>{renderSegs(help.text)}</HelpTip>
@@ -151,7 +150,8 @@ export function PromptPageFrame({
         }
       />
 
-      <div className="mt-0.5 flex h-14 shrink-0 items-center gap-3 px-6">
+      <div className="mx-auto flex min-h-0 w-full max-w-[1160px] flex-1 flex-col px-8">
+      <div className="mt-0.5 flex h-14 shrink-0 items-center gap-3">
         <PromptAppPicker
           app={app}
           apps={apps}
@@ -177,14 +177,15 @@ export function PromptPageFrame({
       </div>
 
       {notices ? (
-        <div role="status" className="flex shrink-0 flex-col gap-2 px-6 pb-3">
+        <div role="status" className="flex shrink-0 flex-col gap-2 pb-3">
           {notices}
         </div>
       ) : (
         <div role="status" className="sr-only" />
       )}
 
-      <div className="flex min-h-0 flex-1 flex-col px-6 pb-5">{children}</div>
+      <div className="flex min-h-0 flex-1 flex-col pb-5">{children}</div>
+      </div>
     </>
   );
 }

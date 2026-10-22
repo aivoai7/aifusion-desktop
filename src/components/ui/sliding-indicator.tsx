@@ -116,7 +116,7 @@ export function TabUnderline({
     <span
       aria-hidden="true"
       className={cn(
-        "pointer-events-none absolute bottom-0 left-0 h-[2px] rounded-full bg-action",
+        "pointer-events-none absolute bottom-0 left-0 h-[2px] bg-action-text",
         animate && RAIL_MOTION,
         className,
       )}
