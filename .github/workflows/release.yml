@@ -218,11 +218,13 @@ jobs:
           WINDOWS_RELEASE_ARCH: ${{ matrix.arch || 'x86_64' }}
         run: |
           $ErrorActionPreference = 'Stop'
-          # MSI 与 NSIS 各出一份，和 README 列给用户的两个安装包一致
+          # MSI 与 NSIS 各出一份，和 README 列给用户的两个安装包一致。
+          # x64 走 node 直调 CLI：pnpm 的 Windows shim 会把 "msi,nsis" 连成一个参数，
+          # tauri 收到的值是 'msi nsis'，直接报 invalid value。
           if ($env:WINDOWS_RELEASE_ARCH -eq 'arm64') {
             pnpm tauri build --target aarch64-pc-windows-msvc --bundles msi
           } else {
-            pnpm tauri build --bundles msi,nsis
+            node node_modules/@tauri-apps/cli/tauri.js build --bundles msi nsis
           }
 
       - name: Build Tauri App (Linux)
