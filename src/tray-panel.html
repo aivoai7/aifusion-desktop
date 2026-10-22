@@ -4,7 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>AIFusion</title>
-    <script>(function(){try{var k="aifusion-theme",v=localStorage.getItem(k);if(v==null){v=localStorage.getItem("cc-switch-theme");if(v!=null)localStorage.setItem(k,v);}var t=v||"system";var d=t==="dark"||(t==="system"&&matchMedia("(prefers-color-scheme: dark)").matches);document.documentElement.classList.toggle("dark",d);}catch(e){}})()</script>
+    <!-- 托盘面板与主窗口同一套墨底：独立 WebView 也固定深色，首帧直接挂 dark -->
+    <script>document.documentElement.classList.add("dark");</script>
   </head>
   <body class="tray-panel">
     <div id="root"></div>

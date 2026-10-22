@@ -525,3 +525,160 @@ input[type="password"]::-ms-clear {
     flex: 1 1 0%;
   }
 }
+
+/* ══════════════════════════════════════════════════════════════════════
+   Mission Control · 与 Web 管理端同一套深色设计 token
+   ──────────────────────────────────────────────────────────────────────
+   桌面端固定深色：无论 light / dark / system，都使用同一套墨底 + 荧光标尺。
+   变量名与既有组件保持一致，仅替换取值，页面无需逐页改类名。
+   选择器只写 :root（不写 .light）：只要 <html> 存在就用墨底，
+   残留的 light / system 选择也拿不到浅色 token，不会出现浅卡配浅字。
+   ══════════════════════════════════════════════════════════════════════ */
+:root,
+.dark {
+  color-scheme: dark;
+
+  /* shadcn tokens */
+  --background: 210 20% 4%;
+  --foreground: 200 20% 93%;
+  --card: 200 25% 6%;
+  --card-foreground: 200 20% 93%;
+  --popover: 200 25% 6%;
+  --popover-foreground: 200 20% 93%;
+  --primary: 73 92% 60%;
+  --primary-foreground: 80 60% 5%;
+  --secondary: 200 12% 9%;
+  --secondary-foreground: 200 20% 93%;
+  --muted: 200 12% 9%;
+  --muted-foreground: 200 8% 63%;
+  --accent: 200 12% 12%;
+  --accent-foreground: 200 20% 93%;
+  --destructive: 0 100% 72%;
+  --destructive-foreground: 0 40% 6%;
+  --border: 200 16% 14%;
+  --input: 200 16% 18%;
+  --ring: 73 92% 60%;
+  --radius: 4px;
+
+  /* surfaces */
+  --bg-app: #07090a;
+  --bg-sidebar: #080b0c;
+  --bg-subtle: #0f1416;
+  --bg-selected: #141a1d;
+  --bg-card: #0c1012;
+  --hairline: rgba(255, 255, 255, 0.06);
+  --hairline-strong: rgba(255, 255, 255, 0.14);
+  --border-strong: #2b353a;
+
+  /* text */
+  --text-1: #e8eef1;
+  --text-2: #9daab1;
+  --text-3: #6b7a82;
+
+  /* primary action = signal lime */
+  --action-bg: #c9f73a;
+  --action-fg: #0a0d07;
+  --action-hover: #dbff6e;
+  --action-text: #c9f73a;
+  --action-soft: rgba(201, 247, 58, 0.1);
+
+  --inverse-bg: #e8eef1;
+  --inverse-fg: #0a0d07;
+  --inverse-hover: #ffffff;
+  --overlay: rgba(0, 0, 0, 0.68);
+  --control-off: #2b353a;
+
+  /* connection modes */
+  --direct-fill: #4cc9f0;
+  --direct-text: #7fdcf7;
+  --direct-soft: rgba(76, 201, 240, 0.12);
+  --direct-solid: #2ba8d0;
+  --direct-on: #04191f;
+  --direct-border: rgba(76, 201, 240, 0.4);
+
+  --route-fill: #5be38b;
+  --route-text: #8cf0af;
+  --route-soft: rgba(91, 227, 139, 0.12);
+  --route-solid: #27b866;
+  --route-on: #041a0e;
+  --route-border: rgba(91, 227, 139, 0.4);
+
+  --stack-fill: #b18cff;
+  --stack-text: #c9b1ff;
+  --stack-soft: rgba(177, 140, 255, 0.12);
+  --stack-solid: #8259e8;
+  --stack-on: #0b0418;
+  --stack-border: rgba(177, 140, 255, 0.4);
+
+  /* semantics */
+  --success: #5be38b;
+  --success-text: #8cf0af;
+  --success-soft: rgba(91, 227, 139, 0.1);
+  --warning: #f5c453;
+  --warning-text: #ffd784;
+  --warning-soft: rgba(245, 196, 83, 0.1);
+  --danger: #ff6e6e;
+  --danger-text: #ff9b9b;
+  --danger-soft: rgba(255, 110, 110, 0.1);
+
+  /* charts */
+  --chart-1: #c9f73a;
+  --chart-2: #4cc9f0;
+  --chart-3: #b18cff;
+  --chart-grid: #1e262a;
+  --heat-1: rgba(201, 247, 58, 0.14);
+  --heat-2: rgba(201, 247, 58, 0.34);
+  --heat-3: rgba(201, 247, 58, 0.62);
+  --heat-4: #c9f73a;
+
+  /* sessions by agent */
+  --agent-claude: #ff9b7a;
+  --agent-codex: #9daab1;
+  --agent-gemini: #7fdcf7;
+  --agent-opencode: #8cf0af;
+  --agent-pi: #c9b1ff;
+  --agent-generic: var(--text-2);
+  --diff-add-bg: var(--success-soft);
+  --diff-del-bg: var(--danger-soft);
+
+  /* depth */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
+  --shadow-md: 0 6px 18px rgba(0, 0, 0, 0.45);
+  --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.5);
+}
+
+html,
+html.dark,
+body {
+  background-color: var(--bg-app);
+  color: var(--text-1);
+}
+
+body {
+  background-image:
+    radial-gradient(1100px 560px at 82% -12%, rgba(201, 247, 58, 0.07), transparent 62%),
+    radial-gradient(900px 520px at -8% 104%, rgba(76, 201, 240, 0.055), transparent 60%);
+  background-attachment: fixed;
+}
+
+::selection {
+  background: rgba(201, 247, 58, 0.26);
+  color: #f4ffd9;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #2b353a;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #3a464c;
+}
+
+/* 主内容区细网格（与 Web 端 .admin-shell 同款） */
+.admin-shell {
+  position: relative;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.022) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.022) 1px, transparent 1px);
+  background-size: 34px 34px;
+  background-position: -1px -1px;
+}

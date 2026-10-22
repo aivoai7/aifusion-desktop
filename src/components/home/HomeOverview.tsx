@@ -514,15 +514,15 @@ export function HomeOverview({
 
             {/* ── 右栏：用量、组件与平台 ─────────────────────────────── */}
             <aside className="flex min-w-0 flex-col gap-5">
-              <section className="overflow-hidden rounded-panel bg-inverse-bg px-5 pb-5 pt-4 text-inverse-fg">
+              <section className="rounded-panel border border-hairline bg-surface px-5 pb-5 pt-4 text-fg-1">
                 <div className="flex items-center justify-between gap-3">
-                  <span className="af-kicker text-[9px] text-inverse-fg opacity-60">
+                  <span className="af-kicker text-[9px] text-fg-3">
                     {t("home.usageTitle", { defaultValue: "最近用量" })} · 7D
                   </span>
                   <button
                     type="button"
                     onClick={() => onOpenPage("usage")}
-                    className="text-badge text-inverse-fg opacity-60 transition-opacity hover:opacity-100"
+                    className="text-badge text-fg-3 transition-colors hover:text-fg-1"
                   >
                     {t("home.usageOpen", { defaultValue: "查看统计" })} →
                   </button>
@@ -530,14 +530,14 @@ export function HomeOverview({
                 {summary ? (
                   <>
                     <div className="mt-4 flex items-baseline gap-2">
-                      <span className="af-num text-display leading-none">
+                      <span className="af-num text-display leading-none text-action-text">
                         {summary.totalRequests.toLocaleString("en-US")}
                       </span>
-                      <span className="text-caption opacity-60">
+                      <span className="text-caption text-fg-3">
                         {t("home.requestsUnit", { defaultValue: "次请求" })}
                       </span>
                     </div>
-                    <div className="mt-2.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-caption opacity-60">
+                    <div className="mt-2.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-caption text-fg-2">
                       <span className="af-num">
                         ${(Number.parseFloat(summary.totalCost) || 0).toFixed(2)}
                       </span>
@@ -545,7 +545,7 @@ export function HomeOverview({
                         {summary.realTotalTokens.toLocaleString("en-US")} Token
                       </span>
                     </div>
-                    <InverseSpark
+                    <UsageSpark
                       days={spark.days}
                       peak={spark.peak}
                       label={t("home.usageSpark", {
@@ -554,7 +554,7 @@ export function HomeOverview({
                     />
                   </>
                 ) : (
-                  <p className="mt-4 text-caption leading-5 opacity-60">
+                  <p className="mt-4 text-caption leading-5 text-fg-3">
                     {t("home.usageEmpty", {
                       defaultValue:
                         "本机还没有用量记录 —— 客户端产生请求后，这里按天画出请求数、花费与 Token。",
@@ -808,10 +808,10 @@ function describeModel(row: AppModelRow, t: TFunction) {
 }
 
 /**
- * 反色用量块里的柱子：颜色跟随 --inverse-fg，切主题时整块反过来。
- * 今天实心，其余按比例压暗；零请求留一条底线。
+ * 用量卡里的柱子：走图表主色 --chart-1（荧光绿），和 Web 管理端的折线同一支笔。
+ * 今天实心，其余按比例压淡；零请求留一条底线。
  */
-function InverseSpark({
+function UsageSpark({
   days,
   peak,
   label,
@@ -827,8 +827,7 @@ function InverseSpark({
       aria-label={label}
       className="mt-5 flex h-[52px] items-end gap-[3px]"
       style={{
-        borderBottom:
-          "1px solid color-mix(in srgb, var(--inverse-fg) 22%, transparent)",
+        borderBottom: "1px solid var(--hairline-strong)",
       }}
     >
       {days.map((day, i) => {
@@ -843,10 +842,10 @@ function InverseSpark({
               height: `${Math.max(ratio * 100, 4)}%`,
               background:
                 day.requestCount === 0
-                  ? "color-mix(in srgb, var(--inverse-fg) 16%, transparent)"
+                  ? "color-mix(in srgb, var(--chart-1) 16%, transparent)"
                   : isToday
-                    ? "var(--inverse-fg)"
-                    : "color-mix(in srgb, var(--inverse-fg) 48%, transparent)",
+                    ? "var(--chart-1)"
+                    : "color-mix(in srgb, var(--chart-1) 42%, transparent)",
             }}
           />
         );

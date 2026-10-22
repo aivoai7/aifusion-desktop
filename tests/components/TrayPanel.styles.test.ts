@@ -24,8 +24,8 @@ afterEach(() => {
   else root.dataset.layout = originalLayout;
 });
 
-function cardFor(platform: "windows" | "macos", dark: boolean) {
-  root.classList.toggle("dark", dark);
+function cardFor(platform: "windows" | "macos") {
+  root.classList.add("dark");
   root.dataset.glass = platform === "macos" ? "native" : "frosted";
   root.dataset.layout = platform === "macos" ? "floating" : "joined";
   canvas = document.createElement("div");
@@ -38,25 +38,18 @@ function cardFor(platform: "windows" | "macos", dark: boolean) {
 }
 
 describe("TrayPanel backgrounds stay scoped to each platform", () => {
-  it.each([false, true])("keeps Windows cards opaque (dark=%s)", (dark) => {
-    const style = cardFor("windows", dark);
-    // Ink & Grid 卡面：浅墨白 / 深墨蓝，必须是实色（整窗 Acrylic 已移除）
-    expect(style.backgroundColor).toBe(
-      dark ? "rgb(16, 23, 37)" : "rgb(247, 249, 253)",
-    );
+  it("keeps Windows cards opaque on the Mission Control card face", () => {
+    const style = cardFor("windows");
+    // 面板固定深色：实色卡面 #0c1012（整窗 Acrylic 已移除，不能透出桌面内容）
+    expect(style.backgroundColor).toBe("rgb(12, 16, 18)");
     expect(getComputedStyle(root).backgroundColor).toBe("rgba(0, 0, 0, 0)");
   });
 
-  it.each([false, true])(
-    "preserves the macOS overlay on native glass (dark=%s)",
-    (dark) => {
-      const style = cardFor("macos", dark);
-      // 玻璃在原生层，网页只叠一层很淡的墨色
-      expect(style.backgroundColor).toBe(
-        dark ? "rgba(16, 23, 37, 0.5)" : "rgba(244, 246, 251, 0.55)",
-      );
-      expect(style.boxShadow).toContain("0 8px 20px");
-      expect(getComputedStyle(root).backgroundColor).toBe("rgba(0, 0, 0, 0)");
-    },
-  );
+  it("preserves the macOS overlay on native glass", () => {
+    const style = cardFor("macos");
+    // 玻璃在原生层，网页只叠一层很淡的墨底
+    expect(style.backgroundColor).toBe("rgba(12, 16, 18, 0.55)");
+    expect(style.boxShadow).toContain("0 8px 20px");
+    expect(getComputedStyle(root).backgroundColor).toBe("rgba(0, 0, 0, 0)");
+  });
 });

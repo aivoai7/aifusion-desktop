@@ -35,7 +35,6 @@ import {
   type PanelTexts,
   type TrayPanelState,
 } from "./api";
-import { usePanelTheme } from "./usePanelTheme";
 import { UsageTab } from "./UsageTab";
 
 type Tab = "config" | "usage";
@@ -43,6 +42,8 @@ const TAB_KEY = "aifusion-tray-tab";
 /** 主界面保存语言用的键 */
 const LANGUAGE_KEY = "language";
 const MAIN_MAX_HEIGHT = 620;
+/** 面板与主窗口同一套 Mission Control 深色，原生侧的窗体外观也跟着钉成深色 */
+const PANEL_DARK = true;
 /** 使用固定画布时，窗口在一次弹出里的最大高度 */
 const CANVAS_MAX_HEIGHT = 760;
 /** 分开摆时窗口四周留的透明边距，给卡片的阴影（系统窗口阴影已关掉） */
@@ -419,7 +420,6 @@ export function TrayPanel() {
   const [openApp, setOpenApp] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [shownCount, setShownCount] = useState(0);
-  const theme = usePanelTheme(shownCount);
 
   const mainRef = useRef<HTMLDivElement>(null);
   const subRef = useRef<HTMLDivElement>(null);
@@ -575,7 +575,7 @@ export function TrayPanel() {
       offsetX: mainX,
       offsetY: top,
       cards,
-      dark: theme.explicit,
+      dark: PANEL_DARK,
     };
     const key = JSON.stringify(layout);
     if (key === lastLayout.current) return;
@@ -596,7 +596,7 @@ export function TrayPanel() {
     } else {
       void trayPanelApi.layout(layout);
     }
-  }, [openApp, theme.explicit]);
+  }, [openApp]);
 
   useEffect(
     () => () => {
