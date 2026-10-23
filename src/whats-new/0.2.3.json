@@ -1,0 +1,26 @@
+{
+  "version": "0.2.3",
+  "items": [
+    {
+      "type": "fix",
+      "zh": "总成本改按平台账本的真实扣费显示，不再是本机估算",
+      "zh-TW": "總成本改按平台帳本的真實扣費顯示，不再是本機估算",
+      "en": "Total cost now reads from the platform's billing ledger instead of a local estimate",
+      "ja": "総コストを本機推算から、プラットフォームの課金台帳の実表示に修正しました"
+    },
+    {
+      "type": "improve",
+      "zh": "平台暂时没有用量接口时自动回退本机估算，不影响使用",
+      "zh-TW": "平台暫時沒有用量介面時自動回退本機估算，不影響使用",
+      "en": "If the platform has no usage endpoint yet, the card quietly falls back to the local estimate",
+      "ja": "プラットフォームに用量APIが無い間は、自動的に本機推算へ切り替わります"
+    },
+    {
+      "type": "improve",
+      "zh": "成本卡加了口径说明，悬停可看数字来自平台还是本机",
+      "zh-TW": "成本卡加了口徑說明，懸停可看數字來自平台還是本機",
+      "en": "The cost card explains itself on hover: platform ledger or local estimate",
+      "ja": "コストカードに説明を追加。ホバーで実績か推算か分かります"
+    }
+  ]
+}
