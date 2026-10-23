@@ -2118,7 +2118,10 @@
       "realTotalHelpTitle": "Toplam tokenlar nasıl sayılır?",
       "realTotalHelp": "Yeni giriş + çıkış + önbellek yazma + önbellek isabetleri. Yeni giriş önbelleği hariç tutar; bazı protokoller (OpenAI gibi) önbellek yazma işlemlerini raporlamaz, dolayısıyla bu kısım düşük olabilir.",
       "hitRateHelpTitle": "Önbellek isabet oranı nasıl hesaplanır?",
-      "hitRateHelp": "Önbellek isabetleri ÷ (yeni girdi + önbellek yazmaları + önbellek isabetleri)."
+      "hitRateHelp": "Önbellek isabetleri ÷ (yeni girdi + önbellek yazmaları + önbellek isabetleri).",
+      "costHelpTitle": "Toplam maliyet nasıl hesaplanır",
+      "costHelpPlatform": "Platform defterindeki gerçek tutardır; web konsoluyla aynı kaynaktan gelir. Aşağıdaki istek ve token sayıları yerel günlüklere göre sayıldığı için kapsam farklıdır.",
+      "costHelpLocal": "Yerel fiyat tablosuyla tahmin edilir: platformun eklediği yeni modeller yerel tabloda yoksa 0 sayılır. Gerçek tutar platform defterindedir."
     },
     "heatmap": {
       "title": "Kullanım ısı haritası",

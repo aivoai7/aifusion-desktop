@@ -58,6 +58,16 @@ pub async fn get_platform_wallet_balance(
     platform_key::fetch_wallet_balance(state.db.as_ref()).await
 }
 
+/// 平台账本的真实用量（按天与按模型聚合，含真实扣费美元）；
+/// 未登录或平台版本还没有这个接口时返回 `None`，前端回退本机估算。
+#[tauri::command]
+pub async fn get_platform_usage(
+    state: tauri::State<'_, AppState>,
+    days: i64,
+) -> Result<Option<platform_key::PlatformUsage>, String> {
+    platform_key::fetch_platform_usage(state.db.as_ref(), days).await
+}
+
 async fn apply_fetched_key(
     app_handle: &AppHandle,
     fetched: FetchedPlatformKey,

@@ -2255,7 +2255,10 @@
       "realTotalHelpTitle": "How total tokens are counted",
       "realTotalHelp": "Fresh input + output + cache writes + cache hits. Fresh input excludes cache; some protocols (such as OpenAI) don't report cache writes, so that part may be low.",
       "hitRateHelpTitle": "How the cache hit rate is calculated",
-      "hitRateHelp": "Cache hits ÷ (fresh input + cache writes + cache hits)."
+      "hitRateHelp": "Cache hits ÷ (fresh input + cache writes + cache hits).",
+      "costHelpTitle": "How total cost is computed",
+      "costHelpPlatform": "Real charges from the platform ledger, the same source as the web console. Requests and tokens below still come from local logs, so the two use different scopes.",
+      "costHelpLocal": "Estimated from the local price table: models the platform added but local pricing misses are counted as 0. The platform ledger holds the real charge."
     },
     "heatmap": {
       "title": "Usage heatmap",

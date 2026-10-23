@@ -5,6 +5,7 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import { usageApi } from "@/lib/api/usage";
+import { platformKeyApi } from "@/lib/api/platformKey";
 import { resolveUsageRange } from "@/lib/usageRange";
 import type {
   LogFilters,
@@ -211,6 +212,27 @@ export function useUsageSummaryByApp(
         filters?.model,
       );
     },
+    placeholderData: keepPreviousData,
+    refetchInterval: options?.refetchInterval ?? DEFAULT_REFETCH_INTERVAL_MS,
+    refetchIntervalInBackground: options?.refetchIntervalInBackground ?? false,
+  });
+}
+
+/**
+ * 平台账本的真实用量（含真实扣费美元）。
+ *
+ * `days` 传 null 表示这个时间区间对不上平台的自然日窗口，或者界面上带了筛选
+ * （平台只有账号级账本，分不了客户端 / 模型），此时不发请求，调用方用本机估算。
+ * 未登录或平台版本还没有这个接口时后端回 null，同样回退。
+ */
+export function usePlatformUsage(
+  days: number | null,
+  options?: UsageQueryOptions,
+) {
+  return useQuery({
+    queryKey: ["platformUsage", days ?? 0],
+    queryFn: () => platformKeyApi.usage(days as number),
+    enabled: days != null && days > 0,
     placeholderData: keepPreviousData,
     refetchInterval: options?.refetchInterval ?? DEFAULT_REFETCH_INTERVAL_MS,
     refetchIntervalInBackground: options?.refetchIntervalInBackground ?? false,

@@ -57,6 +57,45 @@ export interface PlatformModelApplyResult {
   message: string | null;
 }
 
+/** 平台账本里某一天的真实用量。 */
+export interface PlatformUsageDay {
+  date: string;
+  requests: number;
+  tokens: number;
+  costUsd: number;
+}
+
+/** 平台账本里单个模型的真实用量；modelId 与 /v1/models 的 id 同源。 */
+export interface PlatformUsageModel {
+  modelId: string;
+  modelName: string;
+  requests: number;
+  inputTokens: number;
+  outputTokens: number;
+  tokens: number;
+  costUsd: number;
+}
+
+/** 平台账本在所选区间内的合计。 */
+export interface PlatformUsageTotals {
+  requests: number;
+  inputTokens: number;
+  outputTokens: number;
+  tokens: number;
+  costUsd: number;
+}
+
+/** `GET /v1/wallet/usage` 的聚合结果：平台真正扣掉的钱。 */
+export interface PlatformUsage {
+  currencyCode: string;
+  days: number;
+  from: string;
+  to: string;
+  totals: PlatformUsageTotals;
+  daily: PlatformUsageDay[];
+  models: PlatformUsageModel[];
+}
+
 export const platformKeyApi = {
   async status(): Promise<PlatformKeyStatus> {
     return await invoke("get_platform_api_key_status");
@@ -81,6 +120,14 @@ export const platformKeyApi = {
    */
   async walletBalance(): Promise<number | null> {
     return await invoke("get_platform_wallet_balance");
+  },
+
+  /**
+   * 平台账本的真实用量（按天 / 按模型聚合，含真实扣费美元）。
+   * 未登录或平台版本还没有这个接口时返回 null，调用方回退本机估算。
+   */
+  async usage(days: number): Promise<PlatformUsage | null> {
+    return await invoke("get_platform_usage", { days });
   },
 
   /** 保存前先校验，避免用户存下一把必然 401 的 Key。 */

@@ -63,6 +63,28 @@ export function resolveUsageRange(
   }
 }
 
+/**
+ * 平台账本（`GET /v1/wallet/usage`）按自然日聚合：从今天 00:00 往前数 N 天。
+ * 只有和这个窗口完全对得上的预设才用它回的成本，其余返回 null 让调用方回退本机估算：
+ * `1d` 是滚动 24 小时、`all` 与 `custom` 可以超出 365 天窗口或结束在过去某天。
+ */
+export function platformUsageDays(
+  selection: UsageRangeSelection,
+): number | null {
+  switch (selection.preset) {
+    case "today":
+      return 1;
+    case "7d":
+      return 7;
+    case "14d":
+      return 14;
+    case "30d":
+      return 30;
+    default:
+      return null;
+  }
+}
+
 export function getUsageRangePresetLabel(
   preset: UsageRangePreset,
   t: (key: string, options?: { defaultValue?: string }) => string,

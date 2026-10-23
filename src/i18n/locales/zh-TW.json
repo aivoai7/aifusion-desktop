@@ -2164,7 +2164,10 @@
       "realTotalHelpTitle": "真實消耗 Tokens 怎麼算",
       "realTotalHelp": "新增輸入 + 輸出 + 快取寫入 + 快取命中。新增輸入不含快取；部分協定（如 OpenAI）不上報快取寫入，這一項可能偏低。",
       "hitRateHelpTitle": "快取命中率怎麼算",
-      "hitRateHelp": "快取命中 ÷（新增輸入 + 快取寫入 + 快取命中）。"
+      "hitRateHelp": "快取命中 ÷（新增輸入 + 快取寫入 + 快取命中）。",
+      "costHelpTitle": "總成本按什麼算",
+      "costHelpPlatform": "取自平台帳本的真實扣費，與網頁控制台同源。下方的請求數與 Tokens 仍按本機日誌統計，兩者口徑不同。",
+      "costHelpLocal": "按本機定價表估算：平台上新模型沒進本機價目表時會被估成 0，真實扣費以平台帳本為準。"
     },
     "heatmap": {
       "title": "用量熱力圖",

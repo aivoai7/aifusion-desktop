@@ -238,6 +238,215 @@ pub async fn fetch_wallet_balance(db: &Database) -> Result<Option<f64>, String> 
     }
 }
 
+/// 平台账本里某一天的真实用量。
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PlatformUsageDay {
+    pub date: String,
+    pub requests: i64,
+    pub tokens: i64,
+    pub cost_usd: f64,
+}
+
+/// 平台账本里单个模型的真实用量；`model_id` 就是 `/v1/models` 回的那个 id。
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PlatformUsageModel {
+    pub model_id: String,
+    pub model_name: String,
+    pub requests: i64,
+    pub input_tokens: i64,
+    pub output_tokens: i64,
+    pub tokens: i64,
+    pub cost_usd: f64,
+}
+
+/// 平台账本在所选区间内的合计。
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PlatformUsageTotals {
+    pub requests: i64,
+    pub input_tokens: i64,
+    pub output_tokens: i64,
+    pub tokens: i64,
+    pub cost_usd: f64,
+}
+
+/// `GET /v1/wallet/usage` 的聚合结果：平台真正扣掉的钱，按天与按模型分好。
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PlatformUsage {
+    pub currency_code: String,
+    pub days: i64,
+    pub from: String,
+    pub to: String,
+    pub totals: PlatformUsageTotals,
+    pub daily: Vec<PlatformUsageDay>,
+    pub models: Vec<PlatformUsageModel>,
+}
+
+/// 反序列化用的形状：平台回下划线字段，缺字段一律按 0 / 空处理，
+/// 免得平台加字段时桌面端直接解析失败。
+#[derive(Debug, Clone, serde::Deserialize)]
+struct PlatformUsageResponse {
+    #[serde(default)]
+    currency_code: String,
+    #[serde(default)]
+    range: PlatformUsageRange,
+    #[serde(default)]
+    totals: PlatformUsageTotalsWire,
+    #[serde(default)]
+    daily: Vec<PlatformUsageDayWire>,
+    #[serde(default)]
+    models: Vec<PlatformUsageModelWire>,
+}
+
+#[derive(Debug, Clone, Default, serde::Deserialize)]
+struct PlatformUsageRange {
+    #[serde(default)]
+    days: i64,
+    #[serde(default)]
+    from: String,
+    #[serde(default)]
+    to: String,
+}
+
+#[derive(Debug, Clone, Default, serde::Deserialize)]
+struct PlatformUsageTotalsWire {
+    #[serde(default)]
+    requests: i64,
+    #[serde(default)]
+    input_tokens: i64,
+    #[serde(default)]
+    output_tokens: i64,
+    #[serde(default)]
+    tokens: i64,
+    #[serde(default)]
+    cost_usd: f64,
+}
+
+#[derive(Debug, Clone, Default, serde::Deserialize)]
+struct PlatformUsageDayWire {
+    #[serde(default)]
+    date: String,
+    #[serde(default)]
+    requests: i64,
+    #[serde(default)]
+    tokens: i64,
+    #[serde(default)]
+    cost_usd: f64,
+}
+
+#[derive(Debug, Clone, Default, serde::Deserialize)]
+struct PlatformUsageModelWire {
+    #[serde(default)]
+    model_id: String,
+    #[serde(default)]
+    model_name: String,
+    #[serde(default)]
+    requests: i64,
+    #[serde(default)]
+    input_tokens: i64,
+    #[serde(default)]
+    output_tokens: i64,
+    #[serde(default)]
+    tokens: i64,
+    #[serde(default)]
+    cost_usd: f64,
+}
+
+/// 平台账本的真实用量。
+///
+/// 桌面端「用量统计」原本按本机价目表估成本，平台上新模型没进价目表时估出来是 0
+/// （实测真实扣费 $1.75、本机只报 $0.01），所以成本以平台账本为准。
+/// 未登录、或平台版本还没有这个接口时返回 `None`，前端回退本机估算。
+pub async fn fetch_platform_usage(db: &Database, days: i64) -> Result<Option<PlatformUsage>, String> {
+    let Some((api_key, _)) = resolve_api_key(db) else {
+        return Ok(None);
+    };
+
+    let days = days.clamp(1, 365);
+    let url = format!(
+        "{}/v1/wallet/usage?days={}",
+        PLATFORM_SITE.trim_end_matches('/'),
+        days
+    );
+    let client = reqwest::Client::builder()
+        .timeout(std::time::Duration::from_secs(15))
+        .build()
+        .map_err(|error| format!("无法初始化网络请求：{error}"))?;
+
+    let response = match client.get(&url).bearer_auth(&api_key).send().await {
+        Ok(response) => response,
+        Err(_) => return Err("无法连接平台，请检查网络后重试".to_string()),
+    };
+    let status = response.status();
+    if status == reqwest::StatusCode::NOT_FOUND || status == reqwest::StatusCode::METHOD_NOT_ALLOWED
+    {
+        return Ok(None);
+    }
+    if !status.is_success() {
+        return Err(format!("查询平台用量失败：HTTP {}", status.as_u16()));
+    }
+    let body: PlatformUsageResponse = response
+        .json()
+        .await
+        .map_err(|error| format!("平台返回的用量无法解析：{error}"))?;
+
+    Ok(Some(PlatformUsage {
+        currency_code: if body.currency_code.is_empty() {
+            "USD".to_string()
+        } else {
+            body.currency_code
+        },
+        days: if body.range.days > 0 {
+            body.range.days
+        } else {
+            days
+        },
+        from: body.range.from,
+        to: body.range.to,
+        totals: PlatformUsageTotals {
+            requests: body.totals.requests,
+            input_tokens: body.totals.input_tokens,
+            output_tokens: body.totals.output_tokens,
+            tokens: if body.totals.tokens > 0 {
+                body.totals.tokens
+            } else {
+                body.totals.input_tokens + body.totals.output_tokens
+            },
+            cost_usd: body.totals.cost_usd,
+        },
+        daily: body
+            .daily
+            .into_iter()
+            .map(|d| PlatformUsageDay {
+                date: d.date,
+                requests: d.requests,
+                tokens: d.tokens,
+                cost_usd: d.cost_usd,
+            })
+            .collect(),
+        models: body
+            .models
+            .into_iter()
+            .map(|m| PlatformUsageModel {
+                model_id: m.model_id,
+                model_name: m.model_name,
+                requests: m.requests,
+                input_tokens: m.input_tokens,
+                output_tokens: m.output_tokens,
+                tokens: if m.tokens > 0 {
+                    m.tokens
+                } else {
+                    m.input_tokens + m.output_tokens
+                },
+                cost_usd: m.cost_usd,
+            })
+            .collect(),
+    }))
+}
+
 /// 保存密钥并下发到所有平台的供应商行，随后重投影当前供应商的 live 配置。
 pub fn set_api_key(state: &AppState, api_key: &str) -> Result<PlatformKeyApplyResult, AppError> {
     let api_key = api_key.trim();

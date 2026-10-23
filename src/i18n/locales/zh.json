@@ -2253,7 +2253,10 @@
       "realTotalHelpTitle": "真实消耗 Tokens 怎么算",
       "realTotalHelp": "新增输入 + 输出 + 缓存写入 + 缓存命中。新增输入不含缓存；部分协议（如 OpenAI）不上报缓存写入，这一项可能偏低。",
       "hitRateHelpTitle": "缓存命中率怎么算",
-      "hitRateHelp": "缓存命中 ÷（新增输入 + 缓存写入 + 缓存命中）。"
+      "hitRateHelp": "缓存命中 ÷（新增输入 + 缓存写入 + 缓存命中）。",
+      "costHelpTitle": "总成本按什么算",
+      "costHelpPlatform": "取自平台账本的真实扣费，与网页控制台同源。下面的请求数与 Tokens 仍按本机日志统计，两者口径不同。",
+      "costHelpLocal": "按本机定价表估算：平台上新模型没进本机价目表时会被估成 0，真实扣费以平台账本为准。"
     },
     "heatmap": {
       "title": "用量热力图",

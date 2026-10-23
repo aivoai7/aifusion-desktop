@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ChevronDown } from "lucide-react";
-import { useUsageSummaryByApp } from "@/lib/query/usage";
+import { useUsageSummaryByApp, usePlatformUsage } from "@/lib/query/usage";
+import { platformUsageDays } from "@/lib/usageRange";
 import { HelpTip } from "@/components/ui/help-tip";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -179,6 +180,18 @@ export function UsageHero({
     appType ? [appType] : allApps.map((a) => a.appType),
   );
 
+  // 成本以平台账本为准：本机价目表缺某个模型时，那部分真实消费会被估成 0
+  // （实测平台扣了 $1.75，本机只报 $0.01）。平台只有账号级账本，所以一旦
+  // 界面上带了客户端 / 模型筛选，就没有对得上的真数可换，回退本机估算。
+  const platformDays = appType || model ? null : platformUsageDays(range);
+  const { data: platformUsage } = usePlatformUsage(platformDays, {
+    refetchInterval: refreshIntervalMs > 0 ? refreshIntervalMs : false,
+  });
+  const platformCost =
+    platformUsage && Number.isFinite(platformUsage.totals.costUsd)
+      ? platformUsage.totals.costUsd
+      : null;
+
   const input = summary?.totalInputTokens ?? 0;
   const output = summary?.totalOutputTokens ?? 0;
   const cacheWrite = summary?.totalCacheCreationTokens ?? 0;
@@ -186,6 +199,8 @@ export function UsageHero({
   const realTotal = summary?.realTotalTokens ?? 0;
   const hitRate = summary?.cacheHitRate ?? 0;
   const totalCost = parseFiniteNumber(summary?.totalCost);
+  // 有平台账本就报平台账本，没有才用本机估算
+  const shownCost = platformCost ?? totalCost;
   const requests = summary?.totalRequests ?? 0;
 
   const placeholder = isLoading ? "…" : undefined;
@@ -212,10 +227,18 @@ export function UsageHero({
           >
             <MetricCard
               label={t("usage.totalCost")}
+              help={{
+                title: t("usage.metrics.costHelpTitle"),
+                body:
+                  platformCost == null
+                    ? t("usage.metrics.costHelpLocal")
+                    : t("usage.metrics.costHelpPlatform"),
+              }}
               value={
-                placeholder ?? (totalCost == null ? "--" : money(totalCost, 2))
+                placeholder ??
+                (shownCost == null ? "--" : money(shownCost, 2))
               }
-              title={totalCost == null ? undefined : moneyTitle(totalCost, 6)}
+              title={shownCost == null ? undefined : moneyTitle(shownCost, 6)}
             />
             <MetricCard
               label={t("usage.totalRequests")}
