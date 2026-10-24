@@ -6,7 +6,7 @@
 
 登录一次，密钥自动下发；模型、路由、用量与客户端更新，都在一个窗口里完成。
 
-[![Version](https://img.shields.io/badge/version-0.2.3-black)](https://github.com/aivoai7/aifusion-desktop/releases)
+[![Version](https://img.shields.io/badge/version-0.2.4-black)](https://github.com/aivoai7/aifusion-desktop/releases)
 [![Platform](https://img.shields.io/badge/platform-Windows%20%C2%B7%20Linux-2f6feb)](https://github.com/aivoai7/aifusion-desktop/releases/latest)
 [![Built with Tauri](https://img.shields.io/badge/built%20with-Tauri%202-orange)](https://tauri.app/)
 
@@ -23,7 +23,7 @@ AIFusion 是 AIFusion 平台的桌面客户端，支持 Windows 与 Linux。它�
 - 平台地址：<https://op.aifusion.sbs>
 - 安装包不包含任何 API Key；首次使用时通过网页登录取回你自己的 Key
 - 不需要手改 JSON / TOML / YAML，客户端配置由应用写入
-- 当前版本 **0.2.3**，Windows 与 Linux 各出 x64/x86_64 与 ARM64 安装包
+- 当前版本 **0.2.4**，Windows 与 Linux 各出 x64/x86_64 与 ARM64 安装包
 
 支持的客户端：
 
@@ -73,17 +73,17 @@ Claude Code、Claude Desktop、Codex、Gemini CLI、Grok Build 可以按客户�
 
 | 文件 | 用途 |
 | --- | --- |
-| `AIFusion-v0.2.3-Windows-setup.exe` | NSIS 安装包，Windows x64 推荐绝大多数用户使用 |
-| `AIFusion-v0.2.3-Windows.msi` | MSI 安装包，适合企业批量分发 |
-| `AIFusion-v0.2.3-Windows-Portable.zip` | Windows x64 免安装版，解压即用 |
-| `AIFusion-v0.2.3-Windows-arm64.msi` | Windows ARM64 MSI |
-| `AIFusion-v0.2.3-Windows-arm64-Portable.zip` | Windows ARM64 免安装版，解压即用 |
-| `AIFusion-v0.2.3-Linux-x86_64.AppImage` | Linux x86_64 通用包，chmod +x 后直接运行，跨发行版首选 |
-| `AIFusion-v0.2.3-Linux-x86_64.deb` | Debian / Ubuntu |
-| `AIFusion-v0.2.3-Linux-x86_64.rpm` | Fedora / openSUSE / RHEL 系 |
-| `AIFusion-v0.2.3-Linux-arm64.{AppImage,deb,rpm}` | 以上三种的 ARM64 版本，命名同 x86_64 |
+| `AIFusion-v0.2.4-Windows-setup.exe` | NSIS 安装包，Windows x64 推荐绝大多数用户使用 |
+| `AIFusion-v0.2.4-Windows.msi` | MSI 安装包，适合企业批量分发 |
+| `AIFusion-v0.2.4-Windows-Portable.zip` | Windows x64 免安装版，解压即用 |
+| `AIFusion-v0.2.4-Windows-arm64.msi` | Windows ARM64 MSI |
+| `AIFusion-v0.2.4-Windows-arm64-Portable.zip` | Windows ARM64 免安装版，解压即用 |
+| `AIFusion-v0.2.4-Linux-x86_64.AppImage` | Linux x86_64 通用包，chmod +x 后直接运行，跨发行版首选 |
+| `AIFusion-v0.2.4-Linux-x86_64.deb` | Debian / Ubuntu |
+| `AIFusion-v0.2.4-Linux-x86_64.rpm` | Fedora / openSUSE / RHEL 系 |
+| `AIFusion-v0.2.4-Linux-arm64.{AppImage,deb,rpm}` | 以上三种的 ARM64 版本，命名同 x86_64 |
 
-> 如果你安装过 4.0.15 或更早的版本，请先卸载旧版再安装 0.2.3。版本号回退时，Windows 安装器可能拒绝覆盖升级。
+> 如果你安装过 4.0.15 或更早的版本，请先卸载旧版再安装 0.2.4。版本号回退时，Windows 安装器可能拒绝覆盖升级。
 
 deb/rpm 的依赖名按 Ubuntu 22.04 一代的包写死。本机在 Ubuntu 26.04（WSL2）实测：`libgtk-3-0` 已完成 t64 迁移改名 `libgtk-3-0t64`，`apt install ./xxx.deb` 会报依赖不满足；装法是先手动装齐 GTK3、WebKit2GTK 4.1、AppIndicator3、libnotify、xdg-utils，再用 `sudo dpkg -i --force-depends xxx.deb`，或直接改用 AppImage。
 

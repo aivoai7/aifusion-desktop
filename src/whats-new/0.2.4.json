@@ -1,0 +1,33 @@
+{
+  "version": "0.2.4",
+  "items": [
+    {
+      "type": "new",
+      "zh": "界面全面重做：总览、用量与客户端详情统一为深色 Night Ops 视觉",
+      "zh-TW": "介面全面重做：總覽、用量與客戶端詳情統一為深色 Night Ops 視覺",
+      "en": "Complete visual overhaul: overview, usage and client details share one dark Night Ops system",
+      "ja": "画面を全面刷新。概要・使用量・クライアント詳細をダークな Night Ops デザインに統一"
+    },
+    {
+      "type": "fix",
+      "zh": "总成本改按当前 API Key 统计，和请求数、Token 对得上",
+      "zh-TW": "總成本改按目前 API Key 統計，和請求數、Token 對得上",
+      "en": "Total cost now scopes to your API key, matching request and token counts",
+      "ja": "総コストを現在のAPIキー単位に変更し、リクエスト数・トークン数と一致"
+    },
+    {
+      "type": "improve",
+      "zh": "主模型未下发时显示「由平台下发」，不再拿轻量模型顶替",
+      "zh-TW": "主模型未下發時顯示「由平台下發」，不再以輕量模型頂替",
+      "en": "When no main model is assigned, the app says so instead of showing the light model",
+      "ja": "メインモデル未割当時は軽量モデルで代用せず「プラットフォームから配信」と表示"
+    },
+    {
+      "type": "fix",
+      "zh": "修正模型选择框中单选项全部显示为已选的问题",
+      "zh-TW": "修正模型選擇框中單選項全部顯示為已選的問題",
+      "en": "Fixed radio buttons in the model picker appearing all selected",
+      "ja": "モデル選択ダイアログのラジオボタンが全て選択済みに見える問題を修正"
+    }
+  ]
+}
