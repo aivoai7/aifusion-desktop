@@ -360,6 +360,10 @@ struct PlatformUsageModelWire {
 /// 桌面端「用量统计」原本按本机价目表估成本，平台上新模型没进价目表时估出来是 0
 /// （实测真实扣费 $1.75、本机只报 $0.01），所以成本以平台账本为准。
 /// 未登录、或平台版本还没有这个接口时返回 `None`，前端回退本机估算。
+///
+/// 用 `scope=key`：这张卡片上还有「本机」的请求数与 Token 数，只有按这把 Key
+/// 统计才和它们对得上。账号级（默认 scope=user）会把别的设备/Key 的消费也算进来，
+/// 出现「$44 成本 vs 177 次请求」这种对不上的数字。
 pub async fn fetch_platform_usage(db: &Database, days: i64) -> Result<Option<PlatformUsage>, String> {
     let Some((api_key, _)) = resolve_api_key(db) else {
         return Ok(None);
@@ -367,7 +371,7 @@ pub async fn fetch_platform_usage(db: &Database, days: i64) -> Result<Option<Pla
 
     let days = days.clamp(1, 365);
     let url = format!(
-        "{}/v1/wallet/usage?days={}",
+        "{}/v1/wallet/usage?days={}&scope=key",
         PLATFORM_SITE.trim_end_matches('/'),
         days
     );
