@@ -122,11 +122,8 @@ export function PlatformConnectionPanel({
     return [...new Set(list)];
   }, [modelConfig]);
 
-  // 主模型是占位符时不要拿轻量模型顶替：显示「由平台下发」更诚实。
-  const mainModel =
-    visibleModelId(modelConfig?.defaultModel) ??
-    visibleModelId(modelConfig?.models[0]) ??
-    null;
+  // 主模型是占位符时不要拿轻量模型或列表第一项顶替：显示「由平台下发」更诚实。
+  const mainModel = visibleModelId(modelConfig?.defaultModel) ?? null;
   const lightModel = visibleModelId(modelConfig?.lightModel);
 
   // additive 应用（OpenCode / OpenClaw / Hermes / Pi / Mcode）没有「当前供应商」，

@@ -91,7 +91,10 @@ function PlatformModelDialogBody({
     // 占位符（__AIFUSION_MODEL__）不是可选模型，当作未选择，逼用户挑一个真模型。
     setDraftDefault(visibleModelId(config.defaultModel) ?? UNSET);
     setDraftLight(visibleModelId(config.lightModel) ?? UNSET);
-    setDraftModels(config.models);
+    // 占位符不是可选模型：草稿列表里也滤掉，免得被计入数量或原样保存回去。
+    setDraftModels(
+      config.models.filter((id): id is string => visibleModelId(id) != null),
+    );
     setQuery("");
   }, [draftKey, config]);
 

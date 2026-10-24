@@ -193,10 +193,11 @@ export function HomeOverview({
   const { data: trends } = useUsageTrends(range);
   // 成本优先读平台账本；接口还没上线或未登录时回退本机估算
   const { data: platformUsage } = usePlatformUsage(platformUsageDays(range));
-  const shownCost =
-    platformUsage && Number.isFinite(platformUsage.totals.costUsd)
-      ? platformUsage.totals.costUsd
-      : Number.parseFloat(summary?.totalCost ?? "") || 0;
+  const costFromPlatform =
+    platformUsage != null && Number.isFinite(platformUsage.totals.costUsd);
+  const shownCost = costFromPlatform
+    ? platformUsage.totals.costUsd
+    : Number.parseFloat(summary?.totalCost ?? "") || 0;
   const spark = useMemo(() => {
     const days = (trends ?? []).slice(-7);
     const peak = days.reduce((max, day) => Math.max(max, day.requestCount), 0);
@@ -556,7 +557,7 @@ export function HomeOverview({
                       <span className="af-num text-[30px] leading-none tracking-[-0.04em] text-action-text">
                         ${shownCost.toFixed(2)}
                       </span>
-                      {platformUsage && (
+                      {costFromPlatform && (
                         <span className="text-[10px] text-fg-3">
                           {t("home.ledgerTag", {
                             defaultValue: "平台账本",

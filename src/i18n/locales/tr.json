@@ -60,7 +60,24 @@
     "keyBody": "Platform yöneticinizin size atadığı API anahtarını girin. Anahtar yalnızca bu cihazda saklanır ve tüm istemci sekmelerine dağıtılır.",
     "keySave": "Doğrula ve kaydet",
     "keySkip": "Daha sonra ayarla",
-    "confirm": "Anladım"
+    "confirm": "Anladım",
+    "loggingIn": "Oturum açılıyor…",
+    "webLoginHint": "AIFusion oturum açma sayfası varsayılan tarayıcınızda açılır; tamamlandığında buraya geri dönülür.",
+    "loginEyebrow": "Masaüstü istemcisi",
+    "loginHeadline1": "Bir kez kurun,",
+    "loginHeadline2": "anahtar kendiliğinden gelir",
+    "loginLead": "Tarayıcınızda AIFusion platformuna bir kez oturum açın; istemci anahtarı alır ve on AI aracının yapılandırmasına yazar — kopyala-yapıştır yok, her araca ayrı giriş yok.",
+    "loginFact1Title": "Tarayıcıda oturum açın",
+    "loginFact1Desc": "Platform sitesi varsayılan tarayıcınızda açılır ve mevcut oturum kullanılır",
+    "loginFact2Title": "Anahtar bu cihazda kalır",
+    "loginFact2Desc": "Yerel şifreli depoya yazılır; arayüzde veya günlüklerde asla görünmez",
+    "loginFact3Title": "On istemci tek seferde",
+    "loginFact3Desc": "Claude Code / Codex / Gemini CLI / OpenCode ve daha fazlası",
+    "loginCardHint": "Oturum açtıktan sonra anahtar bu cihaza otomatik teslim edilir; elle giriş gerekmez.",
+    "loginNote": "Oturum açtıktan sonra buraya otomatik dönülür. Anahtar günlüklerde, ekran görüntülerinde veya hiçbir URL'de görünmez.",
+    "loginFooter": "Güvenli loopback · tek kullanımlık durum",
+    "webLogin": "Tarayıcıda oturum aç",
+    "webLoginWaiting": "Sistem tarayıcısı açıldı. Oturum açmayı tarayıcıda tamamlayın; işlem bitince AIFusion otomatik olarak devam eder."
   },
   "platformKey": {
     "title": "Platform anahtarı",
@@ -84,7 +101,14 @@
     "saved": "Platform anahtarı kaydedildi ve dağıtıldı",
     "cleared": "Platform anahtarı temizlendi",
     "syncWarning": "Anahtar kaydedildi ancak şu uygulamalar hemen güncellenmedi: {{apps}}. Yeniden giriş yapın veya uygulamayı yeniden başlatıp tekrar deneyin.",
-    "hint": "Anahtar bu cihazda kalır; her kullanıcı kendi anahtarını kullanır."
+    "hint": "Anahtar bu cihazda kalır; her kullanıcı kendi anahtarını kullanır.",
+    "loggingIn": "Oturum açılıyor…",
+    "relogin": "Yeniden oturum aç",
+    "loggedIn": "Platforma oturum açıldı ve erişim anahtarı dağıtıldı",
+    "webLogin": "Web sitesinde oturum aç",
+    "webLoginHint": "AIFusion sitesi varsayılan tarayıcınızda açılır. Oturum açtıktan sonra API anahtarı otomatik alınır ve tüm istemcilere dağıtılır.",
+    "webLoginWaiting": "Sistem tarayıcısı açıldı. Oturum açmayı tarayıcıda tamamlayın; işlem bitince AIFusion otomatik olarak devam eder.",
+    "cancelWaiting": "Beklemeyi iptal et"
   },
   "jsonEditor": {
     "mustBeObject": "Yapılandırma bir dizi veya başka türde değil, JSON nesnesi olmalıdır",
@@ -222,7 +246,19 @@
     "formSubtitleStack": "{{app}} (Birleştirme modu)",
     "editCurrentNoticeFile": "Bu, kullanımda olan sağlayıcıdır. Kaydetme şunu yazar:",
     "editCurrentNoticeFileEnd": "hemen; sonraki istek bunu kullanır.",
-    "editCurrentNotice": "Bu, kullanımda olan sağlayıcıdır. Kaydetme hemen etkili olur; sonraki istek yeni ayarları kullanır."
+    "editCurrentNotice": "Bu, kullanımda olan sağlayıcıdır. Kaydetme hemen etkili olur; sonraki istek yeni ayarları kullanır.",
+    "openTerminalDialog": {
+      "title": "Terminal hangi klasörde açılsın?",
+      "description": "Seçtiğiniz klasörde bir terminal açılır ve \"{{name}}\" ayarlarıyla Claude Code başlatılır. Genellikle proje klasörünüzü seçersiniz.",
+      "isolationTitle": "Bu terminal yalıtılmıştır",
+      "isolationBody": "\"{{name}}\" sabit kalır: sonra AIFusion'da sağlayıcı değiştirseniz de etkilenmez; AIFusion'un o an kullandığı sağlayıcıyı da değiştirmez.",
+      "noDir": "Henüz klasör seçilmedi",
+      "choose": "Klasör seç…",
+      "change": "Değiştir…",
+      "recent": "Son kullanılanlar",
+      "forget": "Son kullanılanlardan kaldır",
+      "confirm": "Terminali aç"
+    }
   },
   "codex": {
     "needsRouting": "Yönlendirme Gerekiyor",
@@ -332,7 +368,8 @@
     "codexAuthCleanupFailed": "Başarılı bir şekilde geçiş yapıldı ancak auth.json kaldırılamadı; resmi oturum açma kimlik bilgileri hâlâ diskte; bunları kaldırmak için auth.json'u Codex yapılandırma dizininden silin",
     "windowControlFailed": "Pencere kontrolü başarısız oldu: {{error}}",
     "officialBlockedByProxy": "Yerel yönlendirme etkinken resmi sağlayıcıya geçilemez. Yönlendirmenin resmi API'lerle kullanılması hesabın yasaklanmasına neden olabilir.",
-    "proxyOfficialWarning": "{{name}} platformuyla doğrudan konuşuyor; yerel yönlendirme devralamaz, istekler yine doğrudan gönderilir"
+    "proxyOfficialWarning": "{{name}} platformuyla doğrudan konuşuyor; yerel yönlendirme devralamaz, istekler yine doğrudan gönderilir",
+    "proxyReasonDesktopMapping": "model eşlemesi kullanır (Claude Desktop yalnızca Claude model adlarını kabul eder)"
   },
   "confirm": {
     "deleteProvider": "Sağlayıcıyı Sil",
@@ -1058,7 +1095,8 @@
     },
     "data": {
       "location": "Konum"
-    }
+    },
+    "portableUpdateHint": "Taşınabilir mod: üstteki düğme yeni zip dosyasını indirir. Çıkarıp mevcut aifusion.exe'nin üzerine yazın. Ayarlar ve veriler kullanıcı klasörünüzdeki .aifusion içinde saklanır ve etkilenmez."
   },
   "apps": {
     "claude": "Claude",
@@ -1563,7 +1601,12 @@
       "9527code": "9527 CODE, Claude Code, Codex ve diğer ana akım modeller için hızlı, kararlı aktarma sağlayan kurumsal düzeyde, tam özellikli bir yapay zeka aktarma platformudur. Bir yıllık sürekli çalışma, %99,9 hizmet istikrarı ve 7×24 insan teknik desteği. Yeni kullanıcılar sınırsız yönlendirme para iadesiyle deneme kredisi için destekle iletişime geçebilir!",
       "soleapi": "SoleAPI, geliştiriciler ve kuruluşlar için bir yapay zeka modeli ağ geçididir: bir API anahtarı, gerçek zamanlı akıllı yönlendirme, milisaniyelik yedek sağlayıcıya geçiş, %99,99 kullanılabilirlik ve 7/24 destek ile OpenAI ve Anthropic protokolleriyle yerel olarak uyumlu, Claude, GPT ve Gemini dahil 30'dan fazla lider modele ulaşır. Ücretsiz deneme kredileri ve yükleme yapan arkadaşlarınızı davet ederek devam eden para iadesi için yönlendirme bağlantısı aracılığıyla kaydolun!",
       "fluxa": "FluxA ve Baidu AI Cloud, AI ajanlerinin modelleri, API'leri ve araçları kendi başlarına satın almasına, yönetmesine ve kullanmasına olanak tanıyan AgenticPlan'ı ortaklaşa başlattı. DeepSeek V4, GLM 5.2 ve Kimi gibi amiral gemisi modellerinde %40'a varan indirim sağlayan Baidu Qianfan TokenPlan'ın yanı sıra arama, veri kazıma, sosyal medya, finans, kripto, görüntü oluşturma ve video için 13.000'den fazla ücretli API'nin kilidini açan bonus FluxA AgentMarket API kredilerini içerir.",
-      "88api": "88API, bir Hong Kong şirketi tarafından işletilen ve metin, görüntü, konuşma ve video modellerine birleşik erişim sağlayan tek noktadan çok modelli bir API platformudur. Başlıca uluslararası ödeme yöntemlerini kabul eder, fatura düzenleyebilir ve kurumsal düzeyde istikrarlı hizmet sağlar. Bonus kredileri almak için özel bağlantı üzerinden kaydolun!"
+      "88api": "88API, bir Hong Kong şirketi tarafından işletilen ve metin, görüntü, konuşma ve video modellerine birleşik erişim sağlayan tek noktadan çok modelli bir API platformudur. Başlıca uluslararası ödeme yöntemlerini kabul eder, fatura düzenleyebilir ve kurumsal düzeyde istikrarlı hizmet sağlar. Bonus kredileri almak için özel bağlantı üzerinden kaydolun!",
+      "modelflare": "Modelflare, tek anahtarla GPT, Claude, Gemini, Grok ve diğer önde gelen modellere erişen kararlı ve düşük maliyetli bir AI model ağ geçididir. AIFusion kullanıcılarına özel: ilk yüklemenizde \"CCSWITCH\" kodunu kullanın, %10 indirim!",
+      "everyapi": "EveryAPI, Claude Code, Codex, Cursor ve 20+ aracı tek tıkla otomatik yapılandıran kendi masaüstü istemcisiyle gelir; tek anahtar Claude, GPT, DeepSeek, GLM, MiniMax, Kimi ve Doubao modellerine ulaşır, model değiştirmek için yapılandırma değişikliği gerekmez. Kayıtta ¥14 ücretsiz bakiye ve ilk yüklemeye ek %20. AIFusion kullanıcılarına özel: ödemede \"ccswitch\" koduyla ek %20 indirim, süresiz!",
+      "alltokens": "AllTokens istikrar ve dürüstlük üzerine kuruludur; her AI çağrısını kararlı, gerçek ve güvenilir kılmayı hedefler: güvenilir servis, şeffaf faturalandırma ve GPT, Claude, Gemini, Grok, DeepSeek, GLM, Kimi gibi önde gelen modellere tek platformdan erişim; kullandıkça öde ve harcama limiti desteği. Kayıtta 1 $ deneme bakiyesi!",
+      "openmodel": "OpenModel, Codex için %90'a varan ve Claude Code için %60'a varan istemciye özel indirimler sunar. Bu bağlantıyla kaydolan ve \"cc-switch\" kodunu kullanan AIFusion kullanıcıları ilk yüklemelerinde %10 indirim kazanır!",
+      "grooroute": "GrooRoute Pro, OpenAI, Claude, DeepSeek gibi ana akım modellere erişen güvenilir bir AI API aktarım servisidir; kullandıkça öde ve abonelik planları sunar. Bu bağlantıyla kaydolan AIFusion kullanıcıları ¥5 ücretsiz deneme bakiyesi kazanır!"
     },
     "presets": {
       "ucloud": "Compshare",
@@ -1575,7 +1618,8 @@
       "deepseek": "DeepSeek",
       "together": "Birlikte Yapay Zeka",
       "tuzi": "Tu-zi",
-      "yylx": "YYLX"
+      "yylx": "YYLX",
+      "tokenfactory": "TokenFactory"
     },
     "parameterConfig": "Parametre Yapılandırması - {{name}} *",
     "mainModel": "Ana Model (isteğe bağlı)",
@@ -1827,7 +1871,8 @@
       "thirdparty": "Platformum",
       "cloud": "Bulut sağlayıcıları",
       "plugin": "Eklenti yapılandırmaları",
-      "universal": "Evrensel sağlayıcılar"
+      "universal": "Evrensel sağlayıcılar",
+      "local": "Yerel"
     },
     "crossApp": "Uygulamalar genelinde",
     "groupHint": {
@@ -1836,7 +1881,8 @@
       "thirdparty": "Birçok modeli bir araya getiren veya resmi modellerin yeniden satışını yapan platformlar.",
       "cloud": "Bulut sağlayıcı hesabına sahip modelleri arayın.",
       "plugin": "OpenCode eklentileri için model atama yapılandırmaları.",
-      "universal": "Bir kez yapılandırın, Claude Code, Codex ve Gemini CLI ile eşitle edin."
+      "universal": "Bir kez yapılandırın, Claude Code, Codex ve Gemini CLI ile eşitle edin.",
+      "local": "Bu bilgisayarda çalışan çıkarım servisleri. Önce servisi başlatıp model indirin; anahtar yalnızca yer tutucudur."
     },
     "noResults": "\"{{query}}\" için hiçbir şey bulunamadı",
     "noResultsHint": "Özel bir yapılandırma kullanabilir ve istek URL'sini ve API anahtarını kendiniz doldurabilirsiniz.",
@@ -2120,8 +2166,14 @@
       "hitRateHelpTitle": "Önbellek isabet oranı nasıl hesaplanır?",
       "hitRateHelp": "Önbellek isabetleri ÷ (yeni girdi + önbellek yazmaları + önbellek isabetleri).",
       "costHelpTitle": "Toplam maliyet nasıl hesaplanır",
-      "costHelpPlatform": "Platform defterindeki gerçek tutardır; web konsoluyla aynı kaynaktan gelir. Aşağıdaki istek ve token sayıları yerel günlüklere göre sayıldığı için kapsam farklıdır.",
-      "costHelpLocal": "Yerel fiyat tablosuyla tahmin edilir: platformun eklediği yeni modeller yerel tabloda yoksa 0 sayılır. Gerçek tutar platform defterindedir."
+      "costHelpPlatform": "Bu anahtarın tüm cihazlardaki harcamasını kapsayan, platform defterinden gelen gerçek kesintiler (web konsoluyla aynı kaynak). Aşağıdaki istek ve token sayıları yerel günlükten sayıldığı için iki verinin ölçüsü farklıdır.",
+      "costHelpLocal": "Yerel fiyat tablosuyla tahmin edilir: platformun eklediği yeni modeller yerel tabloda yoksa 0 sayılır. Gerçek tutar platform defterindedir.",
+      "platformLedger": "Platform defteri",
+      "costSubPlatform": "Cüzdan kesintileriyle aynı esas",
+      "costSubLocal": "Yerel fiyat listesinden tahmin",
+      "requestsSub": "Başarı {{rate}}",
+      "realTotalSub": "Giriş {{input}} · Çıkış {{output}}",
+      "hitRateSub": "Yeni giriş + önbellek isabetleri"
     },
     "heatmap": {
       "title": "Kullanım ısı haritası",
@@ -2229,7 +2281,38 @@
     "firstTokenHelp": "Yönlendirme hizmetinin isteği aldığı andan sağlayıcının çıktı üretmeye başladığı ana kadar geçen süre. ≈ işaretli değer, yönlendirme kapalıyken oturum günlüğü zamanlarından hesaplanır: önceki günlük satırının yazıldığı andan başladığı için istemcinin isteği hazırlama süresini de içerir ve daha yüksek görünür. Claude Code’da yalnızca yanıt düşünme ile başladığında; Codex’te yalnızca yeni günlüklerde ve yanıt bir araç çağrısıyla başlamadığında hesaplanabilir.",
     "firstTokenSumHelpTitle": "İlk token süresi nasıl hesaplanır?",
     "firstTokenSumHelp": "Yönlendirme hizmetinin isteği aldığı andan sağlayıcının çıktı üretmeye başladığı ana kadar geçen süre. Satır, isteklerin medyanını gösterir; böylece ara sıra yavaşlayan bir istek (kuyruk, soğuk başlangıç) değeri yükseltmez. Yalnızca yönlendirme hizmetinden geçen başarılı akış istekleri hesaba katılır; 30 günden eski ve günlük toplamlara dahil edilmiş istekler sayılmaz. ≈ işaretli değer oturum günlüklerinden türetilir (daha yüksek görünür ve yalnızca bazı isteklerde hesaplanabilir); yalnızca satırda yönlendirilmiş istek verisi yoksa gösterilir.",
-    "estimatedTimingTipWithFirstToken": "Yaklaşık {{duration}} sn · ilk token yaklaşık {{ttft}} sn (oturum günlüğü zamanlarından tahmin edildi)"
+    "estimatedTimingTipWithFirstToken": "Yaklaşık {{duration}} sn · ilk token yaklaşık {{ttft}} sn (oturum günlüğü zamanlarından tahmin edildi)",
+    "display": {
+      "title": "Görünüm",
+      "currency": "Para birimi",
+      "rate": "Döviz kuru",
+      "rateHint": "Elle girilir, yalnızca görüntüleme içindir; maliyetler yine USD olarak kaydedilir.",
+      "rateInvalid": "0'dan büyük bir sayı girin",
+      "approxNote": "Dönüştürülmüş tutarın üzerine gelerek USD değerini görebilirsiniz.",
+      "sidebarToday": "Kenar çubuğu \"Bugün\"",
+      "sidebarTodayItems": {
+        "cost": "Maliyet",
+        "tokens": "Token",
+        "requests": "İstekler",
+        "hitRate": "Önbellek isabet oranı",
+        "none": "Gizli"
+      },
+      "sidebarTodayLimit": "En fazla {{count}} öğe seçin",
+      "logColumns": "İstek günlüğü sütunları",
+      "logColumnsSummary": "{{shown}} / {{total}} sütun",
+      "trendChartType": "Trend grafiği",
+      "trendChartTypes": {
+        "bar": "Sütun",
+        "area": "Alan"
+      }
+    },
+    "logColumns": {
+      "reset": "Varsayılana dön",
+      "cacheWrite": "Önbellek Yazma",
+      "hitRate": "İsabet Oranı",
+      "hitRateTip": "{{total}} önbelleklenebilir girişten {{read}} isabet",
+      "duration": "Toplam Süre"
+    }
   },
   "dbUpgrade": {
     "title": "Veritabanı sürümü çok yeni",
@@ -2900,7 +2983,8 @@
         "checkPermission": "Lütfen dizin izinlerini kontrol edin",
         "uninstallFirst": "Lütfen önce aynı ada sahip mevcut beceriyi kaldırın",
         "checkZipContent": "Lütfen ZIP dosyasının geçerli beceri dizinleri içerdiğini doğrulayın (SKILL.md dosyalarıyla birlikte)"
-      }
+      },
+      "archiveDownloadTooLarge": "Depo arşivi indirmesi {{limit_mb}} MB sınırını aştı; durduruldu"
     },
     "repo": {
       "title": "Beceri Depolarını Yönet",
@@ -3602,7 +3686,13 @@
     "back": "Geri",
     "overview": "Genel bakış",
     "mcp": "MCP",
-    "skills": "Yetenekler"
+    "skills": "Yetenekler",
+    "home": "Genel Bakış",
+    "todayRequests": "{{value}} istek",
+    "todayHitRate": "İsabet {{value}}",
+    "walletBalance": "Cüzdan bakiyesi",
+    "walletUnavailable": "Bağlı değil",
+    "walletHint": "Yerel anahtarla USD bakiyesi canlı sorgulanır, dakikada bir yenilenir"
   },
   "appsPage": {
     "showInHome": "Ana sayfada {{name}}'yi göster",
@@ -3637,7 +3727,8 @@
       "hermes": "Resmi komut dosyasıyla yüklenir",
       "pi": "Npm ile yüklenir",
       "mcode": "Resmi komut dosyasıyla yüklenir, npm'ye geri döner"
-    }
+    },
+    "updateNeedsNode": "{{version}} sürümü Node {{required}} gerektiriyor, ancak bu kurulum Node {{current}} kullanıyor. Önce Node'u yükseltin."
   },
   "appPage": {
     "moreActions": "{{name}} için diğer işlemler",
@@ -3650,7 +3741,8 @@
     "openclawConfig": "Yapılandırma",
     "memory": "Bellek",
     "webUi": "Web kullanıcı arayüzü",
-    "viewUsage": "Bu uygulamanın kullanımını görüntüle"
+    "viewUsage": "Bu uygulamanın kullanımını görüntüle",
+    "backHome": "Genel Bakış"
   },
   "mode": {
     "tabsLabel": "Bağlantı modu",
@@ -3698,7 +3790,8 @@
       "clientConfigChanged": " İstemci yapılandırması da değişti. Güncel yapılandırmayı yüklemek için {{app}} uygulamasını yeniden başlatın.",
       "defaultRemembered": "Birleştirme'ya geçtiğinizde {{provider}} varsayılan sağlayıcı olacaktır.",
       "restartHint": "Uygulamak için {{app}}'yi yeniden başlatın.",
-      "failed": "Geçiş yapılamadı: {{detail}}"
+      "failed": "Geçiş yapılamadı: {{detail}}",
+      "enteredStackDesktop": "{{app}} Birleştirme moduna geçti. Model listesinde birleşik modelleri görmek için {{app}} uygulamasını yeniden başlatın."
     },
     "dialog": {
       "routeTitle": "{{app}} için yönlendirme kullanılsın mı?",
@@ -3723,13 +3816,44 @@
       "needsRouteTitle": "{{provider}}'nin yönlendirmeye ihtiyacı var",
       "needsRouteLead": "{{provider}}: {{reason}}. Doğrudan geçiş yaparsanız {{app}} onu kullanamayacaktır.",
       "switchAnyway": "Yine de doğrudan geçiş yap",
-      "routeAndUse": "Yönlendirmeyi başlatın ve kullanın"
+      "routeAndUse": "Yönlendirmeyi başlatın ve kullanın",
+      "desktopRouteNoteModels": "Claude Desktop'ın model listesi, yönlendirilen sağlayıcının modellerine dönüşür; yönlendirme sağlayıcısını değiştirmek yapılandırma dosyasını yeniden yazar.",
+      "desktopRouteNoteRestart": "{{app}} yapılandırmasını yalnızca başlangıçta okur: onayladıktan sonra {{app}} uygulamasını yeniden başlatın.",
+      "desktopRouteNoteKeepRunning": "{{app}} isteklerinin gidebilmesi için AIFusion'un çalışır durumda kalması gerekir.",
+      "desktopStackNoteMembers": "{{names}}, Claude Desktop model listesine \"Sağlayıcı / model\" biçiminde gösterilen {{count}} model ekler.",
+      "stackSubagentLead": "Alt ajanlar varsayılan olarak ana modeli izler; dilerseniz birleşik listeden bir model seçebilirsiniz (sonra Birleştirme ayarlarından istediğiniz zaman değişebilir).",
+      "desktopLeaveStackNote": "Birleşik modeller yeniden başlatmanın ardından Claude Desktop model listesinden çekilir. Birleştirme listesi saklanır ve birleştirmeye geri geçtiğinizde yeniden görünür. Birini kullanıyorsanız normal bir modele geçin.",
+      "exitTitle": "\"{{from}}\" üzerinden {{app}} doğrudan bağlantıya döndürülsün mü?",
+      "exitLead": "{{app}}, {{provider}} sağlayıcısına doğrudan bağlanır; istekler artık AIFusion'dan geçmez.",
+      "exitNoteFile": "{{file}} içindeki adres ve anahtar {{provider}} değerine geri yazılır; diğer ayarlara dokunulmaz.",
+      "exitNoteRouteKept": "Yönlendirme hedefi, yedek kuyruğu ve ayarlar saklanır; yönlendirme bir sonraki açılışında geri gelir.",
+      "desktopExitNoteRouteKept": "Yönlendirme hedefi saklanır ve yönlendirme bir sonraki açılışında geri gelir.",
+      "confirmDirect": "Doğrudan bağlantıya dön"
     },
     "help": {
       "title": "Bağlantı modları nasıl farklılık gösterir?",
       "direct": "Doğrudan: AIFusion isteklerinize müdahale etmez; istemci, seçtiğiniz sağlayıcıyla kendi yerel özelliklerini kullanarak doğrudan iletişim kurar.",
       "route": "Yönlendirme: İstekler bu bilgisayardaki AIFusion üzerinden geçer; anında sağlayıcı değiştirme, yedek sağlayıcıya geçiş, biçim dönüştürme ve diğer gelişmiş özellikleri kullanabilirsiniz.",
       "stack": "Birleştirme: Farklı sağlayıcıların modelleri /model içinde birlikte listelenir; istemci içinde modeller arasında kesintisiz geçiş yapabilirsiniz."
+    },
+    "stackSettings": {
+      "title": "Birleştirme ayarları",
+      "subagentDescription": "Alt ajanlar varsayılan olarak ana modeli izler. Birleşik listeden bir model seçerseniz, ana ajanın başlattığı alt ajanlar varsayılan olarak onu kullanır (ana ajan görev verirken kendisi bir model belirtmediği sürece). Codex'i yeniden başlatmaya gerek yok: yeni konuşmalar bu ayarı alır, açık konuşmalar önceki ayarla devam eder.",
+      "subagentModel": "Alt ajan modeli",
+      "followMain": "Ana modeli izle",
+      "subagentEffort": "Alt ajan akıl yürütme düzeyi",
+      "effortModelDefault": "Model varsayılanı",
+      "effortModelDefaultNamed": "Model varsayılanı ({{effort}})",
+      "unavailableOption": "{{model}} (artık birleştirmede değil)",
+      "unavailable": "Seçili model artık birleştirme listesinde yok (sağlayıcı kaldırıldı veya modeli yayından çekti); alt ajanlar şimdilik ana modeli izler. Listeye geri eklendiğinde otomatik geri gelir.",
+      "noModels": "Birleştirme listesinde henüz yayımlanmış model yok. Önce sağlayıcıları birleştirmeye ekleyin.",
+      "classicOff": "Alt ajan ana ajanla farklı bir sağlayıcıda çalışır; Codex'in yeni alt ajan araçları görevi yalnızca ana ajanın sağlayıcısının açabileceği şekilde şifreler ve alt ajan görevi alamaz. Aşağıdaki \"Birleştirmede alt ajan klasik araçları\" seçeneğini açmalısınız.",
+      "autoReviewModel": "Otomatik İnceleme modeli",
+      "autoReviewDescription": "Codex'te otomatik onay (Approve for me) açıkken bir işleme izin verilip verilmeyeceğine bakan model; birleştirmedeki başka bir sağlayıcının modeli de olabilir. Değişiklikten sonra Codex'i yeniden başlatın.",
+      "autoReviewDefaultOfficial": "Resmî Auto Review (varsayılan)",
+      "autoReviewDefaultMain": "Ana model kendini inceler (varsayılan)",
+      "autoReviewUnavailable": "Seçili model artık birleştirme listesinde yok (sağlayıcı kaldırıldı veya modeli yayından çekti); onaylar şimdilik varsayılan modeli kullanır. Listeye geri eklendiğinde otomatik geri gelir.",
+      "saveFailed": "Kaydedilemedi: {{error}}"
     }
   },
   "desktopAccess": {
@@ -4188,5 +4312,137 @@
     },
     "showEarlier": "{{count}} önceki sürüm(ler)",
     "confirm": "Anladım"
+  },
+  "home": {
+    "routeAllDone": "{{count}} istemci yönlendirmeye geçirildi",
+    "routeAllPartial": "{{done}} istemci geçirildi, {{failed}} başarısız",
+    "stats": "Platform verileri",
+    "walletHint": "Platform cüzdanını canlı göster",
+    "connectedHint": "Tüm anahtarlar dağıtıldı",
+    "notSignedIn": "Oturum açınca dağıtılır",
+    "modelsUnit": "adet",
+    "topModelHint": "İstemci ana modelleri arasında en sık görülen",
+    "clientsKicker": "Clients",
+    "appsHintNew": "Ayrıntılar için bir satıra tıklayın; modeller ve anahtarlar platform tarafından dağıtılır",
+    "routeAllDone2": "Tümü yönlendiriliyor",
+    "routeAll": "Tümünü yönlendir",
+    "colClient": "İstemci",
+    "colModel": "Model",
+    "colMode": "Bağlantı",
+    "colStatus": "Durum",
+    "viewingNow": "Görüntüleniyor",
+    "noVisibleApps": "Genel bakışta henüz gösterilen istemci yok.",
+    "routedCount": "Yerel yönlendirme {{routed}}/{{total}}",
+    "routeNote": "Diğer istemciler platform ağ geçidine doğrudan bağlanır",
+    "ledgerTag": "Platform defteri",
+    "requestsUnit": "istek",
+    "usageSpark": "Son 7 günün günlük istekleri",
+    "updateAvailable": "Güncelleme var",
+    "statusSignedOut": "Oturum kapalı",
+    "statusPushed": "Dağıtıldı",
+    "modelSource": "Platform model yapılandırması",
+    "singleModel": "Tek model",
+    "title": "Genel Bakış",
+    "subtitle": "Platform, istemciler ve kullanım tek ekranda",
+    "heroHint": "Modeller ve anahtarlar platform tarafından yönetilir; oturum açmak her istemciyi otomatik yapılandırır",
+    "connectedApps": "Bağlı istemciler",
+    "platformModels": "Platformdaki modeller",
+    "topModel": "En çok kullanılan model",
+    "appsTitle": "İstemciler",
+    "appsHint": "Modelini değiştirmek için bir karta tıklayın",
+    "moreTitle": "Diğer araçlar",
+    "moreHint": "Bu sayfalar tüm istemcilere uygulanır",
+    "usageTitle": "Son kullanım",
+    "usageHint": "Son 7 gün, yerel kullanım kaydından",
+    "usageOpen": "İstatistikleri aç",
+    "usageEmpty": "Henüz kullanım kaydı yok — istemciler istek gönderdikçe uygulama bazında istek, token ve maliyet burada görünür.",
+    "usageLine": "{{requests}} istek",
+    "modelTag": "Modeller",
+    "mainModelTag": "Ana",
+    "lightModelTag": "Hafif",
+    "firstModelTag": "İlk",
+    "sameAsMain": "Ana modelle aynı",
+    "notAvailable": "Veri yok",
+    "localConvert": "Yerel dönüştürücü",
+    "openDetail": "Ayrıntılar →",
+    "modelsHint": "Platformdan canlı"
+  },
+  "platformConnection": {
+    "reSignIn": "Yeniden oturum aç",
+    "updatesHint": "İstemci bileşeninin yeni sürümü var",
+    "modeNoRouteHint": "Yapılandırma doğrudan platform tarafından yazılır; bu istemci yerel yönlendirmeyi desteklemez",
+    "detailSubtitle": "Model, yönlendirme ve anahtarlar platform tarafından yönetilir; kaydettiğinizde bu istemciye hemen yazılır.",
+    "updatesForApp": "Güncelleme bu istemcinin komut satırı programını değiştirir",
+    "modelsCount": "{{count}}",
+    "title": "AIFusion Platformu",
+    "connected": "Bağlı",
+    "disconnected": "Bağlı değil",
+    "appUpdates": "Uygulama güncellemeleri",
+    "updatesChecking": "Kontrol ediliyor…",
+    "updatesAvailable": "{{count}} güncelleme var",
+    "updatesLatest": "Güncel",
+    "updatesUnchecked": "Kontrol edilmedi",
+    "updatesCheck": "Güncellemeleri kontrol et",
+    "updatesRunAll": "Tümünü güncelle",
+    "manageKey": "Bağlantıyı yönet",
+    "appConnected": "Platforma bağlı",
+    "appLocal": "Yerel yapılandırma kullanılıyor",
+    "modeLabel": "Bağlantı",
+    "modeDirectHint": "İstemci platform ağ geçidine doğrudan istek gönderir",
+    "modeConvertHint": "Yerel dönüştürme servisi üzerinden uyumlu isteğe çevrilir",
+    "usageLabel": "Son kullanım",
+    "usageNone": "Son 7 günde kullanım kaydı yok",
+    "usageLine": "{{requests}} istek · ${{cost}} · {{tokens}} token",
+    "usageOpen": "İstatistikleri gör",
+    "switchTitle": "Başka istemciye geç",
+    "switchHint": "Bir kart seçerek o istemcinin ayrıntılarını açın",
+    "proxyRunning": "Yönlendirme servisi çalışıyor",
+    "proxyStopped": "Yönlendirme servisi durduruldu",
+    "hint": "Modeller ve anahtarlar AIFusion platformu tarafından yönetilir; istemcide manuel kurulum gerekmez. Oturum açmak yetkilendirmeyi otomatik tamamlar.",
+    "signIn": "Oturum aç",
+    "modelLabel": "Model",
+    "chooseModel": "Model seç",
+    "modelLoading": "Yükleniyor…",
+    "modelNone": "Model seçilmedi",
+    "modelCount_other": "{{count}} model",
+    "modelPair": "{{main}} (hafif: {{light}})",
+    "modelPending": "Platforma geri geçince uygulanır",
+    "modelSignedOut": "Model seçmek için oturum açın",
+    "modelSource": "Platform tarafından dağıtılır",
+    "modelsKicker": "Models",
+    "availableModels": "Kullanılabilir modeller",
+    "modelsCount_one": "{{count}}",
+    "switchKicker": "Clients",
+    "modelCount": "{{count}} model",
+    "modelInjectedHint": "Bu cihaza yazılırken hesabınıza göre değiştirilir",
+    "modelsCount_other": "{{count}}",
+    "specTitle": "Yapılandırma",
+    "specHint": "Yalnızca bu istemciye yazılır, diğer uygulamaları etkilemez",
+    "keyWritten": "Anahtar bu cihaza yazıldı",
+    "keyMissing": "Oturum açınca yazılır",
+    "modelRoleMain": "Ana",
+    "modelRoleLight": "Hafif",
+    "modelRoleMetered": "Kullandıkça"
+  },
+  "platformModel": {
+    "title": "{{app}} modelleri",
+    "leadLive": "Seçiminiz hemen bu istemcinin yapılandırmasına yazılır.",
+    "leadLater": "Bu istemci şu anda yerel yapılandırma kullanıyor; seçim kaydedilir ve AIFusion'a geri geçildiğinde uygulanır.",
+    "refresh": "Yenile",
+    "loading": "Platform modelleri yükleniyor…",
+    "empty": "Platform model döndürmedi. Önce bağlantıyı tamamlayın.",
+    "mainModel": "Ana model",
+    "lightModel": "Hafif model",
+    "useMain": "Ana modelle aynı",
+    "search": "Model veya sağlayıcı ara",
+    "addAll": "Görünenleri seç",
+    "clearAll": "Temizle",
+    "selectedCount": "{{total}} modelden {{selected}} seçili",
+    "noMatch": "Eşleşen model yok",
+    "apply": "Uygula",
+    "saved": "Model seçimi kaydedildi",
+    "savedLive": "Kaydedildi ve istemciye uygulandı",
+    "lightBadge": "Hafif",
+    "retired": "Platformdan kaldırıldı"
   }
 }

@@ -12,6 +12,7 @@
 //! - 保存成功后按应用重投影；Pi 走自己的 `models.json` 通道。
 
 use serde::Serialize;
+use std::sync::OnceLock;
 
 use crate::app_config::AppType;
 use crate::database::{
@@ -26,6 +27,13 @@ use crate::store::AppState;
 /// 平台密钥来源。
 const SOURCE_USER: &str = "user";
 const SOURCE_ENVIRONMENT: &str = "environment";
+
+/// 进程级共享的 HTTP 客户端：复用连接池，避免每次查询都重建 TLS 会话。
+/// 单次请求的超时在调用处用 `RequestBuilder::timeout` 覆盖。
+fn http_client() -> &'static reqwest::Client {
+    static CLIENT: OnceLock<reqwest::Client> = OnceLock::new();
+    CLIENT.get_or_init(|| reqwest::Client::new())
+}
 
 /// 平台密钥状态（不返回明文）。
 #[derive(Debug, Clone, Serialize)]
@@ -211,12 +219,14 @@ pub async fn fetch_wallet_balance(db: &Database) -> Result<Option<f64>, String> 
     };
 
     let url = format!("{}/v1/wallet/balance", PLATFORM_SITE.trim_end_matches('/'));
-    let client = reqwest::Client::builder()
-        .timeout(std::time::Duration::from_secs(12))
-        .build()
-        .map_err(|error| format!("无法初始化网络请求：{error}"))?;
 
-    let response = match client.get(&url).bearer_auth(&api_key).send().await {
+    let response = match http_client()
+        .get(&url)
+        .bearer_auth(&api_key)
+        .timeout(std::time::Duration::from_secs(12))
+        .send()
+        .await
+    {
         Ok(response) => response,
         Err(_) => return Err("无法连接平台，请检查网络后重试".to_string()),
     };
@@ -375,12 +385,13 @@ pub async fn fetch_platform_usage(db: &Database, days: i64) -> Result<Option<Pla
         PLATFORM_SITE.trim_end_matches('/'),
         days
     );
-    let client = reqwest::Client::builder()
+    let response = match http_client()
+        .get(&url)
+        .bearer_auth(&api_key)
         .timeout(std::time::Duration::from_secs(15))
-        .build()
-        .map_err(|error| format!("无法初始化网络请求：{error}"))?;
-
-    let response = match client.get(&url).bearer_auth(&api_key).send().await {
+        .send()
+        .await
+    {
         Ok(response) => response,
         Err(_) => return Err("无法连接平台，请检查网络后重试".to_string()),
     };

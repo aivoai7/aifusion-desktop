@@ -49,11 +49,17 @@ export function usePlatformWebLogin(): PlatformWebLoginController {
       if (!result) {
         return null;
       }
+      // 换 Key 后所有平台侧数据都要重新拉：钱包余额、模型配置、平台账本用量，
+      // 否则界面会一直显示旧 Key 时代缓存的数据。
       await Promise.all([
         queryClient.invalidateQueries({
           queryKey: PLATFORM_KEY_STATUS_QUERY_KEY,
         }),
         queryClient.invalidateQueries({ queryKey: ["providers"] }),
+        queryClient.invalidateQueries({ queryKey: ["platformWalletBalance"] }),
+        queryClient.invalidateQueries({ queryKey: ["platformModels"] }),
+        queryClient.invalidateQueries({ queryKey: ["platformModelConfig"] }),
+        queryClient.invalidateQueries({ queryKey: ["platformUsage"] }),
       ]);
       toast.success(t("platformKey.loggedIn"));
       if (result.syncFailures.length > 0) {
