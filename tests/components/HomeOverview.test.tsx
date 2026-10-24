@@ -15,6 +15,7 @@ const mocks = vi.hoisted(() => ({
     realTotalTokens: number;
   },
   trends: [] as { date: string; requestCount: number }[],
+  platformUsage: null as null | { totals: { costUsd: number } },
   setTakeover: vi.fn(
     async (_app: string, _enabled: boolean, _stack: boolean) => {},
   ),
@@ -77,6 +78,7 @@ vi.mock("@/lib/toast", () => ({
 vi.mock("@/lib/query/usage", () => ({
   useUsageSummary: () => ({ data: mocks.summary }),
   useUsageTrends: () => ({ data: mocks.trends }),
+  usePlatformUsage: () => ({ data: mocks.platformUsage }),
 }));
 
 vi.mock("@/hooks/useSidebarStatus", () => ({
@@ -206,6 +208,7 @@ describe("HomeOverview", () => {
     ];
     mocks.summary = null;
     mocks.trends = [];
+    mocks.platformUsage = null;
     stubConfigs();
   });
 
@@ -331,7 +334,7 @@ describe("HomeOverview", () => {
 
     expect(await screen.findByText("12")).toBeInTheDocument();
     expect(screen.getByText("$0.42")).toBeInTheDocument();
-    expect(screen.getByText(/5,000 Token/)).toBeInTheDocument();
+    expect(screen.getByText("5,000")).toBeInTheDocument();
 
     const bars = container.querySelectorAll(
       '[aria-label="近 7 天每日请求数"] > div',
@@ -341,6 +344,21 @@ describe("HomeOverview", () => {
     expect(bars[0].getAttribute("title")).toBe("2026-10-15 · 0");
     expect((bars[0] as HTMLElement).style.height).toBe("4%");
     expect((bars[2] as HTMLElement).style.height).toBe("100%");
+  });
+
+  it("takes the home cost from the platform ledger when the endpoint answers", async () => {
+    mocks.summary = {
+      totalRequests: 12,
+      totalCost: "0.42",
+      realTotalTokens: 5000,
+    };
+    mocks.platformUsage = { totals: { costUsd: 1.75 } };
+    renderHome();
+
+    expect(await screen.findByText("$1.75")).toBeInTheDocument();
+    // 平台账本优先：本机估出来的 0.42 不再展示
+    expect(screen.queryByText("$0.42")).not.toBeInTheDocument();
+    expect(screen.getByText("平台账本")).toBeInTheDocument();
   });
 
   it("keeps the white-label promise: no address, key or token in the markup", async () => {

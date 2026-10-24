@@ -2,8 +2,8 @@ import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { Wallet } from "lucide-react";
-import afLogo from "@/assets/icons/logo.png";
 import { platformKeyApi } from "@/lib/api/platformKey";
+import { BrandMark } from "@/components/shell/BrandMark";
 import { HoverTip } from "@/components/ui/hover-tip";
 import { DRAG_REGION_ATTR, DRAG_REGION_STYLE, isMac } from "@/lib/platform";
 import { cn } from "@/lib/utils";
@@ -32,11 +32,11 @@ interface TopBarProps {
 }
 
 /**
- * 常驻顶栏（Paper & Signal 的唯一全局外壳）。
+ * 常驻顶栏（Night Ops）。
  *
- * 左边是平台字标与两个一级入口（总览、用量），右边是实时钱包与窗口按钮；
- * 当前页的信号是一条 2px 电光蓝短线，不做整格底色。页面自己的标题、
- * 页签和操作仍在内容区，顶栏只负责「我在哪、还能去哪、余额多少」。
+ * 左边是字标与两个一级入口（总览、用量），右边是实时钱包与窗口按钮；
+ * 当前页的信号是一条 2px 青绿短线并带柔光。页面自己的标题、页签和操作
+ * 仍在内容区，顶栏只负责「我在哪、还能去哪、余额多少」。
  */
 export function TopBar({
   view,
@@ -69,7 +69,7 @@ export function TopBar({
   return (
     <header
       className={cn(
-        "relative z-30 flex h-[52px] shrink-0 items-stretch gap-2 border-b border-hairline bg-app/95 pe-2 ps-4 supports-[backdrop-filter]:bg-app/85 supports-[backdrop-filter]:backdrop-blur-sm",
+        "relative z-30 flex h-[46px] shrink-0 items-stretch gap-3 border-b border-hairline bg-app/95 pe-2 ps-4 supports-[backdrop-filter]:bg-app/80 supports-[backdrop-filter]:backdrop-blur-md",
         isMac() && "ps-[76px]",
       )}
       {...DRAG_REGION_ATTR}
@@ -86,20 +86,15 @@ export function TopBar({
         type="button"
         onClick={onHome}
         aria-current={overviewActive ? "page" : undefined}
-        className="group flex shrink-0 items-center gap-2.5 pe-5 text-start"
+        className="group flex shrink-0 items-center gap-2.5 pe-1 text-start"
         style={NO_DRAG}
       >
-        <img
-          src={afLogo}
-          alt=""
-          draggable={false}
-          className="h-[21px] w-auto shrink-0"
-        />
+        <BrandMark />
         <span className="flex flex-col justify-center">
           <span className="text-[14px] font-semibold leading-[16px] tracking-[-0.02em] text-fg-1">
             AIFusion
           </span>
-          <span className="af-kicker text-[8.5px] leading-[11px] text-fg-3">
+          <span className="af-kicker text-[8px] leading-[10px] text-fg-3">
             Platform console
           </span>
         </span>
@@ -125,7 +120,7 @@ export function TopBar({
                 item.page === "home" ? onHome() : onOpenPage(item.page)
               }
               className={cn(
-                "af-nav-mark relative inline-flex shrink-0 items-center px-3.5 text-caption transition-colors",
+                "af-nav-mark relative inline-flex shrink-0 items-center px-3 text-[12.5px] transition-colors",
                 active
                   ? "font-semibold text-fg-1"
                   : "text-fg-2 hover:text-fg-1",
@@ -139,7 +134,7 @@ export function TopBar({
         })}
       </nav>
 
-      <div className="flex shrink-0 items-center gap-1.5" style={NO_DRAG}>
+      <div className="flex shrink-0 items-center gap-2" style={NO_DRAG}>
         <HoverTip
           content={t("nav.walletHint", {
             defaultValue:
@@ -151,20 +146,20 @@ export function TopBar({
           <div
             role="img"
             aria-label={`${t("nav.walletBalance", { defaultValue: "钱包余额" })} ${amount}`}
-            className="flex h-8 items-center gap-2 rounded-control border border-hairline px-2.5"
+            className="flex h-[26px] items-center gap-1.5 rounded-full border border-hairline-strong px-2.5"
           >
             <Wallet
-              className="h-3.5 w-3.5 shrink-0 text-fg-3"
-              strokeWidth={1.5}
+              className="h-3 w-3 shrink-0 text-fg-3"
+              strokeWidth={1.6}
             />
-            <span className="af-num text-caption leading-none text-fg-1">
+            <span className="af-num text-[11.5px] leading-none text-fg-1">
               {amount}
             </span>
           </div>
         </HoverTip>
 
         {windowControls && (
-          <div className="ms-0.5 flex items-center border-s border-hairline ps-1.5">
+          <div className="flex items-center overflow-hidden rounded-[7px] border border-hairline-strong">
             {windowControls}
           </div>
         )}

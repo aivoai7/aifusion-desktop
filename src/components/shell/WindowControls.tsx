@@ -7,9 +7,9 @@ import { extractErrorMessage } from "@/utils/errorUtils";
 import { cn } from "@/lib/utils";
 import { HoverTip } from "@/components/ui/hover-tip";
 
-/** 窗口按钮：32 见方、图标 15px、悬停只有弱底，关闭键悬停转红。 */
+/** 窗口按钮：26×30、图标 14px、悬停只有弱底，关闭键悬停转红。 */
 const BUTTON =
-  "flex h-8 w-8 items-center justify-center rounded-control text-fg-3 " +
+  "flex h-[26px] w-[30px] items-center justify-center text-fg-3 " +
   "transition-colors duration-100 hover:bg-subtle hover:text-fg-1 " +
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/45";
 

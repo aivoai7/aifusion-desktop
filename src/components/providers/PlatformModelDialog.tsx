@@ -14,8 +14,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { SearchField } from "@/components/ui/search-field";
-import { CHECKBOX_CLASS, V7Dialog } from "@/components/mcp/formBits";
+import {
+  CHECKBOX_CLASS,
+  RADIO_CLASS,
+  V7Dialog,
+} from "@/components/mcp/formBits";
 import { platformKeyApi, type PlatformModelOption } from "@/lib/api/platformKey";
+import { visibleModelId } from "@/lib/modelId";
 import { getAppLabel } from "@/config/appConfig";
 import type { AppId } from "@/lib/api";
 import { cn } from "@/lib/utils";
@@ -83,8 +88,9 @@ function PlatformModelDialogBody({
     : "";
   useEffect(() => {
     if (!config) return;
-    setDraftDefault(config.defaultModel ?? UNSET);
-    setDraftLight(config.lightModel ?? UNSET);
+    // 占位符（__AIFUSION_MODEL__）不是可选模型，当作未选择，逼用户挑一个真模型。
+    setDraftDefault(visibleModelId(config.defaultModel) ?? UNSET);
+    setDraftLight(visibleModelId(config.lightModel) ?? UNSET);
     setDraftModels(config.models);
     setQuery("");
   }, [draftKey, config]);
@@ -128,7 +134,10 @@ function PlatformModelDialogBody({
         config?.defaultModel,
         config?.lightModel,
         ...(config?.models ?? []),
-      ].filter((id): id is string => !!id && !onPlatform.has(id)),
+      ].filter((id): id is string => {
+        const visible = visibleModelId(id);
+        return visible != null && !onPlatform.has(visible);
+      }),
     );
   }, [config, models]);
 
@@ -328,7 +337,7 @@ function PlatformModelDialogBody({
                       ) : (
                         <input
                           type="radio"
-                          className={CHECKBOX_CLASS}
+                          className={RADIO_CLASS}
                           name="platform-model-main"
                           aria-label={model.id}
                           checked={draftDefault === model.id}

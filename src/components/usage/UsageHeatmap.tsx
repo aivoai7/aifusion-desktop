@@ -302,13 +302,14 @@ export function UsageHeatmap({
     <section
       ref={sectionRef}
       aria-labelledby="usage-heatmap-title"
-      className="relative shrink-0 rounded-panel border border-border bg-surface px-4 py-3"
+      className="relative shrink-0 rounded-panel border border-hairline bg-surface px-4 py-3"
     >
       <div className="flex flex-wrap items-start gap-x-3.5 gap-y-1">
         <div>
+          <div className="af-kicker">Heatmap</div>
           <h2
             id="usage-heatmap-title"
-            className="m-0 text-body font-semibold text-fg-1"
+            className="m-0 mt-1 text-body font-semibold text-fg-1"
           >
             {t("usage.heatmap.title")}
           </h2>

@@ -56,14 +56,30 @@
     "title": "AIFusion へようこそ",
     "bodyDefault": "AIFusion は AIFusion 自社プラットフォームのデスクトップクライアントです。各クライアントにプラットフォーム接続が最初から組み込まれ、ログインするとお使いのプラットフォームを向きます。",
     "bodyOfficial": "AIFusion は自社プラットフォームのみに接続します。キーはプラットフォームが発行し、「カスタム設定」の項目はありません。クライアント詳細で「直結 / ローカルルーティング」を切り替えられます。",
-    "keyTitle": "AIFusion プラットフォームに接続",
-    "keyBody": "プラットフォーム管理者から割り当てられた API Key を入力してください。キーはこの端末にのみ保存され、すべてのクライアントタブに配布されます。",
+    "keyTitle": "AIFusion プラットフォームにログイン",
+    "keyBody": "下のボタンから既定のブラウザで AIFusion 公式サイトを開きます。ログインが完了すると、クライアントが API キーを自動で取得し、すべてのクライアントタブに配布します。手入力は不要です。",
     "keySave": "検証して保存",
     "keySkip": "後で設定",
-    "confirm": "了解しました"
+    "confirm": "了解しました",
+    "webLogin": "ブラウザでログイン",
+    "webLoginWaiting": "ブラウザを開きました。ブラウザでログインを完了してください。完了すると自動で AIFusion に戻ります。",
+    "loginEyebrow": "Desktop client",
+    "loginHeadline1": "入れるだけで、",
+    "loginHeadline2": "キーは自動で届く",
+    "loginLead": "ブラウザで一度 AIFusion プラットフォームにログインすると、クライアントがキーを自動で取得し、10 個の AI ツールの設定に書き込みます。コピー＆ペーストも、ツールごとの入力も要りません。",
+    "loginFact1Title": "ブラウザでログイン",
+    "loginFact1Desc": "既定のブラウザで公式サイトを開き、既存のログイン状態を使います",
+    "loginFact2Title": "キーは端末内だけ",
+    "loginFact2Desc": "ローカルの暗号化ストレージに保存し、画面にもログにも平文を出しません",
+    "loginFact3Title": "10 個のクライアントを一度に",
+    "loginFact3Desc": "Claude Code / Codex / Gemini CLI / OpenCode など",
+    "loginCardHint": "ログイン後、キーは自動でこの端末に配布されます。手入力は不要です。",
+    "loginNote": "ブラウザでのログインが終わると自動でここに戻ります。キーはログ、スクリーンショット、URL のどこにも表示されません。",
+    "loginFooter": "Secure loopback · one-time state"
   },
   "platformKey": {
     "title": "プラットフォームキー",
+    "cancelWaiting": "待機をキャンセル",
     "label": "API Key",
     "help": "AIFusion プラットフォームへのアクセスに使用します。キーはローカルデータベースにのみ保存され、外部には送信されません。保存すると各クライアントタブのプラットフォームプロバイダーに書き込まれます。",
     "site": "プラットフォーム: {{url}}",
@@ -2166,7 +2182,13 @@
       "hitRateHelp": "キャッシュヒット ÷（新規入力 + キャッシュ書き込み + キャッシュヒット）。",
       "costHelpTitle": "総コストの算出方法",
       "costHelpPlatform": "プラットフォームの台帳にある実際の課金額で、Web コンソールと同じ情報源です。下のリクエスト数とトークンは引き続きローカルログ集計のため、集計範囲が異なります。",
-      "costHelpLocal": "ローカルの価格表による概算です。プラットフォームの新モデルがローカル価格表に無い場合は 0 として計上されます。実際の課金はプラットフォームの台帳を基準としてください。"
+      "costHelpLocal": "ローカルの価格表による概算です。プラットフォームの新モデルがローカル価格表に無い場合は 0 として計上されます。実際の課金はプラットフォームの台帳を基準としてください。",
+      "platformLedger": "プラットフォーム台帳",
+      "costSubPlatform": "ウォレットの課金と同じ基準",
+      "costSubLocal": "ローカル価格表による概算",
+      "requestsSub": "成功率 {{rate}}",
+      "realTotalSub": "入力 {{input}} · 出力 {{output}}",
+      "hitRateSub": "新規入力 + キャッシュヒット"
     },
     "heatmap": {
       "title": "使用量ヒートマップ",
@@ -4261,5 +4283,15 @@
     },
     "showEarlier": "さらに以前のバージョン {{count}} 件",
     "confirm": "OK"
+  },
+  "platformConnection": {
+    "keyWritten": "キーは本機に書き込み済み",
+    "keyMissing": "ログイン後に書き込み",
+    "modelRoleMain": "メイン",
+    "modelRoleLight": "軽量",
+    "modelRoleMetered": "従量",
+    "specTitle": "設定",
+    "specHint": "このクライアントだけに書き込みます",
+    "modelInjectedHint": "書き込み時にアカウントのモデルへ置換"
   }
 }

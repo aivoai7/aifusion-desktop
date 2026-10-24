@@ -221,10 +221,10 @@ module.exports = {
         md: "4px",
         lg: "6px",
         xl: "8px",
-        // 控件 4px、卡片 8px、弹层 8px、对话框 12px
-        control: "4px",
-        panel: "8px",
-        dialog: "12px",
+        // Night Ops：控件 6px、卡片 10px、对话框 14px
+        control: "6px",
+        panel: "10px",
+        dialog: "14px",
       },
 
       fontSize: {

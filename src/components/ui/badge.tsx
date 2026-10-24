@@ -38,7 +38,7 @@ function Badge({ className, variant, ...props }: BadgeProps) {
  * 底色走 index.css 预算好的 *-soft 变量，不用 `/NN` 修饰符。
  */
 const chipVariants = cva(
-  "inline-flex h-[18px] shrink-0 items-center gap-1.5 rounded-[3px] border border-transparent px-1.5 text-badge font-medium leading-none whitespace-nowrap",
+  "inline-flex h-[20px] shrink-0 items-center gap-1.5 rounded-full border border-transparent px-2 text-badge font-medium leading-none whitespace-nowrap",
   {
     variants: {
       tone: {

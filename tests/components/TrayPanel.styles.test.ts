@@ -38,17 +38,17 @@ function cardFor(platform: "windows" | "macos") {
 }
 
 describe("TrayPanel backgrounds stay scoped to each platform", () => {
-  it("keeps Windows cards opaque on the Mission Control card face", () => {
+  it("keeps Windows cards opaque on the Night Ops card face", () => {
     const style = cardFor("windows");
-    // 面板固定深色：实色卡面 #0c1012（整窗 Acrylic 已移除，不能透出桌面内容）
-    expect(style.backgroundColor).toBe("rgb(12, 16, 18)");
+    // 面板固定深色：实色卡面 #0a0f13（整窗 Acrylic 已移除，不能透出桌面内容）
+    expect(style.backgroundColor).toBe("rgb(10, 15, 19)");
     expect(getComputedStyle(root).backgroundColor).toBe("rgba(0, 0, 0, 0)");
   });
 
   it("preserves the macOS overlay on native glass", () => {
     const style = cardFor("macos");
     // 玻璃在原生层，网页只叠一层很淡的墨底
-    expect(style.backgroundColor).toBe("rgba(12, 16, 18, 0.55)");
+    expect(style.backgroundColor).toBe("rgba(10, 15, 19, 0.55)");
     expect(style.boxShadow).toContain("0 8px 20px");
     expect(getComputedStyle(root).backgroundColor).toBe("rgba(0, 0, 0, 0)");
   });

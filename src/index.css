@@ -280,19 +280,20 @@
     mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E")
       center / contain no-repeat;
   }
-  .ui-checkbox:indeterminate::before {
+  /* :indeterminate 也会命中「整组都没选」的 radio，这里只让 checkbox 用横杠 */
+  .ui-checkbox[type="checkbox"]:indeterminate::before {
     -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3.5' stroke-linecap='round'%3E%3Cpath d='M6 12h12'/%3E%3C/svg%3E")
       center / contain no-repeat;
     mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3.5' stroke-linecap='round'%3E%3Cpath d='M6 12h12'/%3E%3C/svg%3E")
       center / contain no-repeat;
   }
   .ui-checkbox:checked,
-  .ui-checkbox:indeterminate {
+  .ui-checkbox[type="checkbox"]:indeterminate {
     background-color: var(--action-bg);
     border-color: var(--action-bg);
   }
   .ui-checkbox:checked::before,
-  .ui-checkbox:indeterminate::before {
+  .ui-checkbox[type="checkbox"]:indeterminate::before {
     transform: scale(1);
   }
   .ui-radio:checked {
@@ -355,6 +356,16 @@
     color: var(--text-3);
   }
 
+  /* 眉标前的信号点：静态微光，跟着操作色走，不做呼吸动画免得抢注意力 */
+  .af-kicker-dot {
+    width: 5px;
+    height: 5px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background: var(--action-text);
+    box-shadow: 0 0 9px var(--action-soft), 0 0 2px var(--action-text);
+  }
+
   /* 一整行标尺：比 border 更轻，不占布局高度 */
   .af-rule {
     height: 1px;
@@ -368,11 +379,12 @@
   .af-nav-mark::after {
     content: "";
     position: absolute;
-    left: 0;
-    right: 0;
+    left: 8px;
+    right: 8px;
     bottom: -1px;
     height: 2px;
     background: var(--action-text);
+    box-shadow: 0 0 12px var(--action-soft);
     transform: scaleX(0);
     transform-origin: left center;
     transition: transform 160ms ease;
@@ -527,10 +539,10 @@ input[type="password"]::-ms-clear {
 }
 
 /* ══════════════════════════════════════════════════════════════════════
-   Mission Control · 与 Web 管理端同一套深色设计 token
+   Night Ops · 桌面端固定深色（2026 重设计）
    ──────────────────────────────────────────────────────────────────────
-   桌面端固定深色：无论 light / dark / system，都使用同一套墨底 + 荧光标尺。
-   变量名与既有组件保持一致，仅替换取值，页面无需逐页改类名。
+   墨底 + 青绿信号 + 点阵网格：与平台控制台同一套深色 token。
+   变量名保持不变（bg-surface / text-fg-1 / bg-action …），组件一次换肤。
    选择器只写 :root（不写 .light）：只要 <html> 存在就用墨底，
    残留的 light / system 选择也拿不到浅色 token，不会出现浅卡配浅字。
    ══════════════════════════════════════════════════════════════════════ */
@@ -539,53 +551,53 @@ input[type="password"]::-ms-clear {
   color-scheme: dark;
 
   /* shadcn tokens */
-  --background: 210 20% 4%;
-  --foreground: 200 20% 93%;
-  --card: 200 25% 6%;
-  --card-foreground: 200 20% 93%;
-  --popover: 200 25% 6%;
-  --popover-foreground: 200 20% 93%;
-  --primary: 73 92% 60%;
-  --primary-foreground: 80 60% 5%;
-  --secondary: 200 12% 9%;
-  --secondary-foreground: 200 20% 93%;
-  --muted: 200 12% 9%;
-  --muted-foreground: 200 8% 63%;
-  --accent: 200 12% 12%;
-  --accent-foreground: 200 20% 93%;
-  --destructive: 0 100% 72%;
+  --background: 200 25% 3%;
+  --foreground: 195 22% 94%;
+  --card: 198 22% 6%;
+  --card-foreground: 195 22% 94%;
+  --popover: 198 22% 7%;
+  --popover-foreground: 195 22% 94%;
+  --primary: 175 69% 55%;
+  --primary-foreground: 176 79% 7%;
+  --secondary: 198 18% 9%;
+  --secondary-foreground: 195 22% 94%;
+  --muted: 198 18% 9%;
+  --muted-foreground: 196 12% 63%;
+  --accent: 198 18% 12%;
+  --accent-foreground: 195 22% 94%;
+  --destructive: 0 100% 71%;
   --destructive-foreground: 0 40% 6%;
-  --border: 200 16% 14%;
-  --input: 200 16% 18%;
-  --ring: 73 92% 60%;
-  --radius: 4px;
+  --border: 198 18% 14%;
+  --input: 198 18% 18%;
+  --ring: 175 69% 55%;
+  --radius: 6px;
 
   /* surfaces */
-  --bg-app: #07090a;
-  --bg-sidebar: #080b0c;
-  --bg-subtle: #0f1416;
-  --bg-selected: #141a1d;
-  --bg-card: #0c1012;
-  --hairline: rgba(255, 255, 255, 0.06);
-  --hairline-strong: rgba(255, 255, 255, 0.14);
-  --border-strong: #2b353a;
+  --bg-app: #05070a;
+  --bg-sidebar: #070b0e;
+  --bg-subtle: #0d1418;
+  --bg-selected: #121b20;
+  --bg-card: #0a0f13;
+  --hairline: rgba(233, 241, 244, 0.075);
+  --hairline-strong: rgba(233, 241, 244, 0.14);
+  --border-strong: #24313a;
 
   /* text */
-  --text-1: #e8eef1;
-  --text-2: #9daab1;
-  --text-3: #6b7a82;
+  --text-1: #e9f1f4;
+  --text-2: #93a6b0;
+  --text-3: #5f7079;
 
-  /* primary action = signal lime */
-  --action-bg: #c9f73a;
-  --action-fg: #0a0d07;
-  --action-hover: #dbff6e;
-  --action-text: #c9f73a;
-  --action-soft: rgba(201, 247, 58, 0.1);
+  /* primary action = signal teal */
+  --action-bg: #3ddbd0;
+  --action-fg: #04211f;
+  --action-hover: #62e9df;
+  --action-text: #3ddbd0;
+  --action-soft: rgba(61, 219, 208, 0.12);
 
-  --inverse-bg: #e8eef1;
-  --inverse-fg: #0a0d07;
+  --inverse-bg: #e9f1f4;
+  --inverse-fg: #04211f;
   --inverse-hover: #ffffff;
-  --overlay: rgba(0, 0, 0, 0.68);
+  --overlay: rgba(0, 0, 0, 0.72);
   --control-off: #2b353a;
 
   /* connection modes */
@@ -596,55 +608,55 @@ input[type="password"]::-ms-clear {
   --direct-on: #04191f;
   --direct-border: rgba(76, 201, 240, 0.4);
 
-  --route-fill: #5be38b;
-  --route-text: #8cf0af;
-  --route-soft: rgba(91, 227, 139, 0.12);
-  --route-solid: #27b866;
-  --route-on: #041a0e;
-  --route-border: rgba(91, 227, 139, 0.4);
+  --route-fill: #3ddbd0;
+  --route-text: #7ce9e2;
+  --route-soft: rgba(61, 219, 208, 0.12);
+  --route-solid: #1faeaa;
+  --route-on: #04211f;
+  --route-border: rgba(61, 219, 208, 0.4);
 
-  --stack-fill: #b18cff;
-  --stack-text: #c9b1ff;
-  --stack-soft: rgba(177, 140, 255, 0.12);
-  --stack-solid: #8259e8;
-  --stack-on: #0b0418;
-  --stack-border: rgba(177, 140, 255, 0.4);
+  --stack-fill: #ffb454;
+  --stack-text: #ffcf8a;
+  --stack-soft: rgba(255, 180, 84, 0.12);
+  --stack-solid: #c9852e;
+  --stack-on: #1a0e02;
+  --stack-border: rgba(255, 180, 84, 0.4);
 
   /* semantics */
-  --success: #5be38b;
-  --success-text: #8cf0af;
-  --success-soft: rgba(91, 227, 139, 0.1);
-  --warning: #f5c453;
-  --warning-text: #ffd784;
-  --warning-soft: rgba(245, 196, 83, 0.1);
-  --danger: #ff6e6e;
+  --success: #3ddbd0;
+  --success-text: #7ce9e2;
+  --success-soft: rgba(61, 219, 208, 0.1);
+  --warning: #ffb454;
+  --warning-text: #ffc97e;
+  --warning-soft: rgba(255, 180, 84, 0.1);
+  --danger: #ff6b6b;
   --danger-text: #ff9b9b;
-  --danger-soft: rgba(255, 110, 110, 0.1);
+  --danger-soft: rgba(255, 107, 107, 0.1);
 
   /* charts */
-  --chart-1: #c9f73a;
+  --chart-1: #3ddbd0;
   --chart-2: #4cc9f0;
-  --chart-3: #b18cff;
-  --chart-grid: #1e262a;
-  --heat-1: rgba(201, 247, 58, 0.14);
-  --heat-2: rgba(201, 247, 58, 0.34);
-  --heat-3: rgba(201, 247, 58, 0.62);
-  --heat-4: #c9f73a;
+  --chart-3: #9d8cff;
+  --chart-grid: #162024;
+  --heat-1: rgba(61, 219, 208, 0.14);
+  --heat-2: rgba(61, 219, 208, 0.34);
+  --heat-3: rgba(61, 219, 208, 0.62);
+  --heat-4: #3ddbd0;
 
   /* sessions by agent */
   --agent-claude: #ff9b7a;
-  --agent-codex: #9daab1;
-  --agent-gemini: #7fdcf7;
-  --agent-opencode: #8cf0af;
-  --agent-pi: #c9b1ff;
+  --agent-codex: #93a6b0;
+  --agent-gemini: #4cc9f0;
+  --agent-opencode: #3ddbd0;
+  --agent-pi: #9d8cff;
   --agent-generic: var(--text-2);
   --diff-add-bg: var(--success-soft);
   --diff-del-bg: var(--danger-soft);
 
   /* depth */
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
-  --shadow-md: 0 6px 18px rgba(0, 0, 0, 0.45);
-  --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.5);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.55);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 24px 64px rgba(0, 0, 0, 0.6);
 }
 
 html,
@@ -654,31 +666,34 @@ body {
   color: var(--text-1);
 }
 
+/* 墨底上的两团冷光 + 26px 点阵，和原型窗口内层同一套网格 */
 body {
   background-image:
-    radial-gradient(1100px 560px at 82% -12%, rgba(201, 247, 58, 0.07), transparent 62%),
-    radial-gradient(900px 520px at -8% 104%, rgba(76, 201, 240, 0.055), transparent 60%);
+    radial-gradient(900px 500px at 12% -8%, rgba(61, 219, 208, 0.09), transparent 60%),
+    radial-gradient(700px 420px at 92% 0%, rgba(76, 201, 240, 0.06), transparent 55%),
+    radial-gradient(rgba(233, 241, 244, 0.035) 1px, transparent 1px);
+  background-size: auto, auto, 26px 26px;
   background-attachment: fixed;
 }
 
 ::selection {
-  background: rgba(201, 247, 58, 0.26);
-  color: #f4ffd9;
+  background: rgba(61, 219, 208, 0.28);
+  color: #eafffd;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #2b353a;
+  background: #1c2a31;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #3a464c;
+  background: #2f424c;
 }
 
-/* 主内容区细网格（与 Web 端 .admin-shell 同款） */
+/* 主内容区细网格（点阵之外的一层 34px 标尺，给大面积空白收边） */
 .admin-shell {
   position: relative;
   background-image:
-    linear-gradient(rgba(255, 255, 255, 0.022) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.022) 1px, transparent 1px);
+    linear-gradient(rgba(233, 241, 244, 0.018) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(233, 241, 244, 0.018) 1px, transparent 1px);
   background-size: 34px 34px;
   background-position: -1px -1px;
 }

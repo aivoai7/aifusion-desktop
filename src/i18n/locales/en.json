@@ -61,9 +61,22 @@
     "loggingIn": "Signing in…",
     "keySkip": "Set up later",
     "confirm": "Got it",
-    "webLogin": "Sign in on website",
+    "webLogin": "Sign in with browser",
     "webLoginHint": "Opens the AIFusion sign-in page in your default browser and returns here automatically after sign-in.",
-    "webLoginWaiting": "Sign-in opened in your browser. Complete it there; AIFusion will continue automatically."
+    "webLoginWaiting": "Sign-in opened in your browser. Complete it there; AIFusion will continue automatically.",
+    "loginEyebrow": "Desktop client",
+    "loginHeadline1": "Install once,",
+    "loginHeadline2": "the key arrives on its own",
+    "loginLead": "Sign in to the AIFusion platform once in your browser. The client fetches the key and writes it into ten AI tools — no copy-paste, no filling in each tool.",
+    "loginFact1Title": "Sign in in the browser",
+    "loginFact1Desc": "Opens the platform site in your default browser and reuses the existing session",
+    "loginFact2Title": "The key stays on this device",
+    "loginFact2Desc": "Stored in local encrypted storage; never shown in the UI or logs",
+    "loginFact3Title": "Ten clients aligned at once",
+    "loginFact3Desc": "Claude Code / Codex / Gemini CLI / OpenCode and more",
+    "loginCardHint": "The key is delivered to this device automatically after sign-in. No manual entry.",
+    "loginNote": "You return here automatically after signing in. The key never appears in logs, screenshots, or any URL.",
+    "loginFooter": "Secure loopback · one-time state"
   },
   "platformKey": {
     "title": "Platform connection",
@@ -151,11 +164,19 @@
     "modelPending": "Applies when this client switches back to the platform",
     "modelSignedOut": "Sign in to pick a model",
     "modelSource": "Issued by the platform",
+    "modelInjectedHint": "Replaced with your account model when written",
     "modelsKicker": "Models",
     "availableModels": "Available models",
     "modelsCount_one": "{{count}}",
     "modelsCount_other": "{{count}}",
-    "switchKicker": "Clients"
+    "switchKicker": "Clients",
+    "specTitle": "Configuration",
+    "specHint": "Applies only to this client",
+    "keyWritten": "Key written locally",
+    "keyMissing": "Written after sign-in",
+    "modelRoleMain": "Main",
+    "modelRoleLight": "Light",
+    "modelRoleMetered": "Metered"
   },
   "platformModel": {
     "title": "Models for {{app}}",
@@ -2258,7 +2279,13 @@
       "hitRateHelp": "Cache hits ÷ (fresh input + cache writes + cache hits).",
       "costHelpTitle": "How total cost is computed",
       "costHelpPlatform": "Real charges from the platform ledger, the same source as the web console. Requests and tokens below still come from local logs, so the two use different scopes.",
-      "costHelpLocal": "Estimated from the local price table: models the platform added but local pricing misses are counted as 0. The platform ledger holds the real charge."
+      "costHelpLocal": "Estimated from the local price table: models the platform added but local pricing misses are counted as 0. The platform ledger holds the real charge.",
+      "platformLedger": "Platform ledger",
+      "costSubPlatform": "Same basis as wallet charges",
+      "costSubLocal": "Estimated from local pricing",
+      "requestsSub": "{{rate}} success",
+      "realTotalSub": "In {{input}} · Out {{output}}",
+      "hitRateSub": "Fresh input + cache hits"
     },
     "heatmap": {
       "title": "Usage heatmap",

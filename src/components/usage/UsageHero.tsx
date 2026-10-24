@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { ChevronDown } from "lucide-react";
 import { useUsageSummaryByApp, usePlatformUsage } from "@/lib/query/usage";
 import { platformUsageDays } from "@/lib/usageRange";
+import { Chip } from "@/components/ui/badge";
 import { HelpTip } from "@/components/ui/help-tip";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -88,14 +89,36 @@ function MetricCard({
   help,
   value,
   title,
+  hint,
+  labelExtra,
+  highlight = false,
 }: {
   label: string;
   help?: { title: string; body: string };
   value: string;
   title?: string;
+  /** 数值下面的一行口径说明，例如成功率、输入 / 输出拆分 */
+  hint?: string;
+  /** 标签右侧的小徽标（平台账本） */
+  labelExtra?: ReactNode;
+  /** 主指标：青绿描边 + 顶部微光，数字用操作色 */
+  highlight?: boolean;
 }) {
   return (
-    <div className="flex h-[76px] min-w-0 flex-col justify-between rounded-panel border border-border bg-surface px-3.5 py-3">
+    <div
+      className={cn(
+        "flex min-h-[94px] min-w-0 flex-col justify-between gap-2 rounded-panel border px-4 py-3.5",
+        highlight ? "border-[rgba(61,219,208,0.28)]" : "border-hairline",
+      )}
+      style={
+        highlight
+          ? {
+              background:
+                "linear-gradient(180deg, rgba(61, 219, 208, 0.07), var(--bg-card) 64%)",
+            }
+          : undefined
+      }
+    >
       <div className="flex min-w-0 items-center gap-0.5">
         <span className="truncate text-caption text-fg-2">{label}</span>
         {help && (
@@ -103,13 +126,24 @@ function MetricCard({
             {help.body}
           </HelpTip>
         )}
+        {labelExtra && <span className="ms-auto shrink-0">{labelExtra}</span>}
       </div>
-      <span
-        className="truncate text-metric tabular-nums text-fg-1"
-        title={title}
-      >
-        {value}
-      </span>
+      <div className="min-w-0">
+        <span
+          className={cn(
+            "af-num block truncate text-[27px] leading-[32px] tracking-[-0.03em]",
+            highlight ? "text-action-text" : "text-fg-1",
+          )}
+          title={title}
+        >
+          {value}
+        </span>
+        {hint && (
+          <span className="mt-0.5 block truncate text-[10.5px] leading-[14px] text-fg-3">
+            {hint}
+          </span>
+        )}
+      </div>
     </div>
   );
 }
@@ -205,6 +239,37 @@ export function UsageHero({
 
   const placeholder = isLoading ? "…" : undefined;
 
+  // 卡片底部的一行口径说明：有数才写，加载中留白
+  const costHint = placeholder
+    ? undefined
+    : platformCost == null
+      ? t("usage.metrics.costSubLocal", {
+          defaultValue: "本机价目表估算",
+        })
+      : t("usage.metrics.costSubPlatform", {
+          defaultValue: "与钱包扣减同一口径",
+        });
+  const requestsHint =
+    !placeholder && requests > 0
+      ? t("usage.metrics.requestsSub", {
+          rate: formatHitRatePercent((summary?.successRate ?? 0) / 100),
+          defaultValue: "成功率 {{rate}}",
+        })
+      : undefined;
+  const realTotalHint =
+    !placeholder && realTotal > 0
+      ? t("usage.metrics.realTotalSub", {
+          input: formatTokensCompact(input, locale),
+          output: formatTokensCompact(output, locale),
+          defaultValue: "输入 {{input}} · 输出 {{output}}",
+        })
+      : undefined;
+  const hitRateHint = placeholder
+    ? undefined
+    : t("usage.metrics.hitRateSub", {
+        defaultValue: "新增输入 + 缓存命中",
+      });
+
   const cacheWriteHelp =
     cacheWriteState === "na"
       ? t("usage.cacheWriteNotReported")
@@ -227,6 +292,15 @@ export function UsageHero({
           >
             <MetricCard
               label={t("usage.totalCost")}
+              labelExtra={
+                platformCost != null && !placeholder ? (
+                  <Chip tone="ok">
+                    {t("usage.metrics.platformLedger", {
+                      defaultValue: "平台账本",
+                    })}
+                  </Chip>
+                ) : undefined
+              }
               help={{
                 title: t("usage.metrics.costHelpTitle"),
                 body:
@@ -234,6 +308,8 @@ export function UsageHero({
                     ? t("usage.metrics.costHelpLocal")
                     : t("usage.metrics.costHelpPlatform"),
               }}
+              highlight={platformCost != null}
+              hint={costHint}
               value={
                 placeholder ??
                 (shownCost == null ? "--" : money(shownCost, 2))
@@ -243,6 +319,7 @@ export function UsageHero({
             <MetricCard
               label={t("usage.totalRequests")}
               value={placeholder ?? fmtInt(requests, locale)}
+              hint={requestsHint}
             />
             <MetricCard
               label={t("usage.realTotal")}
@@ -252,6 +329,7 @@ export function UsageHero({
               }}
               value={placeholder ?? formatTokensCompact(realTotal, locale)}
               title={fmtInt(realTotal, locale)}
+              hint={realTotalHint}
             />
             <MetricCard
               label={t("usage.cacheHitRate")}
@@ -260,6 +338,7 @@ export function UsageHero({
                 body: t("usage.metrics.hitRateHelp"),
               }}
               value={placeholder ?? formatHitRatePercent(hitRate)}
+              hint={hitRateHint}
             />
           </div>
           {moreOpen && (

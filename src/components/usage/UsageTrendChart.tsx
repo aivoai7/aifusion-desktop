@@ -268,9 +268,10 @@ export function UsageTrendChart({
   return (
     <section
       aria-labelledby="usage-trend-title"
-      className="shrink-0 rounded-panel border border-border bg-surface px-4 py-2.5"
+      className="shrink-0 rounded-panel border border-hairline bg-surface px-4 py-2.5"
     >
       <div className="flex min-h-7 flex-wrap items-center gap-x-3.5 gap-y-1">
+        <span className="af-kicker">Trend</span>
         <h2
           id="usage-trend-title"
           className="m-0 whitespace-nowrap text-caption font-semibold text-fg-2"

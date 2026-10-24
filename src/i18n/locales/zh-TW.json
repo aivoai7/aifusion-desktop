@@ -56,14 +56,30 @@
     "title": "歡迎使用 AIFusion",
     "bodyDefault": "AIFusion 是 AIFusion 自有平台的桌面用戶端：每個用戶端都內建平台連線，登入後自動指向你的平台，開箱即用。",
     "bodyOfficial": "AIFusion 只對接自有平台，金鑰由平台統一發送，沒有「自訂設定」入口。可在用戶端詳情裡按需切換「直連 / 本機路由」。",
-    "keyTitle": "連線 AIFusion 平台",
-    "keyBody": "請輸入平台管理員分配給你的 API Key。金鑰只保存在本機，並會自動下發到所有用戶端頁籤。",
+    "keyTitle": "登入 AIFusion 平台",
+    "keyBody": "點擊下方按鈕，用系統預設瀏覽器開啟 AIFusion 官網；登入成功後用戶端會自動取回 API Key 並下發到所有用戶端頁籤，不需要手動填寫。",
     "keySave": "驗證並儲存",
     "keySkip": "稍後設定",
-    "confirm": "我了解了"
+    "confirm": "我了解了",
+    "webLogin": "用瀏覽器登入",
+    "webLoginWaiting": "已開啟系統瀏覽器，請在瀏覽器中完成登入；完成後會自動回到 AIFusion。",
+    "loginEyebrow": "Desktop client",
+    "loginHeadline1": "裝好即用，",
+    "loginHeadline2": "金鑰自動到位",
+    "loginLead": "用瀏覽器登入一次 AIFusion 平台，用戶端會自動取回金鑰並寫進十個 AI 工具的設定——不需要複製貼上，也不需要在每個工具裡填一遍。",
+    "loginFact1Title": "瀏覽器完成登入",
+    "loginFact1Desc": "系統預設瀏覽器開啟官網，沿用既有登入狀態",
+    "loginFact2Title": "金鑰只留在本機",
+    "loginFact2Desc": "寫入本機加密儲存，介面與日誌都不顯示明文",
+    "loginFact3Title": "十個用戶端一次對齊",
+    "loginFact3Desc": "Claude Code / Codex / Gemini CLI / OpenCode 等",
+    "loginCardHint": "登入後會自動下發金鑰到本機，無需手動填寫。",
+    "loginNote": "瀏覽器登入成功後會自動回到這裡。金鑰不會出現在日誌、截圖或任何網路位址裡。",
+    "loginFooter": "Secure loopback · one-time state"
   },
   "platformKey": {
     "title": "平台金鑰",
+    "cancelWaiting": "取消等待",
     "label": "API Key",
     "help": "用於存取 AIFusion 平台。金鑰只保存在本機資料庫，不會上傳到其他服務；儲存後會自動寫入所有用戶端頁籤的平台供應商。",
     "site": "平台位址：{{url}}",
@@ -2167,7 +2183,13 @@
       "hitRateHelp": "快取命中 ÷（新增輸入 + 快取寫入 + 快取命中）。",
       "costHelpTitle": "總成本按什麼算",
       "costHelpPlatform": "取自平台帳本的真實扣費，與網頁控制台同源。下方的請求數與 Tokens 仍按本機日誌統計，兩者口徑不同。",
-      "costHelpLocal": "按本機定價表估算：平台上新模型沒進本機價目表時會被估成 0，真實扣費以平台帳本為準。"
+      "costHelpLocal": "按本機定價表估算：平台上新模型沒進本機價目表時會被估成 0，真實扣費以平台帳本為準。",
+      "platformLedger": "平台帳本",
+      "costSubPlatform": "與錢包扣減同一口徑",
+      "costSubLocal": "本機價目表估算",
+      "requestsSub": "成功率 {{rate}}",
+      "realTotalSub": "輸入 {{input}} · 輸出 {{output}}",
+      "hitRateSub": "新增輸入 + 快取命中"
     },
     "heatmap": {
       "title": "用量熱力圖",
@@ -4262,5 +4284,15 @@
     },
     "showEarlier": "還有 {{count}} 個更早的版本",
     "confirm": "知道了"
+  },
+  "platformConnection": {
+    "keyWritten": "金鑰已寫入本機",
+    "keyMissing": "登入後寫入本機",
+    "modelRoleMain": "主",
+    "modelRoleLight": "輕量",
+    "modelRoleMetered": "按量",
+    "specTitle": "設定",
+    "specHint": "只寫入這個用戶端，不影響其他應用",
+    "modelInjectedHint": "寫入本機時依帳號替換"
   }
 }

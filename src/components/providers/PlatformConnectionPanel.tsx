@@ -12,6 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Chip } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { visibleModelId } from "@/lib/modelId";
 import type { GlobalPage } from "@/lib/navigation";
 import type { AppId } from "@/lib/api";
 import type { Provider, VisibleApps } from "@/types";
@@ -107,18 +108,26 @@ export function PlatformConnectionPanel({
     [app, visibleApps],
   );
 
+  // 平台会下发 __AIFUSION_MODEL__ 这类占位符（写入本机时再替换），
+  // 界面上过滤掉，免得看起来像配置坏了。
   const availableModels = useMemo(() => {
     if (!modelConfig) return [];
-    const list =
+    const source =
       modelConfig.models.length > 0
         ? modelConfig.models
-        : [modelConfig.defaultModel, modelConfig.lightModel].filter(
-            (id): id is string => Boolean(id),
-          );
+        : [modelConfig.defaultModel, modelConfig.lightModel];
+    const list = source
+      .map((id) => visibleModelId(id))
+      .filter((id): id is string => id != null);
     return [...new Set(list)];
   }, [modelConfig]);
 
-  const mainModel = modelConfig?.defaultModel ?? modelConfig?.models[0] ?? null;
+  // 主模型是占位符时不要拿轻量模型顶替：显示「由平台下发」更诚实。
+  const mainModel =
+    visibleModelId(modelConfig?.defaultModel) ??
+    visibleModelId(modelConfig?.models[0]) ??
+    null;
+  const lightModel = visibleModelId(modelConfig?.lightModel);
 
   // additive 应用（OpenCode / OpenClaw / Hermes / Pi / Mcode）没有「当前供应商」，
   // 只要平台条目已经下发到库里就算已接入；其余应用看当前选中的那一条。
@@ -206,18 +215,18 @@ export function PlatformConnectionPanel({
         <header className="flex flex-wrap items-end justify-between gap-x-8 gap-y-5 border-b border-hairline pb-6">
           <div className="min-w-0">
             <div className="af-kicker flex flex-wrap items-center gap-2.5">
-              <span>Client / Configuration</span>
+              <span aria-hidden="true" className="af-kicker-dot" />
+              <span>Client</span>
               <span
                 aria-hidden="true"
                 className="h-2.5 w-px bg-hairline-strong"
               />
               <span className="af-num tracking-normal">
-                {APP_DISPLAY_NAME[app]}
+                {String(APP_IDS.indexOf(app) + 1).padStart(2, "0")} /{" "}
+                {String(APP_IDS.length).padStart(2, "0")}
               </span>
             </div>
-            <h1 className="mt-2 text-display text-fg-1">
-              {APP_DISPLAY_NAME[app]}
-            </h1>
+            <h1 className="mt-2 text-page text-fg-1">{APP_DISPLAY_NAME[app]}</h1>
             <p className="mt-1.5 max-w-xl text-body text-fg-2">
               {t("platformConnection.detailSubtitle", {
                 defaultValue:
@@ -295,20 +304,45 @@ export function PlatformConnectionPanel({
 
         <div className="mt-8 grid items-start gap-x-10 gap-y-10 lg:grid-cols-[minmax(0,1fr)_318px]">
           {/* ── 规格表 ─────────────────────────────────────────────── */}
-          <section className="min-w-0">
-            <SectionHead
-              kicker={t("platformConnection.specKicker", {
-                defaultValue: "Specification",
-              })}
-              title={t("platformConnection.specTitle", {
-                defaultValue: "配置",
-              })}
-              hint={t("platformConnection.specHint", {
-                defaultValue: "只写入这个客户端，不影响其他应用",
-              })}
-            />
+          <section className="min-w-0 overflow-hidden rounded-panel border border-hairline bg-surface">
+            <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5 border-b border-hairline px-5 py-3">
+              <div className="flex min-w-0 flex-wrap items-baseline gap-x-2.5 gap-y-1">
+                <span className="af-kicker">Platform</span>
+                <h2 className="m-0 text-body font-semibold text-fg-1">
+                  {t("platformConnection.specTitle", {
+                    defaultValue: "配置",
+                  })}
+                </h2>
+                <span className="text-badge text-fg-3">
+                  {t("platformConnection.specHint", {
+                    defaultValue: "只写入这个客户端，不影响其他应用",
+                  })}
+                </span>
+              </div>
+              <span
+                className={cn(
+                  "flex shrink-0 items-center gap-1.5 text-badge",
+                  configured ? "text-fg-2" : "text-fg-3",
+                )}
+              >
+                <span
+                  aria-hidden="true"
+                  className={cn(
+                    "h-1.5 w-1.5 rounded-full",
+                    configured ? "bg-action-text" : "bg-hairline-strong",
+                  )}
+                />
+                {configured
+                  ? t("platformConnection.keyWritten", {
+                      defaultValue: "密钥已写入本机",
+                    })
+                  : t("platformConnection.keyMissing", {
+                      defaultValue: "登录后写入本机",
+                    })}
+              </span>
+            </div>
 
-            <div className="mt-4 border-t border-hairline">
+            <div>
               <Spec
                 label={t("platformConnection.modelLabel", {
                   defaultValue: "主模型",
@@ -321,17 +355,21 @@ export function PlatformConnectionPanel({
                   >
                     {mainModel ??
                       (configured
-                        ? t("platformConnection.modelNone", {
-                            defaultValue: "未选择模型",
+                        ? t("platformConnection.modelSource", {
+                            defaultValue: "由平台下发",
                           })
                         : t("platformConnection.modelSignedOut", {
                             defaultValue: "登录平台后可选择",
                           }))}
                   </span>
                   <span className="mt-0.5 truncate text-badge text-fg-3">
-                    {t("platformConnection.modelSource", {
-                      defaultValue: "由平台下发",
-                    })}
+                    {configured && mainModel == null
+                      ? t("platformConnection.modelInjectedHint", {
+                          defaultValue: "写入本机时按账号替换",
+                        })
+                      : t("platformConnection.modelSource", {
+                          defaultValue: "由平台下发",
+                        })}
                   </span>
                 </span>
                 <Button
@@ -479,45 +517,58 @@ export function PlatformConnectionPanel({
           </section>
 
           {/* ── 右栏：可用模型 + 切换客户端 ───────────────────────────── */}
-          <aside className="flex min-w-0 flex-col gap-8">
-            <section>
-              <SectionHead
-                kicker={t("platformConnection.modelsKicker", {
-                  defaultValue: "Models",
-                })}
-                title={t("platformConnection.availableModels", {
-                  defaultValue: "可用模型",
-                })}
-                hint={t("platformConnection.modelsCount", {
-                  count: availableModels.length,
-                  defaultValue: "{{count}} 个",
-                })}
-              />
-              <div className="mt-4 border-t border-hairline">
-                {availableModels.length === 0 ? (
-                  <p className="border-b border-hairline py-5 text-caption text-fg-3">
-                    {configured
-                      ? t("platformConnection.modelNone", {
-                          defaultValue: "未选择模型",
-                        })
-                      : t("platformConnection.modelSignedOut", {
-                          defaultValue: "登录平台后可选择",
-                        })}
-                  </p>
-                ) : (
-                  <ul>
-                    {availableModels.map((id) => (
+          <aside className="flex min-w-0 flex-col gap-4">
+            <section className="overflow-hidden rounded-panel border border-hairline bg-surface">
+              <div className="flex items-center justify-between gap-3 border-b border-hairline px-5 py-3">
+                <div className="flex min-w-0 items-baseline gap-2.5">
+                  <span className="af-kicker">Models</span>
+                  <h2 className="m-0 text-body font-semibold text-fg-1">
+                    {t("platformConnection.availableModels", {
+                      defaultValue: "可用模型",
+                    })}
+                  </h2>
+                </div>
+                <span className="shrink-0 text-badge tabular-nums text-fg-3">
+                  {t("platformConnection.modelsCount", {
+                    count: availableModels.length,
+                    defaultValue: "{{count}} 个",
+                  })}
+                </span>
+              </div>
+              {availableModels.length === 0 ? (
+                <p className="m-0 px-5 py-5 text-caption text-fg-3">
+                  {configured
+                    ? t("platformConnection.modelNone", {
+                        defaultValue: "未选择模型",
+                      })
+                    : t("platformConnection.modelSignedOut", {
+                        defaultValue: "登录平台后可选择",
+                      })}
+                </p>
+              ) : (
+                <ul className="m-0 list-none p-0">
+                  {availableModels.map((id) => {
+                    const role =
+                      id === mainModel
+                        ? "main"
+                        : id === lightModel
+                          ? "light"
+                          : "metered";
+                    return (
                       <li
                         key={id}
-                        className="flex items-center gap-2.5 border-b border-hairline px-1 py-2.5"
+                        className={cn(
+                          "flex items-center gap-2.5 border-b border-hairline px-5 py-2.5 last:border-b-0",
+                          role === "metered" && "text-fg-2",
+                        )}
                       >
                         <span
                           aria-hidden="true"
                           className={cn(
-                            "h-1 w-1 shrink-0 rounded-full",
+                            "h-1.5 w-1.5 shrink-0 rounded-full",
                             id === mainModel
                               ? "bg-action-text"
-                              : "bg-transparent",
+                              : "bg-hairline-strong",
                           )}
                         />
                         <span
@@ -529,33 +580,59 @@ export function PlatformConnectionPanel({
                         >
                           {id}
                         </span>
+                        <span
+                          className={cn(
+                            "shrink-0 rounded-full border px-1.5 py-[1px] text-[9.5px] leading-[13px]",
+                            role === "main"
+                              ? "border-[rgba(61,219,208,0.3)] bg-action-soft text-action-text"
+                              : role === "light"
+                                ? "border-hairline-strong text-fg-2"
+                                : "border-transparent text-fg-3",
+                          )}
+                        >
+                          {role === "main"
+                            ? t("platformConnection.modelRoleMain", {
+                                defaultValue: "主",
+                              })
+                            : role === "light"
+                              ? t("platformConnection.modelRoleLight", {
+                                  defaultValue: "轻量",
+                                })
+                              : t("platformConnection.modelRoleMetered", {
+                                  defaultValue: "按量",
+                                })}
+                        </span>
                       </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
+                    );
+                  })}
+                </ul>
+              )}
             </section>
 
             {otherApps.length > 0 && (
-              <section>
-                <SectionHead
-                  kicker={t("platformConnection.switchKicker", {
-                    defaultValue: "Clients",
-                  })}
-                  title={t("platformConnection.switchTitle", {
-                    defaultValue: "切换到其他客户端",
-                  })}
-                  hint={t("platformConnection.switchHint", {
-                    defaultValue: "只改当前查看的应用",
-                  })}
-                />
-                <div className="mt-4 grid grid-cols-2 gap-1.5">
+              <section className="overflow-hidden rounded-panel border border-hairline bg-surface">
+                <div className="border-b border-hairline px-5 py-3">
+                  <div className="flex min-w-0 items-baseline gap-2.5">
+                    <span className="af-kicker">Clients</span>
+                    <h2 className="m-0 text-body font-semibold text-fg-1">
+                      {t("platformConnection.switchTitle", {
+                        defaultValue: "切换到其他客户端",
+                      })}
+                    </h2>
+                  </div>
+                  <p className="m-0 mt-0.5 text-badge text-fg-3">
+                    {t("platformConnection.switchHint", {
+                      defaultValue: "只改当前查看的应用",
+                    })}
+                  </p>
+                </div>
+                <div className="grid grid-cols-2 gap-1.5 p-3">
                   {otherApps.map((item) => (
                     <button
                       key={item}
                       type="button"
                       onClick={() => onOpenApp(item)}
-                      className="group flex min-w-0 items-center gap-2 rounded-[4px] border border-hairline bg-surface px-2 py-2 text-start transition-colors hover:border-hairline-strong hover:bg-subtle active:translate-y-px"
+                      className="group flex min-w-0 items-center gap-2 rounded-control border border-hairline px-2 py-2 text-start transition-colors hover:border-hairline-strong hover:bg-subtle active:translate-y-px"
                     >
                       <AppGlyph
                         app={item}
@@ -597,7 +674,7 @@ export function PlatformConnectionPanel({
 
 /**
  * 规格表的一行：92px 标签 + 可换行的值 + 右对齐操作。
- * 行之间只用发丝线，容器不再套卡片。
+ * 行之间只用发丝线；外框和抬头由上面的卡片负责。
  */
 function Spec({
   label,
@@ -611,36 +688,13 @@ function Spec({
   return (
     <div
       className={cn(
-        "flex flex-col gap-2 border-b border-hairline px-1 py-4 md:flex-row md:items-center md:gap-x-4",
+        "flex flex-col gap-2 border-b border-hairline px-5 py-3.5 md:flex-row md:items-center md:gap-x-4",
         last && "border-b-0",
       )}
     >
       <span className="shrink-0 text-badge text-fg-3 md:w-[92px]">{label}</span>
       <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-3 gap-y-2">
         {children}
-      </div>
-    </div>
-  );
-}
-
-/** 小节抬头：等宽 kicker + 标题 + 灰色注解。 */
-function SectionHead({
-  kicker,
-  title,
-  hint,
-}: {
-  kicker: string;
-  title: string;
-  hint?: string;
-}) {
-  return (
-    <div className="flex flex-wrap items-end justify-between gap-x-3 gap-y-1.5">
-      <div className="min-w-0">
-        <div className="af-kicker">{kicker}</div>
-        <div className="mt-1 flex flex-wrap items-baseline gap-x-2.5 gap-y-1">
-          <h2 className="text-title text-fg-1">{title}</h2>
-          {hint && <span className="text-badge text-fg-3">{hint}</span>}
-        </div>
       </div>
     </div>
   );

@@ -27,7 +27,13 @@ import { platformKeyApi } from "@/lib/api/platformKey";
 import { proxyApi } from "@/lib/api/proxy";
 import { toast } from "@/lib/toast";
 import { usePlatformKeyStatusQuery } from "@/lib/query";
-import { useUsageSummary, useUsageTrends } from "@/lib/query/usage";
+import {
+  usePlatformUsage,
+  useUsageSummary,
+  useUsageTrends,
+} from "@/lib/query/usage";
+import { platformUsageDays } from "@/lib/usageRange";
+import { visibleModelId } from "@/lib/modelId";
 import { useSidebarStatus } from "@/hooks/useSidebarStatus";
 import { usePlatformWebLogin } from "@/hooks/usePlatformWebLogin";
 import { AppGlyph, APP_DISPLAY_NAME } from "@/components/shell/AppGlyph";
@@ -170,7 +176,10 @@ export function HomeOverview({
     for (const row of rows) {
       const config = row.config;
       if (!config) continue;
-      const preferred = config.defaultModel ?? config.models[0] ?? null;
+      const preferred =
+        visibleModelId(config.defaultModel) ??
+        visibleModelId(config.models[0]) ??
+        null;
       if (!preferred) continue;
       tally.set(preferred, (tally.get(preferred) ?? 0) + 1);
     }
@@ -182,6 +191,12 @@ export function HomeOverview({
   const range = useMemo(() => ({ preset: "7d" as const }), []);
   const { data: summary } = useUsageSummary(range);
   const { data: trends } = useUsageTrends(range);
+  // 成本优先读平台账本；接口还没上线或未登录时回退本机估算
+  const { data: platformUsage } = usePlatformUsage(platformUsageDays(range));
+  const shownCost =
+    platformUsage && Number.isFinite(platformUsage.totals.costUsd)
+      ? platformUsage.totals.costUsd
+      : Number.parseFloat(summary?.totalCost ?? "") || 0;
   const spark = useMemo(() => {
     const days = (trends ?? []).slice(-7);
     const peak = days.reduce((max, day) => Math.max(max, day.requestCount), 0);
@@ -223,6 +238,7 @@ export function HomeOverview({
           <header className="flex flex-wrap items-end justify-between gap-x-8 gap-y-5 border-b border-hairline pb-6">
             <div className="min-w-0">
               <div className="af-kicker flex flex-wrap items-center gap-2.5">
+                <span aria-hidden="true" className="af-kicker-dot" />
                 <span>Platform / Overview</span>
                 <span
                   aria-hidden="true"
@@ -297,10 +313,10 @@ export function HomeOverview({
             ) : null}
           </header>
 
-          {/* ── 四格读数：没有卡片，只有标尺 ─────────────────────────── */}
+          {/* ── 四格读数：一块卡面，四道标尺 ─────────────────────────── */}
           <section
             aria-label={t("home.stats", { defaultValue: "平台读数" })}
-            className="grid grid-cols-2 border-b border-hairline md:grid-cols-4"
+            className="mt-6 grid grid-cols-2 overflow-hidden rounded-panel border border-hairline bg-surface md:grid-cols-4"
           >
             <Reading
               index={0}
@@ -351,41 +367,43 @@ export function HomeOverview({
 
           <div className="mt-9 grid items-start gap-x-10 gap-y-9 lg:grid-cols-[minmax(0,1fr)_318px]">
             {/* ── 客户端账本 ─────────────────────────────────────────── */}
-            <section className="min-w-0">
-              <SectionHead
-                kicker={t("home.clientsKicker", { defaultValue: "Clients" })}
-                title={t("home.appsTitle", { defaultValue: "客户端" })}
-                hint={t("home.appsHintNew", {
-                  defaultValue: "点任意一行进入配置详情；模型与密钥由平台下发",
-                })}
-                action={
-                  <Button
-                    variant="neutral"
-                    size="compact"
-                    disabled={
-                      !configured || routing || routeTargets.length === 0
-                    }
-                    onClick={() => void routeAll()}
-                  >
-                    {routing ? (
-                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                    ) : (
-                      <Route className="h-3.5 w-3.5" strokeWidth={1.6} />
-                    )}
-                    {routeTargets.length === 0
-                      ? t("home.routeAllDone2", {
-                          defaultValue: "已全部走路由",
-                        })
-                      : t("home.routeAll", {
-                          count: routeTargets.length,
-                          defaultValue: "全部走路由",
-                        })}
-                  </Button>
-                }
-              />
+            <section className="min-w-0 overflow-hidden rounded-panel border border-hairline bg-surface">
+              <div className="px-5 pb-1 pt-4">
+                <SectionHead
+                  kicker={t("home.clientsKicker", { defaultValue: "Clients" })}
+                  title={t("home.appsTitle", { defaultValue: "客户端" })}
+                  hint={t("home.appsHintNew", {
+                    defaultValue: "点任意一行进入配置详情；模型与密钥由平台下发",
+                  })}
+                  action={
+                    <Button
+                      variant="neutral"
+                      size="compact"
+                      disabled={
+                        !configured || routing || routeTargets.length === 0
+                      }
+                      onClick={() => void routeAll()}
+                    >
+                      {routing ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <Route className="h-3.5 w-3.5" strokeWidth={1.6} />
+                      )}
+                      {routeTargets.length === 0
+                        ? t("home.routeAllDone2", {
+                            defaultValue: "已全部走路由",
+                          })
+                        : t("home.routeAll", {
+                            count: routeTargets.length,
+                            defaultValue: "全部走路由",
+                          })}
+                    </Button>
+                  }
+                />
+              </div>
 
-              <div className="mt-4 border-t border-hairline">
-                <div className="hidden grid-cols-[minmax(0,1.5fr)_minmax(0,1.1fr)_84px_96px_24px] gap-4 px-2 py-2.5 md:grid">
+              <div className="mt-3 border-t border-hairline">
+                <div className="hidden grid-cols-[minmax(0,1.5fr)_minmax(0,1.1fr)_84px_96px_24px] gap-4 px-5 py-2.5 md:grid">
                   {[
                     t("home.colClient", { defaultValue: "客户端" }),
                     t("home.colModel", { defaultValue: "模型" }),
@@ -418,7 +436,7 @@ export function HomeOverview({
                       data-active={active}
                       aria-current={active ? "true" : undefined}
                       className={cn(
-                        "af-accent-rail group relative grid w-full grid-cols-[minmax(0,1fr)_24px] items-center gap-x-4 gap-y-2 border-b border-hairline px-2 py-3.5 text-start transition-colors hover:bg-subtle md:grid-cols-[minmax(0,1.5fr)_minmax(0,1.1fr)_84px_96px_24px]",
+                        "af-accent-rail group relative grid w-full grid-cols-[minmax(0,1fr)_24px] items-center gap-x-4 gap-y-2 border-b border-hairline px-5 py-3.5 text-start transition-colors hover:bg-subtle md:grid-cols-[minmax(0,1.5fr)_minmax(0,1.1fr)_84px_96px_24px]",
                         active && "bg-subtle/60",
                       )}
                     >
@@ -501,12 +519,17 @@ export function HomeOverview({
                 )}
               </div>
 
-              <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-2 px-5 py-3">
                 <span className="text-badge text-fg-3">
                   {t("home.routedCount", {
                     routed: routedCount,
                     total: routeApps.length,
                     defaultValue: "本机路由 {{routed}}/{{total}}",
+                  })}
+                </span>
+                <span className="ms-auto text-badge text-fg-3">
+                  {t("home.routeNote", {
+                    defaultValue: "其余客户端直接连平台网关",
                   })}
                 </span>
               </div>
@@ -530,20 +553,29 @@ export function HomeOverview({
                 {summary ? (
                   <>
                     <div className="mt-4 flex items-baseline gap-2">
-                      <span className="af-num text-display leading-none text-action-text">
+                      <span className="af-num text-[30px] leading-none tracking-[-0.04em] text-action-text">
+                        ${shownCost.toFixed(2)}
+                      </span>
+                      {platformUsage && (
+                        <span className="text-[10px] text-fg-3">
+                          {t("home.ledgerTag", {
+                            defaultValue: "平台账本",
+                          })}
+                        </span>
+                      )}
+                    </div>
+                    <div className="mt-2.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-caption text-fg-2">
+                      <span className="af-num">
                         {summary.totalRequests.toLocaleString("en-US")}
                       </span>
-                      <span className="text-caption text-fg-3">
+                      <span className="text-fg-3">
                         {t("home.requestsUnit", { defaultValue: "次请求" })}
                       </span>
-                    </div>
-                    <div className="mt-2.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-caption text-fg-2">
+                      <span className="text-fg-3">·</span>
                       <span className="af-num">
-                        ${(Number.parseFloat(summary.totalCost) || 0).toFixed(2)}
+                        {summary.realTotalTokens.toLocaleString("en-US")}
                       </span>
-                      <span className="af-num">
-                        {summary.realTotalTokens.toLocaleString("en-US")} Token
-                      </span>
+                      <span className="text-fg-3">Token</span>
                     </div>
                     <UsageSpark
                       days={spark.days}
@@ -600,6 +632,25 @@ export function HomeOverview({
                             defaultValue: "组件更新未检查",
                           })}
                 </p>
+                {updatableCount > 0 && (
+                  <div className="mt-3 border-t border-hairline">
+                    {tools.updatableToolNames.slice(0, 3).map((name) => (
+                      <div
+                        key={name}
+                        className="flex items-center justify-between gap-3 border-b border-hairline py-2"
+                      >
+                        <span className="truncate text-[11.5px] text-fg-1">
+                          {toolDisplayName(name)}
+                        </span>
+                        <span className="shrink-0 text-[10px] text-warning-text">
+                          {t("home.updateAvailable", {
+                            defaultValue: "可升级",
+                          })}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
                 <div className="mt-3 flex flex-wrap items-center gap-2">
                   <Button
                     variant="neutral"
@@ -788,20 +839,25 @@ function describeModel(row: AppModelRow, t: TFunction) {
     };
   }
   if (config.supportsList) {
+    const visibleModels = config.models.filter((id) => visibleModelId(id));
     return {
       primary:
-        config.models[0] ??
+        visibleModels[0] ??
         t("platformConnection.modelNone", { defaultValue: "未选择模型" }),
       secondary: t("platformConnection.modelCount", {
-        count: config.models.length,
+        count: visibleModels.length,
         defaultValue: "{{count}} 个模型",
       }),
     };
   }
-  const primary = config.defaultModel ?? "—";
+  // 占位符（__AIFUSION_MODEL__）由写入本机时替换，不直接展示
+  const primary =
+    visibleModelId(config.defaultModel) ??
+    t("platformConnection.modelSource", { defaultValue: "由平台下发" });
   const secondary = config.supportsLight
     ? `${t("home.lightModelTag", { defaultValue: "轻量" })} ${
-        config.lightModel ?? t("home.sameAsMain", { defaultValue: "同主模型" })
+        visibleModelId(config.lightModel) ??
+        t("home.sameAsMain", { defaultValue: "同主模型" })
       }`
     : t("home.singleModel", { defaultValue: "单模型" });
   return { primary, secondary };

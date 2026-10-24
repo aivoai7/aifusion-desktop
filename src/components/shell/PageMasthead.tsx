@@ -34,7 +34,10 @@ export function PageMasthead({
     >
       <div className="mx-auto flex w-full max-w-[1160px] flex-wrap items-end justify-between gap-x-8 gap-y-4 px-8 pb-5 pt-6">
         <div className="min-w-0">
-          <div className="af-kicker">{kicker}</div>
+          <div className="af-kicker flex items-center gap-2">
+            <span aria-hidden="true" className="af-kicker-dot" />
+            {kicker}
+          </div>
           <div className="mt-2 flex flex-wrap items-center gap-2">
             <h1 className="text-display text-fg-1">{title}</h1>
             {titleExtra}
