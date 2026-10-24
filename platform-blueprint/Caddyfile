@@ -1,0 +1,30 @@
+# Caddy 自动签发/续期证书，反代两个上游。
+# 网关与控制台同源不同路径，省掉一套 CORS 与证书。
+# 域名来自 compose 的 PLATFORM_DOMAIN，只在 .env 里改一次。
+
+{$PLATFORM_DOMAIN:platform.example.com} {
+	# 网关：API Key 客户端走这里
+	handle /v1/* {
+		reverse_proxy gateway:8080
+	}
+
+	# 网关健康检查（给外部拨测用，别暴露内部指标）
+	handle /healthz {
+		reverse_proxy gateway:8080
+	}
+
+	# 控制台与官网
+	handle {
+		reverse_proxy console:3000
+	}
+
+	encode zstd gzip
+
+	log {
+		output file /var/log/caddy/access.log {
+			roll_size 50MiB
+			roll_keep 7
+		}
+		format json
+	}
+}

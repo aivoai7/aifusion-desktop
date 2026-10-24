@@ -1,0 +1,90 @@
+name: ai-platform-blueprint
+
+# 一套能自己维护 5 年的最小组合：Postgres + Redis + 网关 + Caddy。
+# 别在这一步引入 k8s / 服务网格 / 消息队列；单实例 + 备份 + 水平复制够撑很久。
+# 密钥一律走 .env（不入库、不进 git），channels.secret_ref 只存引用名。
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-platform}
+      POSTGRES_USER: ${POSTGRES_USER:-platform}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set in .env}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+      - ./db/schema.sql:/docker-entrypoint-initdb.d/10-schema.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-platform} -d ${POSTGRES_DB:-platform}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--save", "", "--appendonly", "no", "--maxmemory-policy", "allkeys-lru"]
+    # Redis 只做缓存与限流计数，掉电丢数据不影响正确性；账本永远在 Postgres 里
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  gateway:
+    build: ./gateway
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER:-platform}:${POSTGRES_PASSWORD:?set in .env}@db:5432/${POSTGRES_DB:-platform}?sslmode=disable
+      REDIS_URL: redis://redis:6379/0
+      LISTEN_ADDR: ":8080"
+      # 护栏：只按请求体大小设上限。按「消息条数」设上限会误伤 Agent 客户端，
+      # 因为它们每轮重放整段历史，且一次 tool_call 在 OpenAI 形状下拆成两条。
+      MAX_BODY_MB: "10"
+      # 占位网关用一条透传上游；真网关按 channels 表选路，Key 从部署环境注入
+      UPSTREAM_BASE_URL: ${UPSTREAM_BASE_URL:-}
+    depends_on:
+      db: { condition: service_healthy }
+      redis: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/healthz"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    expose:
+      - "8080"
+
+  console:
+    build: ./console
+    restart: unless-stopped
+    # 占位镜像是 python:alpine，busybox 自带 wget
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3000/"]
+      interval: 15s
+      timeout: 3s
+      retries: 5
+    expose:
+      - "3000"
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      # Caddyfile 用 {$PLATFORM_DOMAIN} 读它，域名只在这一处定义
+      PLATFORM_DOMAIN: ${PLATFORM_DOMAIN:-platform.example.com}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      - gateway
+      - console
+
+volumes:
+  db-data:
+  caddy-data:
+  caddy-config:

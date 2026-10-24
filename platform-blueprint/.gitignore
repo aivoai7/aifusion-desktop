@@ -1,0 +1,11 @@
+# 密钥只在这里，永远不进 git
+.env
+
+# 本地构建产物
+gateway/gateway
+gateway/gateway.exe
+gateway/coverage.out
+
+# 编辑器与系统
+.DS_Store
+*.swp

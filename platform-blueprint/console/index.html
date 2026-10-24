@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>控制台占位页</title>
+    <style>
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        background: #0c0d10;
+        color: #e7e9ee;
+        font: 14px/1.7 ui-sans-serif, system-ui, "Segoe UI", sans-serif;
+      }
+      main {
+        max-width: 44rem;
+        padding: 2.5rem 1.5rem;
+      }
+      h1 {
+        font-size: 1.1rem;
+        font-weight: 600;
+        letter-spacing: 0.01em;
+        margin: 0 0 0.75rem;
+      }
+      p {
+        margin: 0 0 1rem;
+        color: #9aa1ad;
+      }
+      ul {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        border-top: 1px solid #1f2229;
+      }
+      li {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 0.6rem 0;
+        border-bottom: 1px solid #1f2229;
+        color: #9aa1ad;
+      }
+      code {
+        color: #b8f26a;
+        font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+        font-size: 12.5px;
+      }
+    </style>
+  </head>
+  <main>
+    <h1>控制台占位页</h1>
+    <p>
+      这里不是产品，只是让 <code>docker compose up</code> 在控制台写完之前也能起来并拿到证书。
+      真实的管理端要在本目录实现，至少要覆盖这几条路由：
+    </p>
+    <ul>
+      <li><span>登录 / 桌面回环分发</span> <code>GET /desktop/connect</code></li>
+      <li><span>用量汇总（对账用，与网关同源同口径）</span> <code>GET /api/v1/admin/usage/summary</code></li>
+      <li><span>钱包与流水</span> <code>GET /api/v1/admin/wallet/ledger</code></li>
+      <li><span>渠道与价目</span> <code>GET /api/v1/admin/pricing</code></li>
+      <li><span>请求策略（只按体积，不按条数）</span> <code>GET /api/v1/admin/settings/request_checks</code></li>
+    </ul>
+  </main>
+</html>
